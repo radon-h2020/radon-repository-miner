@@ -1,5 +1,6 @@
 import github
 from enum import Enum
+from iacminer.entities.file import File
 
 class Filter(Enum):
     ANSIBLE = 1
@@ -39,18 +40,7 @@ class Commit():
             if filter == Filter.ANSIBLE and not self.__is_ansible_file(file.filename):
                 continue
 
-            self.files.add({
-                'sha': file.sha,
-                'filename': file.filename,
-                'previous_filename': file.previous_filename,
-                'additions': file.additions,
-                'deletions': file.deletions,
-                'changes': file.changes,
-                'blob_url': file.blob_url,
-                'raw_url': file.raw_url,
-                'status': file.status,
-                'patch': file.patch
-            })
+            self.files.add(File(file))
 
     def __is_ansible_file(self, filepath: str) -> bool:
         """ 

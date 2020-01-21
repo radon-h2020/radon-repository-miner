@@ -55,29 +55,23 @@ class Git():
         
         return commit
 
+    def get_contents(self, repo: str, path: str, ref: str=None) -> set:
+        """
+        Analyze all the files of a repo, returning a generator of content files.
+        
+        :repo: a repository 'author/repository' (e.g. 'PyGithub/PyGithub')
+        :path: the path to search in
+        :ref: the commit sha where to get the files. If None the master is considered
+        """
+        repo = self.__github.get_repo(repo)
+        dirs_stack = [path]
+        
+        while len(dirs_stack):
+            path = dirs_stack.pop()
+            contents = repo.get_contents(path=path, ref=ref)
 
-
-
-
-
-
-
-##################
-  
-    
-
-    def get_files(self, repo, path, ref=None):
-        repository = self.__github.get_repo(repo)
-        files = []
-        contents = repository.get_contents(path=path, ref=ref)
-        for c in contents:
-            if ('playbooks' in c.path or 'meta' in c.path or 'tasks' in c.path or 'handlers' in c.path or 'roles' in c.path):
-                if c.type == 'dir':
-                    files.extend(self.get_files(repo, path=path + '/' + c.name, ref=ref))
-                elif c.type == 'file' and c.path.endswith('.yml'):
-                    files.append({'filename': c.path, 
-                                  'decoded_content': c.decoded_content, 
-                                  'sha': c.sha})
-
-        return files   
-    
+            for content in contents:
+                if content.type == 'dir':
+                    dirs_stack.append(os.path.join(path, content.name))
+                else:
+                    yield content

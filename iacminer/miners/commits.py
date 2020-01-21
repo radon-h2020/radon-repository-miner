@@ -13,15 +13,10 @@ class CommitsMiner():
 
     def __init__(self):
         self.__fixing_commits = set()
-        self.__unclassified_commits = set()
 
     @property
     def fixing_commits(self):
         return self.__fixing_commits
-    
-    @property
-    def unclassified_commits(self):
-        return self.__unclassified_commits
 
     def __get_closing_commit_id(self, issue: github.Issue) -> str:
         """
@@ -98,8 +93,6 @@ class CommitsMiner():
 
             if is_fix:
                 self.__fixing_commits.add(commit)
-            else:
-                self.__unclassified_commits.add(commit)
 
     def mine_commits(self, repo: str):
         """ 
@@ -107,9 +100,9 @@ class CommitsMiner():
         
         :repo: a repository 'author/repository' (e.g. 'PyGithub/PyGithub')
 
-        :return: two set of fixing and unclassified commits, respectively.
+        :return: the set of fixing commits.
         """
         self.__set_fixing_commits_from_issues(repo)
         self.__set_commits_from_messages(repo)
 
-        return self.__fixing_commits, self.__unclassified_commits
+        return self.__fixing_commits
