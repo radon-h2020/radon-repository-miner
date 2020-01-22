@@ -2,59 +2,28 @@ import github
 import json
 
 from enum import Enum
-from iacminer.entities.file import File
+from iacminer.entities.file import File, FileEncoder
 
 class CommitEncoder(json.JSONEncoder):
-    def __tojson(self, obj):
-        json_files = []
-        for f in obj.files:
-            json_files.append(f.tojson())
-        
-        json_commit = obj.__dict__
-        json_commit['files'] = json_files
-
-        return json_commit
-
 
     def default(self, obj):
         if isinstance(obj, Commit):
-            return self.__tojson(obj)
-            
+            json_files = json.dumps(obj.files, cls=FileEncoder)
+            json_commit = obj.__dict__
+            json_commit['files'] = json_files
+
+            return json_commit
+
         elif isinstance(obj, list):
             json_obj = []
             for item in obj:
+                print(item)
+                print(type(item))
                 json_obj.append(json.dumps(item, cls=CommitEncoder))
 
             return json_obj
 
         return super(CommitEncoder, self).default(obj)
-
-"""
-class CommitDecoder(json.JSONDecoder):
-    
-    def __init__(self, *args, **kwargs):
-        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
-
-    def object_hook(self, obj):
-
-        print(obj)
-
-        c = Commit(None)
-        c.repo = obj['repo']
-        c.author_id = obj['author_id']
-        c.author_name = obj['author_name']
-        c.committer_id = obj['committer_id']
-        c.committer_name = obj['committer_name']
-        c.committer_email = obj['committer_email']
-        c.message = obj['message']
-        c.sha = obj['sha']
-        c.url = obj['url']
-        #TODO files and parents
-        if type == 'datetime':
-            return c
-
-        return obj
-"""
 
 class Filter(Enum):
     ANSIBLE = 1

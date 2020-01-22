@@ -5,6 +5,8 @@ import os
 import json
 import requests
 
+from github import RateLimitExceededException
+
 from requests.exceptions import HTTPError
 from iacminer.entities.content import ContentFile
 from iacminer.entities.commit import Commit
@@ -17,6 +19,8 @@ class ScriptsMiner():
         self.__g = Git()
         self.__defective_scripts = set()    # set of ContentFile
         self.__unclassified_scripts = set() # set of ContentFile
+        self.__load_defective_scripts()
+        self.__load_unclassified_scripts()
 
     @property
     def defective_scripts(self):
@@ -109,21 +113,38 @@ class ScriptsMiner():
 
         :return: two set of defective and unclassified files, respectively.
         """
-        for file in fixing_commit.files:
-            self.__set_defective_scripts(file, fixing_commit.sha, fixing_commit.parents[0], fixing_commit.repo)
-            
-            for content in self.__g.get_contents(fixing_commit.repo, path='.', ref=fixing_commit.sha):
-                content = ContentFile(content)
-                content.commit_sha = fixing_commit.sha
-                content.repository = fixing_commit.repo
+        
+        try:
+            for file in fixing_commit.files:
 
-                # filtering out non-Ansible files
-                if not content.is_ansible:
+                if file in self.__defective_scripts.union(self.unclassified_scripts):
                     continue
 
-                #if any(d.get('filename', None) == content.filename for d in self.__defective_scripts):
-                if content and content not in self.__defective_scripts:
-                    self.__unclassified_scripts.add(content)
+                self.__set_defective_scripts(file, fixing_commit.sha, fixing_commit.parents[0], fixing_commit.repo)
+                
+                for content in self.__g.get_contents(fixing_commit.repo, path='.', ref=fixing_commit.sha):
+                    content = ContentFile(content)
+                    content.commit_sha = fixing_commit.sha
+                    content.repository = fixing_commit.repo
+
+                    # filtering out non-Ansible files
+                    if not content.is_ansible:
+                        continue
+
+                    #if any(d.get('filename', None) == content.filename for d in self.__defective_scripts):
+                    if content and content not in self.__defective_scripts:
+                        self.__unclassified_scripts.add(content)
+        
+        except RateLimitExceededException:
+            print('Rate limit exceeded when downloading files')
+
+            if len(self.__defective_scripts):
+                self.__save_defective_scripts()
+
+            if len(self.__unclassified_scripts):
+                self.__save_unclassified_scripts()
+
+            # TODO Wait self.__g.rate_limiting_resettime()
 
         return self.__defective_scripts, self.__unclassified_scripts
         

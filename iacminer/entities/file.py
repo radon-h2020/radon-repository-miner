@@ -1,4 +1,23 @@
 import github
+import json
+
+class FileEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, File):
+            return obj.__dict__
+
+        elif isinstance(obj, dict):
+                return obj
+
+        elif isinstance(obj, list):
+            json_obj = []
+            for item in obj:
+                json_obj.append(json.dumps(item, cls=FileEncoder))
+
+            return json_obj
+
+        return super(FileEncoder, self).default(obj)
 
 class File():
 
@@ -28,6 +47,3 @@ class File():
 
     def __hash__(self):
         return hash(self.sha)
-
-    def tojson(self):
-        return self.__dict__    

@@ -64,11 +64,11 @@ class CommitsMiner():
                 continue
             
             commit = Commit(commit, Filter.ANSIBLE)
+            commit.repo = repo
 
             if not len(commit.files):
                 continue
             
-            commit.repo = repo
             self.__fixing_commits.add(commit)
 
     def __set_commits_from_messages(self, repo: str):
@@ -119,6 +119,10 @@ class CommitsMiner():
         try:
             self.__set_fixing_commits_from_issues(repo)
             self.__set_commits_from_messages(repo)
+
+            if len(self.__fixing_commits):
+                self.__save_fixing_commits()
+
         except github.RateLimitExceededException: # TO TEST
             print('API rate limit exceeded')
             if len(self.__fixing_commits):
