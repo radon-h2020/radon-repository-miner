@@ -1,8 +1,10 @@
 """
 A module for mining and downloading raw scripts.
 """
-
+import os
+import json
 import requests
+
 from requests.exceptions import HTTPError
 from iacminer.entities.content import ContentFile
 from iacminer.entities.commit import Commit
@@ -44,7 +46,6 @@ class ScriptsMiner():
             #print(f'Other error occurred: {err}')
             return None
 
-
     def __set_defective_scripts(self, file: File, commit_sha: str, commit_parent_sha: str, repo: str) -> str:
         filename = file.previous_filename if file.previous_filename else file.filename
         defective_url = file.raw_url.replace(commit_sha, commit_parent_sha)
@@ -61,6 +62,43 @@ class ScriptsMiner():
         if content.decoded_content:
             self.__defective_scripts.add(content)
 
+    def __load_defective_scripts(self):
+        filepath = os.path.join('data','defective_scripts.json')
+        if os.path.isfile(filepath):
+            with open(filepath, 'r') as infile:
+                json_array = json.load(infile)
+
+                for json_obj in json_array:
+                    self.__defective_scripts.add(ContentFile(json_obj))
+
+    def __save_defective_scripts(self):
+
+        json_obj = []
+
+        for content in self.__defective_scripts:
+            json_obj.append(content.__dict__)
+
+        with open(os.path.join('data', 'defective_scripts.json'), 'w') as outfile:
+            json.dump(json_obj, outfile)
+
+    def __load_unclassified_scripts(self):
+        filepath = os.path.join('data','unclassified_scripts.json')
+        if os.path.isfile(filepath):
+            with open(filepath, 'r') as infile:
+                json_array = json.load(infile)
+
+                for json_obj in json_array:
+                    self.__unclassified_scripts.add(ContentFile(json_obj))
+
+    def __save_unclassified_scripts(self):
+
+        json_obj = []
+
+        for content in self.__unclassified_scripts:
+            json_obj.append(content.__dict__)
+
+        with open(os.path.join('data', 'unclassified_scripts.json'), 'w') as outfile:
+            json.dump(json_obj, outfile)
 
     def mine_scripts(self, fixing_commit: Commit):
         """ 

@@ -8,13 +8,18 @@ class ContentFile():
 
         :file: a file to parse
         """
-        self.__commit_sha = None
-        
-        if content:
-            self.__sha = content.sha
-            self.__filename = content.path
-            self.__decoded_content = content.decoded_content
-            self.__repository = content.repository
+
+        if type(content) == dict:
+            for k, v in content.items():
+                setattr(self, k, v)
+        else:
+            self.__commit_sha = None
+            
+            if content:
+                self.__sha = content.sha
+                self.__filename = content.path
+                self.__decoded_content = content.decoded_content
+                self.__repository = content.repository
 
     @property
     def commit_sha(self):

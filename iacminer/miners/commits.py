@@ -107,7 +107,6 @@ class CommitsMiner():
     def __save_fixing_commits(self):
         with open(os.path.join('data', 'fixing_commits.json'), 'w') as outfile:
             json.dump(list(self.__fixing_commits), outfile, cls=CommitEncoder)
-        
 
     def mine_commits(self, repo: str):
         """ 
