@@ -66,4 +66,6 @@ class ContentFile():
             return self.sha == other.sha
                    
         return False
-        
+    
+    def __hash__(self):
+        return hash(self.__sha)

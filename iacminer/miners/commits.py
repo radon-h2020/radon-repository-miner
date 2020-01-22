@@ -2,17 +2,21 @@
 A module for mining fixing commits.
 """
 import github
+import json
+import os
 import re
 
 from iacminer import utils as utils
-from iacminer.entities.commit import Commit, Filter 
+from iacminer.entities.commit import Commit, CommitEncoder, Filter
 from iacminer.git import Git
 
 
 class CommitsMiner():
 
     def __init__(self):
+        self.__g = Git()
         self.__fixing_commits = set()
+        self.__load_fixing_commits()
 
     @property
     def fixing_commits(self):
@@ -50,14 +54,12 @@ class CommitsMiner():
         :repo: a repository 'author/repository' (e.g. 'PyGithub/PyGithub')
         """
 
-        g = Git()
-
-        for issue in g.get_issues(repo):
+        for issue in self.__g.get_issues(repo):
             sha = self.__get_closing_commit_id(issue)
             if not sha:
                 continue 
             
-            commit = g.get_commit(repo, sha)
+            commit = self.__g.get_commit(repo, sha)
             if not commit:
                 continue
             
@@ -79,8 +81,7 @@ class CommitsMiner():
         :return: set of fixing commits.
         """
 
-        g = Git()
-        commits = g.get_commits(repo) 
+        commits = self.__g.get_commits(repo) 
 
         for commit in commits:
             commit = Commit(commit, Filter.ANSIBLE)
@@ -94,6 +95,20 @@ class CommitsMiner():
             if is_fix:
                 self.__fixing_commits.add(commit)
 
+    def __load_fixing_commits(self):
+        filepath = os.path.join('data','fixing_commits.json')
+        if os.path.isfile(filepath):
+            with open(filepath, 'r') as infile:
+                json_array = json.load(infile)
+
+                for json_obj in json_array:
+                    self.__fixing_commits.add(Commit(json_obj))
+
+    def __save_fixing_commits(self):
+        with open(os.path.join('data', 'fixing_commits.json'), 'w') as outfile:
+            json.dump(list(self.__fixing_commits), outfile, cls=CommitEncoder)
+        
+
     def mine_commits(self, repo: str):
         """ 
         Analyze a repository, and extract fixing and unclassified commits.
@@ -102,7 +117,13 @@ class CommitsMiner():
 
         :return: the set of fixing commits.
         """
-        self.__set_fixing_commits_from_issues(repo)
-        self.__set_commits_from_messages(repo)
+        try:
+            self.__set_fixing_commits_from_issues(repo)
+            self.__set_commits_from_messages(repo)
+        except github.RateLimitExceededException: # TO TEST
+            print('API rate limit exceeded')
+            if len(self.__fixing_commits):
+                self.__save_fixing_commits()
+            # TODO Wait self.__g.rate_limiting_resettime()
 
         return self.__fixing_commits

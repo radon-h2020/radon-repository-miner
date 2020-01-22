@@ -1,3 +1,5 @@
+# TODO: handle HTTPSConnectionPool exception
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -5,9 +7,20 @@ import os
 import github
 
 class Git():
-    
     def __init__(self):
         self.__github = github.Github(os.getenv('GITHUB_ACCESS_TOKEN'))
+        print(f'Remaining quota: {self.get_remaining_quota()}')
+    """
+    def __check_rate_limit(self):
+        print(self.__github.rate_limiting)
+        print(self.__github.rate_limiting_resettime)
+        return self.__github.rate_limiting_resettime
+    """
+    def rate_limiting_resettime(self):
+        return self.__github.rate_limiting_resettime
+
+    def get_remaining_quota(self):
+        return self.__github.rate_limiting[0]
 
     def get_issues(self, repo: str):
         """ 

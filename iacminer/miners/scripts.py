@@ -12,6 +12,7 @@ from iacminer.git import Git
 class ScriptsMiner():
 
     def __init__(self):
+        self.__g = Git()
         self.__defective_scripts = set()    # set of ContentFile
         self.__unclassified_scripts = set() # set of ContentFile
 
@@ -70,12 +71,10 @@ class ScriptsMiner():
 
         :return: two set of defective and unclassified files, respectively.
         """
-        g = Git()
-
         for file in fixing_commit.files:
             self.__set_defective_scripts(file, fixing_commit.sha, fixing_commit.parents[0], fixing_commit.repo)
             
-            for content in g.get_contents(fixing_commit.repo, path='.', ref=fixing_commit.sha):
+            for content in self.__g.get_contents(fixing_commit.repo, path='.', ref=fixing_commit.sha):
                 content = ContentFile(content)
                 content.commit_sha = fixing_commit.sha
                 content.repository = fixing_commit.repo

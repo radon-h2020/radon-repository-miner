@@ -25,4 +25,9 @@ class File():
             return self.sha == other.sha
                    
         return False
-        
+
+    def __hash__(self):
+        return hash(self.sha)
+
+    def tojson(self):
+        return self.__dict__    

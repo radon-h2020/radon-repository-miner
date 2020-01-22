@@ -1,4 +1,5 @@
 import csv
+import json
 import os
 
 def load_repositories():
@@ -11,3 +12,8 @@ def load_repositories():
             repositories.append('{}/{}'.format(row[0], row[1]))
 
     return repositories
+
+
+def save_json(fixing_commits, filename: str):
+    with open(os.path.join('data', filename), 'w') as outfile:
+        return json.dump(fixing_commits, outfile)
