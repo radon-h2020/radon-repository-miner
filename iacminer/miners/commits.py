@@ -9,7 +9,7 @@ import re
 from iacminer import utils as utils
 from iacminer.entities.commit import Commit, CommitEncoder, Filter
 from iacminer.entities.file import File
-from iacminer.git import Git
+from iacminer.mygit import Git
 
 
 class CommitsMiner():

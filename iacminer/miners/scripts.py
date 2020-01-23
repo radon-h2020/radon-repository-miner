@@ -11,7 +11,7 @@ from requests.exceptions import HTTPError
 from iacminer.entities.content import ContentFile, ContentFileEncoder
 from iacminer.entities.commit import Commit
 from iacminer.entities.file import File
-from iacminer.git import Git
+from iacminer.mygit import Git
 
 class ScriptsMiner():
 
