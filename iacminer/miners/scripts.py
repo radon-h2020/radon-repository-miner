@@ -8,7 +8,7 @@ import requests
 from github import RateLimitExceededException
 
 from requests.exceptions import HTTPError
-from iacminer.entities.content import ContentFile
+from iacminer.entities.content import ContentFile, ContentFileEncoder
 from iacminer.entities.commit import Commit
 from iacminer.entities.file import File
 from iacminer.git import Git
@@ -80,7 +80,8 @@ class ScriptsMiner():
         json_obj = []
 
         for content in self.__defective_scripts:
-            json_obj.append(content.__dict__)
+            json_content = json.dumps(content, cls=ContentFileEncoder)
+            json_obj.append(json.loads(json_content))
 
         with open(os.path.join('data', 'defective_scripts.json'), 'w') as outfile:
             json.dump(json_obj, outfile)
@@ -99,10 +100,12 @@ class ScriptsMiner():
         json_obj = []
 
         for content in self.__unclassified_scripts:
-            json_obj.append(content.__dict__)
+            json_content = json.dumps(content, cls=ContentFileEncoder)
+            json_obj.append(json.loads(json_content))
 
         with open(os.path.join('data', 'unclassified_scripts.json'), 'w') as outfile:
             json.dump(json_obj, outfile)
+
 
     def mine_scripts(self, fixing_commit: Commit):
         """ 
@@ -117,7 +120,7 @@ class ScriptsMiner():
         try:
             for file in fixing_commit.files:
 
-                if file in self.__defective_scripts.union(self.unclassified_scripts):
+                if file in self.__defective_scripts.union(self.__unclassified_scripts):
                     continue
 
                 self.__set_defective_scripts(file, fixing_commit.sha, fixing_commit.parents[0], fixing_commit.repo)
@@ -132,8 +135,14 @@ class ScriptsMiner():
                         continue
 
                     #if any(d.get('filename', None) == content.filename for d in self.__defective_scripts):
-                    if content and content not in self.__defective_scripts:
+                    if content not in self.__defective_scripts:
                         self.__unclassified_scripts.add(content)
+                    
+            if len(self.__defective_scripts):
+                self.__save_defective_scripts()
+
+            if len(self.__unclassified_scripts):
+                self.__save_unclassified_scripts()
         
         except RateLimitExceededException:
             print('Rate limit exceeded when downloading files')

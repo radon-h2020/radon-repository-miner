@@ -4,7 +4,8 @@ import yaml
 
 from io import StringIO
 
-import pydriller.metrics.process.metrics as process_metrics
+import pydriller
+#import pydriller.metrics.process.metrics as process_metrics
 
 from ansiblemetrics.main import MetricExtractor, LoadingError
 
@@ -14,14 +15,14 @@ class Metrics():
         self.__extractor = MetricExtractor()
 
 
-    def __calculate(self, script):
-
+    def __calculate(self, script, path_to_repo, filepath, commit_sha):
+        """
         try:
             metrics = self.__extractor.run(script)
 
             metrics['comm'] = process_metrics.commits_count
             
-            devs_count = process_metrics.devs_count
+            devs_count = process_metrics.devs_count(path_to_repo, filepath, to_commit=commit_sha)
             metrics['ddev'] = devs_count[0]
             metrics['adev'] = devs_count[1]
 
@@ -53,13 +54,20 @@ class Metrics():
                 print('An unknown error has occurred')
         finally:
             return None
+        """
 
 
     def calculate(self, defective_scripts, unclassified_scripts):
-            
+            """
             metrics_list = []
             for content in defective_scripts:
-                metrics = self.__calculate(StringIO(content.decoded_content))
+                path_to_repo = f'https://github.com/{content.repository}'
+                
+                metrics = self.__calculate(StringIO(content.decoded_content), 
+                                           path_to_repo,
+                                           content.filename,
+                                           commit_sha)
+                
                 if metrics:
                     metrics['filepath'] = content.filename
                     metrics['sha'] = content.sha
@@ -78,3 +86,5 @@ class Metrics():
                 dataset.to_csv(out, mode='w', index=False)
 
             return dataset
+            """
+            return None

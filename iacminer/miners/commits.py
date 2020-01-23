@@ -8,6 +8,7 @@ import re
 
 from iacminer import utils as utils
 from iacminer.entities.commit import Commit, CommitEncoder, Filter
+from iacminer.entities.file import File
 from iacminer.git import Git
 
 
@@ -102,7 +103,13 @@ class CommitsMiner():
                 json_array = json.load(infile)
 
                 for json_obj in json_array:
-                    self.__fixing_commits.add(Commit(json_obj))
+                    files = set()
+                    for file in json_obj['files']:
+                        files.add(File(file))
+                    
+                    commit = Commit(json_obj)
+                    commit.files = files
+                    self.__fixing_commits.add(commit)
 
     def __save_fixing_commits(self):
         with open(os.path.join('data', 'fixing_commits.json'), 'w') as outfile:

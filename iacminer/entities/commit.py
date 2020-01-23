@@ -8,9 +8,9 @@ class CommitEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, Commit):
-            json_files = json.dumps(obj.files, cls=FileEncoder)
+            json_files = json.dumps(list(obj.files), cls=FileEncoder)
             json_commit = obj.__dict__
-            json_commit['files'] = json_files
+            json_commit['files'] = json.loads(json_files)
 
             return json_commit
 

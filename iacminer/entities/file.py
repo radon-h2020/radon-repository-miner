@@ -27,16 +27,21 @@ class File():
 
         :file: a file to parse
         """
-        self.sha = file.sha
-        self.filename = file.filename
-        self.previous_filename = file.previous_filename
-        self.additions = file.additions
-        self.deletions = file.deletions
-        self.changes = file.changes
-        self.blob_url = file.blob_url
-        self.raw_url = file.raw_url
-        self.status = file.status
-        self.patch = file.patch
+
+        if type(file) == dict:
+            for k, v in file.items():
+                setattr(self, k, v)
+        else:
+            self.sha = file.sha
+            self.filename = file.filename
+            self.previous_filename = file.previous_filename
+            self.additions = file.additions
+            self.deletions = file.deletions
+            self.changes = file.changes
+            self.blob_url = file.blob_url
+            self.raw_url = file.raw_url
+            self.status = file.status
+            self.patch = file.patch
 
     def __eq__(self, other):
         """Overrides the default implementation"""

@@ -1,4 +1,17 @@
 import github
+import json
+
+class ContentFileEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, ContentFile):
+            return obj.__dict__
+
+        elif isinstance(obj, dict):
+                return obj
+
+        return super(ContentFileEncoder, self).default(obj)
+
 
 class ContentFile():
 
@@ -13,53 +26,13 @@ class ContentFile():
             for k, v in content.items():
                 setattr(self, k, v)
         else:
-            self.__commit_sha = None
+            self.commit_sha = None
             
             if content:
-                self.__sha = content.sha
-                self.__filename = content.path
-                self.__decoded_content = content.decoded_content
-                self.__repository = content.repository
-
-    @property
-    def commit_sha(self):
-        return self.__commit_sha
-
-    @commit_sha.setter
-    def commit_sha(self, value: str):
-        self.__commit_sha = value
-        
-    @property
-    def sha(self):
-        return self.__sha
-
-    @sha.setter
-    def sha(self, value: str):
-        self.__sha = value
-        
-    @property
-    def filename(self):
-        return self.__filename
-
-    @filename.setter
-    def filename(self, value: str):
-        self.__filename = value
-
-    @property
-    def decoded_content(self):
-        return self.__decoded_content
-
-    @decoded_content.setter
-    def decoded_content(self, value: str):
-        self.__decoded_content = value
-
-    @property
-    def repository(self):
-        return self.__repository
-
-    @repository.setter
-    def repository(self, value: str):
-        self.__repository = value
+                self.sha = content.sha
+                self.filename = content.path
+                self.decoded_content = str(content.decoded_content.decode("utf-8"))
+                self.repository = content.repository
 
     @property
     def is_ansible(self):
@@ -72,5 +45,8 @@ class ContentFile():
                    
         return False
     
+    def __str__(self):
+        return str(self.__dict__)
+
     def __hash__(self):
-        return hash(self.__sha)
+        return hash(self.sha)
