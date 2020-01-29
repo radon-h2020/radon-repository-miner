@@ -2,6 +2,7 @@ import github
 import json
 
 from enum import Enum
+from requests.exceptions import ReadTimeout
 from iacminer.entities.file import File, FileEncoder
 
 class CommitEncoder(json.JSONEncoder):
@@ -62,14 +63,22 @@ class Commit():
                     self.parents.append(c.sha)
 
                 self.files = set()
-                for file in commit.files:
-                    if file.status == 'added' or file.status == 'removed': # Skip files created or removed at commit time
-                        continue
+                try:
+                    for file in commit.files:
+                        if file.status == 'added' or file.status == 'removed': # Skip files created or removed at commit time
+                            continue
 
-                    if filter == Filter.ANSIBLE and not self.__is_ansible_file(file.filename):
-                        continue
+                        if filter == Filter.ANSIBLE and not self.__is_ansible_file(file.filename):
+                            continue
 
-                    self.files.add(File(file))
+                        self.files.add(File(file))
+
+                except ReadTimeout:
+                    # TODO save issue for later
+                    print('Read timed out.')
+                    pass
+                
+                
 
     def __is_ansible_file(self, filepath: str) -> bool:
         """ 

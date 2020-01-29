@@ -5,11 +5,16 @@ import github
 import json
 import os
 import re
+import time
+
+from datetime import datetime
+from requests.exceptions import ReadTimeout
 
 from iacminer import utils as utils
 from iacminer.entities.commit import Commit, CommitEncoder, Filter
 from iacminer.entities.file import File
 from iacminer.mygit import Git
+
 
 
 class CommitsMiner():
@@ -18,6 +23,8 @@ class CommitsMiner():
         self.__g = Git()
         self.__fixing_commits = set()
         self.__load_fixing_commits()
+        reset = (datetime.fromtimestamp(self.__g.rate_limiting_resettime) - datetime.now()).total_seconds()/60
+        print(f'Reset time in {round(reset)} minutes')
 
     @property
     def fixing_commits(self):
@@ -30,14 +37,19 @@ class CommitsMiner():
 
         :return: str commit id. None if not commit closed the issue
         """
-        issue_events = issue.get_events()
-        if issue_events is None or issue_events.totalCount == 0:
-            return None
-        
-        for e in issue_events: 
-            if e.event.lower() == 'closed' and e.commit_id:
-                return e.commit_id
-        
+        try:
+            issue_events = issue.get_events()
+            if issue_events is None or issue_events.totalCount == 0:
+                return None
+            
+            for e in issue_events: 
+                if e.event.lower() == 'closed' and e.commit_id:
+                    return e.commit_id
+        except ReadTimeout:
+            # TODO save issue for later
+            print('Read timed out.')
+            pass
+
         return None
 
     def __has_fix_in_message(self, message: str):
@@ -56,6 +68,10 @@ class CommitsMiner():
         """
 
         for issue in self.__g.get_issues(repo):
+            
+            if not issue:
+                continue
+
             sha = self.__get_closing_commit_id(issue)
             if not sha:
                 continue 
@@ -134,6 +150,9 @@ class CommitsMiner():
             print('API rate limit exceeded')
             if len(self.__fixing_commits):
                 self.__save_fixing_commits()
-            # TODO Wait self.__g.rate_limiting_resettime()
-
+            # Wait self.__g.rate_limiting_resettime()
+            t = (datetime.fromtimestamp(self.__g.rate_limiting_resettime) - datetime.now()).total_seconds() + 10
+            print(f'Execution stopped. Quota will be reset in {round(t/60)} minutes')
+            time.sleep(t)
+            
         return self.__fixing_commits

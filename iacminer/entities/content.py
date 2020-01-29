@@ -31,8 +31,12 @@ class ContentFile():
             if content:
                 self.sha = content.sha
                 self.filename = content.path
-                self.decoded_content = str(content.decoded_content.decode("utf-8"))
                 self.repository = content.repository
+
+                if type(content.decoded_content) is str:
+                    self.decoded_content = content.decoded_content.decode()
+                else:
+                    self.decoded_content = str(content.decoded_content.decode('utf-8'))
 
     @property
     def is_ansible(self):

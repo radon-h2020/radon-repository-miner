@@ -4,6 +4,9 @@ A module for mining and downloading raw scripts.
 import os
 import json
 import requests
+import time
+
+from datetime import datetime
 
 from github import RateLimitExceededException
 
@@ -125,7 +128,8 @@ class ScriptsMiner():
 
                 self.__set_defective_scripts(file, fixing_commit.sha, fixing_commit.parents[0], fixing_commit.repo)
                 
-                for content in self.__g.get_contents(fixing_commit.repo, path='.', ref=fixing_commit.sha):
+                #for content in self.__g.get_contents(fixing_commit.repo, path='.', ref=fixing_commit.sha):
+                for content in self.__g.get_contents(fixing_commit.repo, path='.', ref=fixing_commit.parents[0]):
                     content = ContentFile(content)
                     content.commit_sha = fixing_commit.sha
                     content.repository = fixing_commit.repo
@@ -153,7 +157,10 @@ class ScriptsMiner():
             if len(self.__unclassified_scripts):
                 self.__save_unclassified_scripts()
 
-            # TODO Wait self.__g.rate_limiting_resettime()
+            # Wait self.__g.rate_limiting_resettime()
+            t = (datetime.fromtimestamp(self.__g.rate_limiting_resettime) - datetime.now()).total_seconds() + 10
+            print(f'Execution stopped. Quota will be reset in {round(t/60)} minutes')
+            time.sleep(t)
 
         return self.__defective_scripts, self.__unclassified_scripts
         

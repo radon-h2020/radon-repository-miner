@@ -16,6 +16,7 @@ class Git():
         print(self.__github.rate_limiting_resettime)
         return self.__github.rate_limiting_resettime
     """
+    @property
     def rate_limiting_resettime(self):
         return self.__github.rate_limiting_resettime
 
