@@ -18,8 +18,6 @@ class CommitEncoder(json.JSONEncoder):
         elif isinstance(obj, list):
             json_obj = []
             for item in obj:
-                print(item)
-                print(type(item))
                 json_obj.append(json.dumps(item, cls=CommitEncoder))
 
             return json_obj
@@ -31,7 +29,7 @@ class Filter(Enum):
 
 class Commit():
    
-    def __init__(self, commit: github.Commit = None, filter: Filter = None):
+    def __init__(self, commit: github.Commit, filter: Filter = None):
         """
         Initialize a new commit from github.Commit and filters out the file for the \
         specified filter.
@@ -47,38 +45,60 @@ class Commit():
                 setattr(self, k, v)
         else:
             self.repo = None
+            self.__release_starts_at = None
+            self.__release_ends_at = None
 
-            if commit:
-                self.author_id = commit.author.node_id if commit.author else None
-                self.author_name = commit.commit.author.name if commit.commit.author else None
-                self.committer_id = commit.committer.node_id if commit.committer else None
-                self.committer_name = commit.commit.committer.name if commit.commit.committer else None
-                self.committer_email = commit.commit.committer.email if commit.commit.committer else None
-                self.message = commit.commit.message
-                self.sha = commit.sha
-                self.url = commit.url
+            self.author_id = commit.author.node_id if commit.author else None
+            self.author_name = commit.commit.author.name if commit.commit.author else None
+            self.committer_id = commit.committer.node_id if commit.committer else None
+            self.committer_name = commit.commit.committer.name if commit.commit.committer else None
+            self.committer_email = commit.commit.committer.email if commit.commit.committer else None
+            self.message = commit.commit.message
+            self.sha = commit.sha
+            self.url = commit.url
+            
+            self.parents = []
+            for c in commit.parents:
+                self.parents.append(c.sha)
+
+            self.files = set()
+            try:
+                for file in commit.files:
+                    if file.changes == 0:
+                        continue
+                    
+                    if file.status == 'added' or file.status == 'removed': # Skip files created or removed at commit time
+                        continue
+
+                    if filter == Filter.ANSIBLE and not self.__is_ansible_file(file.filename):
+                        continue
+                    
+                    self.files.add(File(file))
+
+            except ReadTimeout:
+                print('Read timed out.')
+                pass
                 
-                self.parents = []
-                for c in commit.parents:
-                    self.parents.append(c.sha)
+    
+    @property
+    def release_start_at(self):
+        return self.__release_starts_at
 
-                self.files = set()
-                try:
-                    for file in commit.files:
-                        if file.status == 'added' or file.status == 'removed': # Skip files created or removed at commit time
-                            continue
+    @release_start_at.setter
+    def release_start_at(self, sha=None):
+        self.__release_starts_at = sha
+        for file in self.files:
+            file.release_starts_at = sha
 
-                        if filter == Filter.ANSIBLE and not self.__is_ansible_file(file.filename):
-                            continue
+    @property
+    def release_ends_at(self):
+        return self.__release_ends_at
 
-                        self.files.add(File(file))
-
-                except ReadTimeout:
-                    # TODO save issue for later
-                    print('Read timed out.')
-                    pass
-                
-                
+    @release_ends_at.setter
+    def release_ends_at(self, sha=None):
+        self.__release_ends_at = sha
+        for file in self.files:
+            file.release_ends_at = sha
 
     def __is_ansible_file(self, filepath: str) -> bool:
         """ 

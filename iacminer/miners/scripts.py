@@ -1,6 +1,7 @@
 """
 A module for mining and downloading raw scripts.
 """
+import copy
 import os
 import json
 import time
@@ -16,12 +17,17 @@ from iacminer.mygit import Git
 
 class ScriptsMiner():
 
-    def __init__(self):
+    def __init__(self, fixing_commit: Commit):
+        """
+        :fixing_commit: a commit to analyze
+        """
         self.__g = Git()
         self.__defective_scripts = set()    # set of ContentFile
         self.__unclassified_scripts = set() # set of ContentFile
         self.__load_defective_scripts()
         self.__load_unclassified_scripts()
+
+        self.fixing_commit = fixing_commit
 
     @property
     def defective_scripts(self):
@@ -44,7 +50,7 @@ class ScriptsMiner():
 
         json_obj = []
 
-        for content in self.__defective_scripts:
+        for content in copy.deepcopy(self.__defective_scripts):
             json_content = json.dumps(content, cls=ContentFileEncoder)
             json_obj.append(json.loads(json_content))
 
@@ -64,20 +70,20 @@ class ScriptsMiner():
 
         json_obj = []
 
-        for content in self.__unclassified_scripts:
+        for content in copy.deepcopy(self.__unclassified_scripts):
             json_content = json.dumps(content, cls=ContentFileEncoder)
             json_obj.append(json.loads(json_content))
 
         with open(os.path.join('data', 'unclassified_scripts.json'), 'w') as outfile:
             json.dump(json_obj, outfile)
 
-    def __set_defective_scripts(self, fixing_commit: Commit):
+    def __set_defective_scripts(self):
         
-        parent_commit = fixing_commit.parents[0]
-        repo = fixing_commit.repo
+        parent_commit = self.fixing_commit.parents[0]
+        repo = self.fixing_commit.repo
 
         
-        for file in fixing_commit.files:
+        for file in self.fixing_commit.files:
             
             filename = file.previous_filename if file.previous_filename else file.filename
             for content in self.__g.get_contents(repo, path=filename, ref=parent_commit):
@@ -88,31 +94,33 @@ class ScriptsMiner():
                     content_file.filename = content.path
                     content_file.sha = content.sha
                     content_file.decoded_content = self.__g.get_git_blob(repo, content_file.sha)
-                    
+                    content_file.release_starts_at = file.release_starts_at
+                    content_file.release_ends_at = file.release_ends_at
+
                     if content_file not in self.__defective_scripts:
                         self.__defective_scripts.add(content_file)
                         self.__save_defective_scripts()
                         yield (content_file, True) # True = defect-prone
 
                 except UnicodeDecodeError:
-                    print(f'Error decoding content for {commit.repo}/{content.path}/commit/{commit.sha}')
+                    print(f'Error decoding content for {self.fixing_commit.repo}/{filename}/commit/{self.fixing_commit.sha}')
                     pass
 
-    def __set_unclassified_scripts(self, commit: Commit):
+    def __set_unclassified_scripts(self):
         
-        for content in self.__g.get_contents(commit.repo, path='.', ref=commit.parents[0]):
+        for content in self.__g.get_contents(self.fixing_commit.repo, path='.', ref=self.fixing_commit.parents[0]):
             try:
                 content_file = ContentFile()
-                content_file.commit_sha = commit.parents[0]
-                content_file.repository = commit.repo
+                content_file.commit_sha = self.fixing_commit.parents[0]
+                content_file.repository = self.fixing_commit.repo
                 content_file.filename = content.path
                 content_file.sha = content.sha
-
+                
                 # filtering out non-Ansible files
                 if not content_file.is_ansible:
                     continue
 
-                content_file.decoded_content = self.__g.get_git_blob(commit.repo, content.sha)
+                content_file.decoded_content = self.__g.get_git_blob(self.fixing_commit.repo, content.sha)
 
                 if content_file not in self.__defective_scripts:
                     self.__unclassified_scripts.add(content_file)
@@ -120,23 +128,21 @@ class ScriptsMiner():
                     yield (content_file, False) # False = defect-free
                     
             except UnicodeDecodeError:
-                print(f'Error decoding content for {commit.repo}/{content.path}/commit/{commit.sha}')
+                print(f'Error decoding content for {self.fixing_commit.repo}/{content.path}/commit/{self.fixing_commit.sha}')
                 continue
 
-    def mine(self, fixing_commit: Commit):
+    def mine(self):
         """ 
         Analyze a commit, and extract defective and unclassifieid files \
         from the repository at that point in time.
-        
-        :commit: a commit to analyze
 
         :return: yield tuple (content: ContentFile, defective: bool)
         """
         try:
-            for script in self.__set_defective_scripts(fixing_commit):
+            for script in self.__set_defective_scripts():
                 yield script
             
-            for script in self.__set_unclassified_scripts(fixing_commit):
+            for script in self.__set_unclassified_scripts():
                 yield script
 
         except RateLimitExceededException:
@@ -146,3 +152,4 @@ class ScriptsMiner():
             t = (datetime.fromtimestamp(self.__g.rate_limiting_resettime) - datetime.now()).total_seconds() + 60
             print(f'Execution stopped. Quota will be reset in {round(t/60)} minutes')
             time.sleep(t)
+            self.__g = Git()

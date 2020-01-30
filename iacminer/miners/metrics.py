@@ -19,23 +19,19 @@ class MetricsMiner():
         self.__process_metrics = []
         self.__product_metrics = {}
 
-    def mine_process_metrics(self, from_commit: Commit=None, to_commit: Commit=None) -> list:
+    def mine_process_metrics(self, path_to_repo: str, from_commit_sha: str=None, to_commit: str=None) -> list:
         """
         Extract process metrics from a commit.
         Save the result in the instance and returns it.
         """
-        path_to_repo = f'https://github.com/{to_commit.repo}'
 
-        from_sha = from_commit.sha if from_commit else None
-        to_sha = to_commit.sha if to_commit else None
-        
-        commits_count = process_metrics.commits_count(path_to_repo, from_commit=from_sha, to_commit=to_sha)
-        contributors_count = process_metrics.contributors_count(path_to_repo, from_commit=from_sha, to_commit=to_sha)
-        highest_contributors_experience = process_metrics.highest_contributors_experience(path_to_repo, from_commit=from_sha, to_commit=to_sha)
-        #pm = process_metrics.history_complexity(path_to_repo, periods=[('some_commit sha', 'other_commit sha')])
-        hunks_count = process_metrics.hunks_count(path_to_repo, from_commit=to_sha, to_commit=to_sha)
-        median_hunks_count = process_metrics.hunks_count(path_to_repo, from_commit=from_sha, to_commit=to_sha)
-        lines_count = process_metrics.lines_count(path_to_repo, from_commit=from_sha, to_commit=to_sha)
+        commits_count = process_metrics.commits_count(path_to_repo, from_commit_sha, to_commit)
+        contributors_count = process_metrics.contributors_count(path_to_repo, from_commit_sha, to_commit)
+        highest_contributors_experience = process_metrics.highest_contributors_experience(path_to_repo, from_commit_sha, to_commit)
+        #history_complexity_single_commit = None #process_metrics.history_complexity(path_to_repo, periods=[(from_commit_sha, to_sha)])
+        hunks_count = process_metrics.hunks_count(path_to_repo, from_commit_sha, to_commit)
+        median_hunks_count = process_metrics.hunks_count(path_to_repo, from_commit_sha, to_commit)
+        lines_count = process_metrics.lines_count(path_to_repo, from_commit_sha, to_commit)
         
         self.__process_metrics = [
                 commits_count,
@@ -84,6 +80,8 @@ class MetricsMiner():
         metrics['file_sha'] = file.sha
         metrics['commit_sha'] = file.commit_sha
         metrics['repository'] = file.repository
+        metrics['release_starts_at'] = file.release_starts_at
+        metrics['release_ends_at'] = file.release_ends_at
         metrics['defective'] = 'yes' if defect_prone else 'no'
 
         # Saving process metrics

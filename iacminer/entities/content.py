@@ -25,6 +25,8 @@ class ContentFile():
         self.sha = ''
         self.filename = ''
         self.repository = ''
+        self.release_starts_at = ''
+        self.release_ends_at = ''
 
         if type(content) == dict:
             for k, v in content.items():

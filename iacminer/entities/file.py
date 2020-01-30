@@ -42,6 +42,8 @@ class File():
             self.raw_url = file.raw_url
             self.status = file.status
             self.patch = file.patch
+            self.release_starts_at = None
+            self.release_ends_at = None
 
     def __eq__(self, other):
         """Overrides the default implementation"""
