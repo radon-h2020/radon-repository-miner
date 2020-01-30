@@ -9,7 +9,7 @@ sys.path.append(path)
 
 from io import StringIO
 
-from iacminer.metrics.metrics import Metrics
+from iacminer.miners.metrics import MetricsMiner
 from iacminer.miners.commits import CommitsMiner
 from iacminer.miners.scripts import ScriptsMiner
 from iacminer.utils import load_repositories
@@ -18,12 +18,12 @@ def main():
     """
     repos = load_repositories()
 
-    miner = CommitsMiner()
+    commits_miner = CommitsMiner()
     for repo in repos:
-        fc = miner.mine_commits(repo)
+        fc = commits_miner.mine(repo)
         print(f'Found {len(fc)} fixing commits in {repo}')
     
-    fixing_commits = miner.fixing_commits
+    fixing_commits = commits_miner.fixing_commits
     """
    
     from iacminer.entities.commit import Commit
@@ -46,38 +46,21 @@ def main():
 
     print(f'Found {len(fixing_commits)} fixing commits in total.')
 
-    miner = ScriptsMiner()
+    scripts_miner = ScriptsMiner()
     for commit in fixing_commits:
-        defective, unclassified = miner.mine_scripts(commit)
-        print(f'Found {len(defective)} defective files and {len(unclassified)} unclassified files.')
-    
-    """
-    defective_scripts = miner.defective_scripts
-    unclassified_scripts = miner.unclassified_scripts
-    
-    from iacminer.entities.content import ContentFile
 
-    defective_scripts = set()
-    unclassified_scripts = set()
+        print(f'Extracting process metrics from {commit.sha}')
+        metrics_miner = MetricsMiner()
+        metrics_miner.mine_process_metrics(None, commit)
+        
+        for content, defect_prone in scripts_miner.mine(commit):
+            # TODO: Start thread for metric passing Compute process metrics in parent commit
+            print(f'Extracting product metrics from {commit.sha}/{content.filename}')
+            metrics_miner.mine_product_metrics(content)
+            print(f'Saving metris')
+            metrics_miner.save(content, defect_prone)
 
-    filepath = os.path.join('data','defective_scripts.json')
-    if os.path.isfile(filepath):
-        with open(filepath, 'r') as infile:
-            json_array = json.load(infile)
+        print(f'Found {len(scripts_miner.defective_scripts)} defective files and {len(scripts_miner.unclassified_scripts)} unclassified files so far.')
 
-            for json_obj in json_array:
-                defective_scripts.add(ContentFile(json_obj))
-
-    filepath = os.path.join('data','unclassified_scripts.json')
-    if os.path.isfile(filepath):
-        with open(filepath, 'r') as infile:
-            json_array = json.load(infile)
-
-            for json_obj in json_array:
-                unclassified_scripts.add(ContentFile(json_obj))
-
-    dataset = Metrics().calculate(defective_scripts, unclassified_scripts)
-    dataset.head(10)
-    """
 if __name__=='__main__':
     main()

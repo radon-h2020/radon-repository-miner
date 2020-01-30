@@ -1,4 +1,3 @@
-import github
 import json
 
 class ContentFileEncoder(json.JSONEncoder):
@@ -15,32 +14,25 @@ class ContentFileEncoder(json.JSONEncoder):
 
 class ContentFile():
 
-    def __init__(self, content: github.ContentFile=None):
+    def __init__(self, content: dict=None):
         """
-        Initialize a new content file from github.ContentFile.
+        Initialize a new content file.
 
         :file: a file to parse
         """
 
+        self.commit_sha = ''
+        self.sha = ''
+        self.filename = ''
+        self.repository = ''
+
         if type(content) == dict:
             for k, v in content.items():
                 setattr(self, k, v)
-        else:
-            self.commit_sha = None
-            
-            if content:
-                self.sha = content.sha
-                self.filename = content.path
-                self.repository = content.repository
-
-                if type(content.decoded_content) is str:
-                    self.decoded_content = content.decoded_content.decode()
-                else:
-                    self.decoded_content = str(content.decoded_content.decode('utf-8'))
-
+     
     @property
     def is_ansible(self):
-        return 'playbooks' in self.filename or 'meta' in self.filename or 'tasks' in self.filename or 'handlers' in self.filename or 'roles' in self.filename
+        return ('playbooks' in self.filename or 'meta' in self.filename or 'tasks' in self.filename or 'handlers' in self.filename or 'roles' in self.filename) and self.filename.endswith('.yml')
 
     def __eq__(self, other):
         """Overrides the default implementation"""

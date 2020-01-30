@@ -3,6 +3,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import base64
 import os
 import github
 
@@ -69,7 +70,18 @@ class Git():
         
         return commit
 
-    def get_contents(self, repo: str, path: str, ref: str=None) -> set:
+    def get_git_blob(self, repo: str, sha: str):
+        """
+        :repo: string
+        :sha: string
+        :rtype: string
+        """
+        repo = self.__github.get_repo(repo)
+        blob = repo.get_git_blob(sha)
+        decoded_content = base64.b64decode(blob.content).decode('utf-8')
+        return decoded_content
+        
+    def get_contents(self, repo: str, path: str, ref: str=None):
         """
         Analyze all the files of a repo, returning a generator of content files.
         
@@ -83,9 +95,13 @@ class Git():
         while len(dirs_stack):
             path = dirs_stack.pop()
             contents = repo.get_contents(path=path, ref=ref)
+            
+            if type(contents) is github.ContentFile.ContentFile:
+                yield contents
 
-            for content in contents:
-                if content.type == 'dir':
-                    dirs_stack.append(os.path.join(path, content.name))
-                else:
-                    yield content
+            elif type(contents) is list:
+                for content in contents:
+                    if content.type == 'dir':
+                        dirs_stack.append(os.path.join(path, content.name))
+                    else:
+                        yield content

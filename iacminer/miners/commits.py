@@ -131,7 +131,7 @@ class CommitsMiner():
         with open(os.path.join('data', 'fixing_commits.json'), 'w') as outfile:
             json.dump(list(self.__fixing_commits), outfile, cls=CommitEncoder)
 
-    def mine_commits(self, repo: str):
+    def mine(self, repo: str):
         """ 
         Analyze a repository, and extract fixing and unclassified commits.
         
