@@ -20,6 +20,22 @@ import shutil
 from pathlib import Path
 from pydriller.repository_mining import GitRepository
 
+def clone_repo(repo: str):
+     # Clone repo
+    author = repo.split('/')[0]
+    repo_name = repo.split('/')[1]
+    root_path = str(Path(f'repositories/{author}'))
+    repo_path = os.path.join(root_path, repo_name)
+    
+    delete_repo(root_path)
+    os.makedirs(root_path)
+
+    git.Git(root_path).clone(f'https://github.com/{repo}.git', branch='master')
+    git_repo = GitRepository(repo_path)
+    
+    return git_repo
+    
+
 def main():
 
     repos = load_repositories()
@@ -28,56 +44,41 @@ def main():
         print(f'====================== Mining repository: {repo}')
         
         # Clone repo
-        author = repo.split('/')[0]
-        repo_name = repo.split('/')[1]
-        root_path = str(Path(f'repositories/{author}'))
-        repo_path = os.path.join(root_path, repo_name)
-        
-        delete_repo(root_path)
-        os.makedirs(root_path)
-
-        git.Git(root_path).clone(f'https://github.com/{repo}.git', branch='master')
-        git_repo = GitRepository(repo_path)
-        
+        git_repo = clone_repo(repo)
         commits_miner = CommitsMiner(git_repo)
+        scripts_miner = ScriptsMiner(git_repo)
         
         metrics_miners = {}
 
         for commit in commits_miner.mine():
-            #print(f'========== Checkout to commit: {commit.hash}')
+            print(f'========== Checkout to commit: {commit.hash}')            
             
-            git_repo.checkout(commit.hash)
-
-            #print(f'Extracting process metrics.')
+            print(f'Extracting process metrics.')
             if commit.hash not in metrics_miners:
                 mm = MetricsMiner()
-                mm.mine_process_metrics(repo_path, commit.release[0], commit.release[1])
+                mm.mine_process_metrics(str(git_repo.path), commit.release[0], commit.release[1])
                 metrics_miners[commit.hash] = mm
 
             mm = metrics_miners[commit.hash]
-
-            # mine(buggy_commit)# => all files in buggy commits are defective. The others are not: use filters.is_ansible_file to get content that are ansible files
-            for filepath in commit.filenames:
-                # Script miner => find filepath at commit.hash
-                # Get file and label it defective.
-            # Get all other files from repo at that commit and label them 'defect-prone'
-
-                with open(os.path.join(repo_path, filepath), 'r') as f:
-                    content = f.read()
-                    #mm.mine_product_metrics(content)
-                    mm.save(filepath, defect_prone=True)
-            """
-            scripts_miner = ScriptsMiner(commit)
-
-            for content, defect_prone in scripts_miner.mine():
-                print(f'Extracting product metrics from file: {content.filename}')
-                mm.mine_product_metrics(content)
-                mm.save(content, defect_prone)
-
-            print(f'Found {len(scripts_miner.defective_scripts)} defective files and {len(scripts_miner.unclassified_scripts)} unclassified files so far.')
-            """
+            
+            for content in scripts_miner.mine(commit):
+                metadata = {
+                    'repo': repo,
+                    'commit': commit.hash,
+                    'filepath': content.filepath,
+                    'defective': 'yes' if content.defective else 'no',
+                    'release_starts_at': commit.release_starts_at,
+                    'release_ends_at': commit.release_ends_at,
+                    'commit_date': str(commit.date),
+                    'commit_timezone': str(commit.timezone)
+                } 
+                mm.mine_product_metrics(content.content)
+                mm.save(content.filepath, metadata)
 
         git_repo.clear()
+
+        author = repo.split('/')[0]
+        root_path = str(Path(f'repositories/{author}'))
         delete_repo(root_path)
 
 def delete_repo(path_to_repo: str):

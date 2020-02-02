@@ -9,8 +9,10 @@ import pydriller.metrics.process.metrics as process_metrics
 from pathlib import Path
 
 from ansiblemetrics.main import MetricExtractor, LoadingError
-from iacminer.entities.commit import Commit
+from iacminer.entities.commit import BuggyInducingCommit
 from iacminer.entities.content import ContentFile
+
+DESTINATION_PATH = os.path.join('data', 'metrics.csv')
 
 class MetricsMiner():
 
@@ -42,7 +44,6 @@ class MetricsMiner():
         
         return self.__process_metrics
     
-    #def mine_product_metrics(self, file: ContentFile) -> list:
     def mine_product_metrics(self, content: str) -> list:
         """
         Extract product metrics from a file.
@@ -50,7 +51,6 @@ class MetricsMiner():
         """
         # TODO: move exception handling outside? Or log instead of printing
         try:
-            #ansible_metrics = self.__ansible_metrics.run(StringIO(file.decoded_content))
             ansible_metrics = self.__ansible_metrics.run(StringIO(content))
 
             for item in ansible_metrics:    
@@ -70,21 +70,15 @@ class MetricsMiner():
             
         return self.__product_metrics
 
-    #def save(self, file: ContentFile, defect_prone: bool=False):
-    def save(self, filepath: str, defect_prone: bool=False):
-        #filepath = str(Path(file.filename))
+    def save(self, filepath:str, metadata:dict):
+        """
+        :filepath: str - the filepath for the process metrics
+        """
+        
         filepath = str(Path(filepath))
         
-        metrics = self.__product_metrics
-
-        # Storing metadata
-        #metrics['filepath'] = filepath
-        #metrics['file_sha'] = file.sha
-        #metrics['commit_sha'] = file.commit_sha
-        #metrics['repository'] = file.repository
-        #metrics['release_starts_at'] = file.release_starts_at
-        #metrics['release_ends_at'] = file.release_ends_at
-        metrics['defective'] = 'yes' if defect_prone else 'no'
+        metrics = metadata
+        metrics.update(self.__product_metrics)
 
         # Saving process metrics
         metrics['commits_count'] = self.__process_metrics[0].get(filepath, -1)
@@ -101,11 +95,11 @@ class MetricsMiner():
 
         dataset = pd.DataFrame()
         
-        if os.path.isfile(os.path.join('data', 'metrics.csv')):
-            with open(os.path.join('data', 'metrics.csv'), 'r') as in_file:
+        if os.path.isfile(DESTINATION_PATH):
+            with open(DESTINATION_PATH, 'r') as in_file:
                 dataset = pd.read_csv(in_file)
 
         dataset = dataset.append(metrics, ignore_index=True)
 
-        with open(os.path.join('data', 'metrics.csv'), 'w') as out:
+        with open(DESTINATION_PATH, 'w') as out:
             dataset.to_csv(out, mode='w', index=False)

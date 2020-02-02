@@ -15,8 +15,7 @@ from pydriller.repository_mining import GitRepository, RepositoryMining
 from pydriller.domain.commit import ModificationType
 
 from iacminer import filters
-from iacminer.entities.commit import BuggyInducingCommit, BuggyInducingCommitEncoder
-from iacminer.entities.file import File
+from iacminer.entities.commit import BuggyInducingCommit
 from iacminer.mygit import Git
 
 
@@ -36,37 +35,7 @@ class CommitsMiner():
         self.__releases = []
         self.__commits_closing_issues = set() # Set of commits sha closing issues
 
-        self.fixing_commits = set()
         self.buggy_inducing_commits = set()
-        #self.__fixing_commits = set()
-        #self.__load_fixing_commits()
-        
-    """
-    @property
-    def fixing_commits(self):
-        return self.__fixing_commits
-    
-    def __load_fixing_commits(self):
-        filepath = os.path.join('data','fixing_commits.json')
-        if os.path.isfile(filepath):
-            with open(filepath, 'r') as infile:
-                json_array = json.load(infile)
-
-                for json_obj in json_array:
-                    files = set()
-                    for file in json_obj['files']:
-                        files.add(File(file))
-                    
-                    commit = Commit(json_obj)
-                    commit.files = files
-                    self.__fixing_commits.add(commit)
-
-    def __save_fixing_commits(self):
-        to_save = copy.deepcopy(list(self.__fixing_commits))
-
-        with open(os.path.join('data', 'fixing_commits.json'), 'w') as outfile:
-            json.dump(to_save, outfile, cls=CommitEncoder)
-    """
 
     def __has_fix_in_message(self, message: str):
         """
@@ -140,15 +109,8 @@ class CommitsMiner():
             for modified_file in commit.modifications:
                 
                 # Filter out non Ansible files
-                if not filters.is_ansible_file(modified_file.new_path) and filters.is_ansible_file(modified_file.old_path):
+                if not filters.is_ansible_file(modified_file.new_path):
                     continue
-                
-                """
-                if modified_file.change_type == ModificationType.RENAME:
-                    # TODO: handle renamed_files
-                    renamed_files.setdefault(commit.hash, {}) \
-                                 .setdefault(modified_file.new_path, modified_file.old_path)
-                """
 
                 # Keep only files that have been modified
                 if modified_file.change_type != ModificationType.MODIFY:
@@ -156,11 +118,6 @@ class CommitsMiner():
 
                 if not is_fix and commit.hash not in self.__commits_closing_issues:
                     continue
-                
-                self.fixing_commits.add({
-                    'repo': self.repo_name,
-                    'commit_hash': commit.hash
-                })# TODO save somewhere
 
                 # Find buggy inducing commits
                 files = {}
@@ -170,24 +127,33 @@ class CommitsMiner():
                     for hash in commit_hashes:
                         files.setdefault(hash, set()).add(filepath)
 
-                for commit_hash, filenames in files.items():
+                for buggy_commit_hash, filenames in files.items():
                     bic = BuggyInducingCommit()
-                    bic.hash = commit_hash 
+                    bic.hash = buggy_commit_hash 
 
                     if bic not in self.buggy_inducing_commits:
                         bic.filepaths = filenames
-                        bic.date = date[commit_hash]['date']
-                        bic.timezone = date[commit_hash]['timezone']
+                        bic.date = date[buggy_commit_hash]['date']
+                        bic.timezone = date[buggy_commit_hash]['timezone']
                         bic.repo = self.repo_name
                         bic.release = [
-                            release.get(commit_hash, {}).get('starts_at', None),
-                            release.get(commit_hash, {}).get('ends_at', None)
+                            release.get(buggy_commit_hash, {}).get('starts_at', None),
+                            release.get(buggy_commit_hash, {}).get('ends_at', None)
                         ]
 
                         self.buggy_inducing_commits.add(bic)
                     else:
                         bic = next(iter(self.buggy_inducing_commits))
                         bic.filepaths = bic.filepaths.union(filenames)
+
+    def __handle_renamed_files(self):
+        for bic in self.buggy_inducing_commits:
+            for commit in RepositoryMining(self.repo_path, from_commit=bic.hash , reversed_order=True).traverse_commits():
+                for modified_file in commit.modifications:
+                    if modified_file.change_type == ModificationType.RENAME and modified_file.new_path in bic.filepaths:
+                        bic.filepaths.remove(modified_file.new_path)
+                        bic.filepaths.add(modified_file.old_path)
+
 
     def mine(self):
         """ 
@@ -200,9 +166,6 @@ class CommitsMiner():
         
         try:
             self.__set_commits_closing_issues()
-            self.__set_buggy_inducing_commits()
-            return self.buggy_inducing_commits 
-
         except github.RateLimitExceededException: # TO TEST
             print('API rate limit exceeded')
             
@@ -211,3 +174,9 @@ class CommitsMiner():
             print(f'Execution stopped. Quota will be reset in {round(t/60)} minutes')
             time.sleep(t)
             self.__g = Git()
+            self.__set_commits_closing_issues()
+
+        self.__set_buggy_inducing_commits()
+        self.__handle_renamed_files()
+        
+        return self.buggy_inducing_commits 
