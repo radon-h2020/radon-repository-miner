@@ -19,39 +19,39 @@ class MetricsMiner():
         self.__process_metrics = []
         self.__product_metrics = {}
 
-    def mine_process_metrics(self, path_to_repo: str, from_commit_sha: str=None, to_commit: str=None) -> list:
+    def mine_process_metrics(self, path_to_repo: str, from_commit: str=None, to_commit: str=None) -> list:
         """
         Extract process metrics from a commit.
         Save the result in the instance and returns it.
         """
 
-        commits_count = process_metrics.commits_count(path_to_repo, from_commit_sha, to_commit)
-        contributors_count = process_metrics.contributors_count(path_to_repo, from_commit_sha, to_commit)
-        highest_contributors_experience = process_metrics.highest_contributors_experience(path_to_repo, from_commit_sha, to_commit)
-        #history_complexity_single_commit = None #process_metrics.history_complexity(path_to_repo, periods=[(from_commit_sha, to_sha)])
-        hunks_count = process_metrics.hunks_count(path_to_repo, from_commit_sha, to_commit)
-        median_hunks_count = process_metrics.hunks_count(path_to_repo, from_commit_sha, to_commit)
-        lines_count = process_metrics.lines_count(path_to_repo, from_commit_sha, to_commit)
+        commits_count = process_metrics.commits_count(path_to_repo, from_commit, to_commit)
+        contributors_count = process_metrics.contributors_count(path_to_repo, from_commit, to_commit)
+        highest_contributors_experience = process_metrics.highest_contributors_experience(path_to_repo, from_commit, to_commit)
+        #history_complexity_single_commit = None #process_metrics.history_complexity(path_to_repo, periods=[(from_commit, to_sha)])
+        median_hunks_count = process_metrics.hunks_count(path_to_repo, from_commit, to_commit)
+        lines_count = process_metrics.lines_count(path_to_repo, from_commit, to_commit)
         
         self.__process_metrics = [
                 commits_count,
                 contributors_count,
                 highest_contributors_experience,
-                hunks_count,
                 median_hunks_count,
                 lines_count
             ]
         
         return self.__process_metrics
     
-    def mine_product_metrics(self, file: ContentFile) -> list:
+    #def mine_product_metrics(self, file: ContentFile) -> list:
+    def mine_product_metrics(self, content: str) -> list:
         """
         Extract product metrics from a file.
         Save the result in the instance and returns it.
         """
         # TODO: move exception handling outside? Or log instead of printing
         try:
-            ansible_metrics = self.__ansible_metrics.run(StringIO(file.decoded_content))
+            #ansible_metrics = self.__ansible_metrics.run(StringIO(file.decoded_content))
+            ansible_metrics = self.__ansible_metrics.run(StringIO(content))
 
             for item in ansible_metrics:    
                 if ansible_metrics[item]['count'] is None:
@@ -70,34 +70,35 @@ class MetricsMiner():
             
         return self.__product_metrics
 
-    def save(self, file: ContentFile, defect_prone: bool=False):
-        filepath = str(Path(file.filename))
+    #def save(self, file: ContentFile, defect_prone: bool=False):
+    def save(self, filepath: str, defect_prone: bool=False):
+        #filepath = str(Path(file.filename))
+        filepath = str(Path(filepath))
         
         metrics = self.__product_metrics
 
         # Storing metadata
-        metrics['filepath'] = filepath
-        metrics['file_sha'] = file.sha
-        metrics['commit_sha'] = file.commit_sha
-        metrics['repository'] = file.repository
-        metrics['release_starts_at'] = file.release_starts_at
-        metrics['release_ends_at'] = file.release_ends_at
+        #metrics['filepath'] = filepath
+        #metrics['file_sha'] = file.sha
+        #metrics['commit_sha'] = file.commit_sha
+        #metrics['repository'] = file.repository
+        #metrics['release_starts_at'] = file.release_starts_at
+        #metrics['release_ends_at'] = file.release_ends_at
         metrics['defective'] = 'yes' if defect_prone else 'no'
 
         # Saving process metrics
-        metrics['commits_count'] = self.__process_metrics[0].get(filepath, 0)
-        metrics['contributors_count'] = self.__process_metrics[1].get(filepath, {}).get('contributors_count', 0)
-        metrics['minor_contributors_count'] = self.__process_metrics[1].get(filepath, {}).get('minor_contributors_count', 0)
-        metrics['highest_experience'] = self.__process_metrics[2].get(filepath, 0)
-        metrics['commit_hunks_count'] = self.__process_metrics[3].get(filepath, 0)
-        metrics['median_hunks_count'] = self.__process_metrics[4].get(filepath, 0)
-        metrics['added_loc'] = self.__process_metrics[5].get(filepath, {}).get('added', 0)
-        metrics['removed_loc'] = self.__process_metrics[5].get(filepath, {}).get('removed', 0)
-        metrics['norm_added_loc'] = self.__process_metrics[5].get(filepath, {}).get('norm_added', 0)
-        metrics['norm_removed_loc'] = self.__process_metrics[5].get(filepath, {}).get('norm_removed', 0)
-        metrics['total_added_loc'] = self.__process_metrics[5].get(filepath, {}).get('total_added', 0)
-        metrics['total_removed_loc'] = self.__process_metrics[5].get(filepath, {}).get('total_removed', 0)
-        
+        metrics['commits_count'] = self.__process_metrics[0].get(filepath, -1)
+        metrics['contributors_count'] = self.__process_metrics[1].get(filepath, {}).get('contributors_count', -1)
+        metrics['minor_contributors_count'] = self.__process_metrics[1].get(filepath, {}).get('minor_contributors_count', -1)
+        metrics['highest_experience'] = self.__process_metrics[2].get(filepath, -1)
+        metrics['median_hunks_count'] = self.__process_metrics[3].get(filepath, -1)
+        #metrics['added_loc'] = self.__process_metrics[4].get(filepath, {}).get('added', -1)
+        #metrics['removed_loc'] = self.__process_metrics[4].get(filepath, {}).get('removed', -1)
+        #metrics['norm_added_loc'] = self.__process_metrics[4].get(filepath, {}).get('norm_added', -1)
+        #metrics['norm_removed_loc'] = self.__process_metrics[4].get(filepath, {}).get('norm_removed', -1)
+        #metrics['total_added_loc'] = self.__process_metrics[4].get(filepath, {}).get('total_added', -1)
+        #metrics['total_removed_loc'] = self.__process_metrics[4].get(filepath, {}).get('total_removed', -1)
+
         dataset = pd.DataFrame()
         
         if os.path.isfile(os.path.join('data', 'metrics.csv')):

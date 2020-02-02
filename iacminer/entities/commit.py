@@ -5,10 +5,10 @@ from enum import Enum
 from requests.exceptions import ReadTimeout
 from iacminer.entities.file import File, FileEncoder
 
-class CommitEncoder(json.JSONEncoder):
+class BuggyInducingCommitEncoder(json.JSONEncoder):
 
     def default(self, obj):
-        if isinstance(obj, Commit):
+        if isinstance(obj, BuggyInducingCommit):
             json_files = json.dumps(list(obj.files), cls=FileEncoder)
             json_commit = obj.__dict__
             json_commit['files'] = json.loads(json_files)
@@ -18,107 +18,40 @@ class CommitEncoder(json.JSONEncoder):
         elif isinstance(obj, list):
             json_obj = []
             for item in obj:
-                json_obj.append(json.dumps(item, cls=CommitEncoder))
+                json_obj.append(json.dumps(item, cls=BuggyInducingCommitEncoder))
 
             return json_obj
 
-        return super(CommitEncoder, self).default(obj)
+        return super(BuggyInducingCommitEncoder, self).default(obj)
 
-class Filter(Enum):
-    ANSIBLE = 1
-
-class Commit():
+class BuggyInducingCommit():
    
-    def __init__(self, commit: github.Commit, filter: Filter = None):
+    def __init__(self, commit: dict=None):
         """
         Initialize a new commit from github.Commit and filters out the file for the \
         specified filter.
-
         :commit: a commit to parse
-        :filter: a filter to filter out undesired files. \
-            Can be None (default no filters), ANSIBLE (keeps only Ansible files).
-
         """
 
         if type(commit) == dict:
             for k, v in commit.items():
                 setattr(self, k, v)
         else:
+            self.from_fix = None  # Hash of the fixing commit
+            self.hash = None
             self.repo = None
-            self.__release_starts_at = None
-            self.__release_ends_at = None
-
-            self.author_id = commit.author.node_id if commit.author else None
-            self.author_name = commit.commit.author.name if commit.commit.author else None
-            self.committer_id = commit.committer.node_id if commit.committer else None
-            self.committer_name = commit.commit.committer.name if commit.commit.committer else None
-            self.committer_email = commit.commit.committer.email if commit.commit.committer else None
-            self.message = commit.commit.message
-            self.sha = commit.sha
-            self.url = commit.url
-            
-            self.parents = []
-            for c in commit.parents:
-                self.parents.append(c.sha)
-
-            self.files = set()
-            try:
-                for file in commit.files:
-                    if file.changes == 0:
-                        continue
-                    
-                    if file.status == 'added' or file.status == 'removed': # Skip files created or removed at commit time
-                        continue
-
-                    if filter == Filter.ANSIBLE and not self.__is_ansible_file(file.filename):
-                        continue
-                    
-                    self.files.add(File(file))
-
-            except ReadTimeout:
-                print('Read timed out.')
-                pass
-                
-    
-    @property
-    def release_start_at(self):
-        return self.__release_starts_at
-
-    @release_start_at.setter
-    def release_start_at(self, sha=None):
-        self.__release_starts_at = sha
-        for file in self.files:
-            file.release_starts_at = sha
-
-    @property
-    def release_ends_at(self):
-        return self.__release_ends_at
-
-    @release_ends_at.setter
-    def release_ends_at(self, sha=None):
-        self.__release_ends_at = sha
-        for file in self.files:
-            file.release_ends_at = sha
-
-    def __is_ansible_file(self, filepath: str) -> bool:
-        """ 
-        Return True if the file is supposed to be an Ansible file, False otherwise
-
-        :filepath: the path of the file to analyze
-
-        :return: bool True if filepath is of an Ansible file; False otherwise
-        """
-        return ('playbooks' in filepath or 'meta' in filepath or 'tasks' in filepath or 'handlers' in filepath or 'roles' in filepath) and filepath.endswith('.yml')
+            self.filepaths = set()
+            self.release = [] # range of commit: start release, end release
+            self.repo = None
+            self.date = None
+            self.timezone = None
 
     def __eq__(self, other):
         """Overrides the default implementation"""
-        if isinstance(other, Commit):
-            return self.sha == other.sha
+        if isinstance(other, BuggyInducingCommit):
+            return self.hash == other.hash
                    
         return False
 
     def __hash__(self):
-        return hash(self.sha)
-
-    def __str__(self):
-        return str(self.__dict__)
+        return hash(self.hash)
