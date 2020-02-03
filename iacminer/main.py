@@ -41,6 +41,7 @@ def main():
     repos = load_repositories()
     
     for repo in repos:
+
         print(f'====================== Mining repository: {repo}')
         
         # Clone repo
@@ -56,11 +57,11 @@ def main():
             print(f'Extracting process metrics.')
             if commit.hash not in metrics_miners:
                 mm = MetricsMiner()
-                mm.mine_process_metrics(str(git_repo.path), commit.release[0], commit.release[1])
+                mm.mine_process_metrics(str(git_repo.path), commit.hash, commit.release[0], commit.release[1])
                 metrics_miners[commit.hash] = mm
 
             mm = metrics_miners[commit.hash]
-            
+
             for content in scripts_miner.mine(commit):
                 metadata = {
                     'repo': repo,
@@ -69,9 +70,9 @@ def main():
                     'defective': 'yes' if content.defective else 'no',
                     'release_starts_at': commit.release_starts_at,
                     'release_ends_at': commit.release_ends_at,
-                    'commit_date': str(commit.date),
-                    'commit_timezone': str(commit.timezone)
+                    'commit_date': str(commit.date)
                 } 
+                
                 mm.mine_product_metrics(content.content)
                 mm.save(content.filepath, metadata)
 

@@ -4,7 +4,12 @@ import yaml
 
 from io import StringIO
 
-import pydriller.metrics.process.metrics as process_metrics
+from pydriller.metrics.process.commits_count import CommitsCount
+from pydriller.metrics.process.contributors_count import ContributorsCount
+from pydriller.metrics.process.contributors_experience import ContributorsExperience
+from pydriller.metrics.process.history_complexity import HistoryComplexity
+from pydriller.metrics.process.hunks_count import HunksCount
+from pydriller.metrics.process.lines_count import LinesCount
 
 from pathlib import Path
 
@@ -21,25 +26,32 @@ class MetricsMiner():
         self.__process_metrics = []
         self.__product_metrics = {}
 
-    def mine_process_metrics(self, path_to_repo: str, from_commit: str=None, to_commit: str=None) -> list:
+    def mine_process_metrics(self, path_to_repo: str, commit_hash: str, from_commit: str=None, to_commit: str=None) -> list:
         """
         Extract process metrics from a commit.
         Save the result in the instance and returns it.
+
+        :commit_hash: str - hash of buggy inducing commit
+        :from_commit: str - hash of release start
+        :to_commit: str - hash of release end
         """
 
-        commits_count = process_metrics.commits_count(path_to_repo, from_commit, to_commit)
-        contributors_count = process_metrics.contributors_count(path_to_repo, from_commit, to_commit)
-        highest_contributors_experience = process_metrics.highest_contributors_experience(path_to_repo, from_commit, to_commit)
-        #history_complexity_single_commit = None #process_metrics.history_complexity(path_to_repo, periods=[(from_commit, to_sha)])
-        median_hunks_count = process_metrics.hunks_count(path_to_repo, from_commit, to_commit)
-        lines_count = process_metrics.lines_count(path_to_repo, from_commit, to_commit)
-        
+        commits_count = CommitsCount(path_to_repo, from_commit, to_commit).count()
+        contributors_count = ContributorsCount(path_to_repo, from_commit, to_commit).count()
+        highest_contributors_experience = ContributorsExperience(path_to_repo, from_commit, to_commit).count()
+        history_complexity = HistoryComplexity(path_to_repo, from_commit, to_commit).count()
+        median_hunks_count = HunksCount(path_to_repo, from_commit, to_commit).count()
+        lines_count = LinesCount(path_to_repo, from_commit, to_commit).count()
+        lines_count_in_commit = LinesCount(path_to_repo, commit_hash, commit_hash).count()
+
         self.__process_metrics = [
                 commits_count,
                 contributors_count,
                 highest_contributors_experience,
+                history_complexity,
                 median_hunks_count,
-                lines_count
+                lines_count,
+                lines_count_in_commit
             ]
         
         return self.__process_metrics
@@ -81,17 +93,22 @@ class MetricsMiner():
         metrics.update(self.__product_metrics)
 
         # Saving process metrics
-        metrics['commits_count'] = self.__process_metrics[0].get(filepath, -1)
-        metrics['contributors_count'] = self.__process_metrics[1].get(filepath, {}).get('contributors_count', -1)
-        metrics['minor_contributors_count'] = self.__process_metrics[1].get(filepath, {}).get('minor_contributors_count', -1)
-        metrics['highest_experience'] = self.__process_metrics[2].get(filepath, -1)
-        metrics['median_hunks_count'] = self.__process_metrics[3].get(filepath, -1)
-        #metrics['added_loc'] = self.__process_metrics[4].get(filepath, {}).get('added', -1)
-        #metrics['removed_loc'] = self.__process_metrics[4].get(filepath, {}).get('removed', -1)
-        #metrics['norm_added_loc'] = self.__process_metrics[4].get(filepath, {}).get('norm_added', -1)
-        #metrics['norm_removed_loc'] = self.__process_metrics[4].get(filepath, {}).get('norm_removed', -1)
-        #metrics['total_added_loc'] = self.__process_metrics[4].get(filepath, {}).get('total_added', -1)
-        #metrics['total_removed_loc'] = self.__process_metrics[4].get(filepath, {}).get('total_removed', -1)
+        metrics['commits_count'] = self.__process_metrics[0].get(filepath, None)
+        metrics['contributors_count'] = self.__process_metrics[1].get(filepath, {}).get('contributors_count', None)
+        metrics['minor_contributors_count'] = self.__process_metrics[1].get(filepath, {}).get('minor_contributors_count', None)
+        metrics['highest_experience'] = self.__process_metrics[2].get(filepath, None)
+        metrics['highest_experience'] = self.__process_metrics[3].get(filepath, None)
+        metrics['median_hunks_count'] = self.__process_metrics[4].get(filepath, None)
+        metrics['total_added_loc'] = self.__process_metrics[5].get(filepath, {}).get('added', None)
+        metrics['total_removed_loc'] = self.__process_metrics[5].get(filepath, {}).get('removed', None)
+        metrics['norm_added_loc'] = self.__process_metrics[6].get(filepath, {}).get('added', None)
+        metrics['norm_removed_loc'] = self.__process_metrics[6].get(filepath, {}).get('removed', None)
+
+        if metrics['total_added_loc'] and metrics['norm_added_loc']:
+            metrics['norm_added_loc'] /= metrics['total_added_loc']
+        
+        if metrics['total_removed_loc'] and metrics['norm_removed_loc']:
+            metrics['norm_removed_loc'] /= metrics['total_removed_loc']
 
         dataset = pd.DataFrame()
         

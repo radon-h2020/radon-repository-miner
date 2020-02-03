@@ -33,15 +33,18 @@ class ScriptsMiner():
         :return: the set of the files
         """
         _all = set()
-        for path, _, files in os.walk(str(self.repo.path)):
-            if '.git' in path:
+
+        for root, _, filenames in os.walk(str(self.repo.path)):
+            if '.git' in root:
                 continue
-            for name in files:
+            for filename in filenames: 
+                path = os.path.join(root, filename)
                 path = path.replace(str(self.repo.path), '')
-                path = os.path.join(path, name)
-                if path[0] == '/':
-                    path = path[1:] 
+                if path.startswith('/'):
+                    path = path[1:]
+
                 _all.add(path)
+
         return _all
 
     def mine(self, bic: BuggyInducingCommit):
@@ -71,3 +74,5 @@ class ScriptsMiner():
             content = self.get_file_content(filepath)
             content.defective = False
             yield content
+
+        self.repo.reset()

@@ -76,13 +76,10 @@ class CommitsMiner():
         release = {}
         date = {}
         is_first_release_commit = True
-        #renamed_files = {}
 
         for commit in RepositoryMining(self.repo_path, only_in_branch='master').traverse_commits():
-            date[commit.hash] = {
-                'date': commit.committer_date,
-                'timezone': commit.committer_timezone
-            }
+            
+            date[commit.hash] = {'date': commit.committer_date}
 
             # Handle release period information
             if is_first_release_commit:
@@ -134,7 +131,6 @@ class CommitsMiner():
                     if bic not in self.buggy_inducing_commits:
                         bic.filepaths = filenames
                         bic.date = date[buggy_commit_hash]['date']
-                        bic.timezone = date[buggy_commit_hash]['timezone']
                         bic.repo = self.repo_name
                         bic.release = [
                             release.get(buggy_commit_hash, {}).get('starts_at', None),
@@ -148,13 +144,18 @@ class CommitsMiner():
 
     def __handle_renamed_files(self):
         for bic in self.buggy_inducing_commits:
-            for commit in RepositoryMining(self.repo_path, from_commit=bic.hash , reversed_order=True).traverse_commits():
+            for commit in RepositoryMining(self.repo_path, from_commit=bic.hash, reversed_order=True).traverse_commits():
+                if commit.hash == bic.hash:
+                    break
+
                 for modified_file in commit.modifications:
-                    if modified_file.change_type == ModificationType.RENAME and modified_file.new_path in bic.filepaths:
-                        bic.filepaths.remove(modified_file.new_path)
+                    if modified_file.new_path not in bic.filepaths and modified_file.old_path not in bic.filepaths:
+                        continue
+
+                    if modified_file.change_type == ModificationType.RENAME:
+                        bic.filepaths.discard(modified_file.new_path)
                         bic.filepaths.add(modified_file.old_path)
-
-
+               
     def mine(self):
         """ 
         Analyze a repository, yielding buggy inducing commits.
