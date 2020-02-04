@@ -26,7 +26,7 @@ class ScriptsMiner():
 
             return content
 
-    def files(self):
+    def all_files(self):
         """
         Obtain the list of the files (excluding .git directory).
 
@@ -57,15 +57,21 @@ class ScriptsMiner():
         :return: yield tuple (content: str, defective: bool)
         """
         
-        # Checkout to bic.hash to retrieve file contents
-        self.repo.checkout(bic.hash)
-        defect_prone_files = bic.filepaths
-        unclassified_files = self.files() - bic.filepaths
+        all_files = self.all_files()
+        defect_prone_files = bic.release_filepaths
+        unclassified_files = all_files - bic.release_filepaths
         
+        yield_unclassified = False
+
         for filepath in defect_prone_files:
-            content = self.get_file_content(filepath)
-            content.defective = True
-            yield content
+            if filepath in all_files:
+                yield_unclassified = True
+                content = self.get_file_content(filepath)
+                content.defective = True
+                yield content
+
+        if not yield_unclassified:
+            return
 
         for filepath in unclassified_files:
             if not filters.is_ansible_file(filepath):
@@ -74,5 +80,3 @@ class ScriptsMiner():
             content = self.get_file_content(filepath)
             content.defective = False
             yield content
-
-        self.repo.reset()

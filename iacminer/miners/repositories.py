@@ -10,6 +10,9 @@ import re
 from datetime import datetime, timedelta
 
 headers = {"Authorization": "token b603dd89b36fe882419ad825ddf72762a564dff0"}
+
+# ...
+
 query = """
 {
     search(query: "is:public stars:>10 mirror:false archived:false created:DATE_FROM..DATE_TO", type: REPOSITORY, first: 50 <after>) {
@@ -130,18 +133,28 @@ if __name__ == '__main__':
                 node = node.get('node', {})
 
                 has_issues_enabled = node.get("hasIssuesEnabled", True)
+                has_issues = node.get('issues', {}).get('totalCount', 0) > 0 
+                has_releases = node.get('releases', {}).get('totalCount', 0) > 0 
                 is_archived = node.get("isArchived", False)
                 is_disabled = node.get("isDisabled", False)
                 is_mirror = node.get("isMirror", False)
-                
 
-                if not has_issues_enabled or is_archived or is_disabled or is_mirror:
+                #pushedAt = dateutils.parse(node.get('pushedAt'))
+                #is_inactive = pushedAt < YYYY-MM-DD?? 
+                
+                #if is_inactive:
+                #    continue
+
+                if not has_issues_enabled:
                     continue
                 
-                if node.get('releases', {}).get('totalCount', 0) == 0:
+                if is_archived or is_disabled or is_mirror:
                     continue
 
-                if node.get('issues', {}).get('totalCount', 0) == 0:
+                if not has_issues:
+                    continue
+
+                if not has_releases:
                     continue
 
                 object = node.get('object')

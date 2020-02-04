@@ -1,5 +1,7 @@
 pandas==0.24.2    
 python-dotenv==0.10.5
 PyDriller==1.10.1
-PyGithub==1.44.1
+#PyGithub==1.44.1
+PyYAML==5.1
+GitPython==3.0.5
 PyYAML==5.1

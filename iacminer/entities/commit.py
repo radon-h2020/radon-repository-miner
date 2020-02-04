@@ -7,8 +7,10 @@ class BuggyInducingCommit():
 
         self.hash = None
         self.repo = None
-        self.filepaths = set()
+        self.filepaths = set() # are the names of the fixed files in buggy inducing commits
+        self.release_filepaths = set()  # are the names of the fixed files in the release commit. 
         self.release = [] # range of commit: start release, end release
+        self.release_date = None
         self.repo = None
         self.date = None
 

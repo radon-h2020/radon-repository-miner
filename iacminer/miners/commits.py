@@ -16,7 +16,6 @@ from pydriller.domain.commit import ModificationType
 
 from iacminer import filters
 from iacminer.entities.commit import BuggyInducingCommit
-from iacminer.mygit import Git
 
 
 class CommitsMiner():
@@ -31,11 +30,11 @@ class CommitsMiner():
         self.repo_name = f'{owner_repo[0]}/{owner_repo[1]}'
         self.repo_path = str(git_repo.path)
 
-        self.__g = Git()
         self.__releases = []
+        self.__release_dates = {}
         self.__commits_closing_issues = set() # Set of commits sha closing issues
 
-        self.buggy_inducing_commits = set()
+        self.buggy_inducing_commits = list()
 
     def __has_fix_in_message(self, message: str):
         """
@@ -44,30 +43,6 @@ class CommitsMiner():
         fix = re.match(r'fix(e(d|s))?\s+.*\(?#\d+\)?', message.lower())
         return fix is not None
 
-    def __set_commits_closing_issues(self):
-        """ 
-        Analyze a repository, and set the commits that fix some issues \
-        by looking at the commit that explicitly closes or fixes those issues.
-        """
-
-        for issue in self.__g.get_issues(self.repo_name):
-            
-            if not issue:
-                continue
-            
-            try:
-                issue_events = issue.get_events()
-                if issue_events is None or issue_events.totalCount == 0:
-                    return None
-                
-                for e in issue_events: 
-                    if e.event.lower() == 'closed' and e.commit_id:
-                        self.__commits_closing_issues.add(e.commit_id)
-
-            except ReadTimeout:
-                # TODO save issue for later
-                print('Read timed out.')                
-   
     def __set_buggy_inducing_commits(self):
         """
         Analyze a repository, and return the buggy inducing commits.
@@ -113,7 +88,7 @@ class CommitsMiner():
                 if modified_file.change_type != ModificationType.MODIFY:
                     continue
 
-                if not is_fix and commit.hash not in self.__commits_closing_issues:
+                if not is_fix:
                     continue
 
                 # Find buggy inducing commits
@@ -136,26 +111,46 @@ class CommitsMiner():
                             release.get(buggy_commit_hash, {}).get('starts_at', None),
                             release.get(buggy_commit_hash, {}).get('ends_at', None)
                         ]
+                        bic.release_date = self.__release_dates.get(bic.release_ends_at, None)
 
-                        self.buggy_inducing_commits.add(bic)
+                        if not bic.release_date:
+                            continue
+                        
+                        self.buggy_inducing_commits.append(bic)
                     else:
-                        bic = next(iter(self.buggy_inducing_commits))
+                        idx = self.buggy_inducing_commits.index(bic)
+                        bic = self.buggy_inducing_commits[idx]
                         bic.filepaths = bic.filepaths.union(filenames)
 
     def __handle_renamed_files(self):
         for bic in self.buggy_inducing_commits:
-            for commit in RepositoryMining(self.repo_path, from_commit=bic.hash, reversed_order=True).traverse_commits():
+
+            # Handle renaming from fix commit to buggy inducing commit
+            for commit in RepositoryMining(self.repo_path, from_commit=bic.hash, reversed_order=True, only_in_branch='master').traverse_commits():
+                
                 if commit.hash == bic.hash:
                     break
 
                 for modified_file in commit.modifications:
-                    if modified_file.new_path not in bic.filepaths and modified_file.old_path not in bic.filepaths:
-                        continue
-
-                    if modified_file.change_type == ModificationType.RENAME:
-                        bic.filepaths.discard(modified_file.new_path)
+                    if modified_file.change_type == ModificationType.RENAME and modified_file.new_path in bic.filepaths:
+                        bic.filepaths.remove(modified_file.new_path)
                         bic.filepaths.add(modified_file.old_path)
-               
+
+            # Handle renaming from buggy inducing commit to release commit
+            bic.release_filepaths = bic.filepaths
+
+            for commit in RepositoryMining(self.repo_path, from_commit=bic.hash, to_commit=bic.release_ends_at, only_in_branch='master').traverse_commits():
+                
+                for modified_file in commit.modifications:
+                    if modified_file.change_type == ModificationType.RENAME and modified_file.old_path in bic.release_filepaths:
+                        bic.release_filepaths.remove(modified_file.old_path)
+                        bic.release_filepaths.add(modified_file.new_path)
+                    elif modified_file.change_type == ModificationType.DELETE and modified_file.old_path in bic.release_filepaths:
+                        bic.release_filepaths.remove(modified_file.old_path)
+                
+                if commit.hash == bic.release_ends_at:
+                    break
+    
     def mine(self):
         """ 
         Analyze a repository, yielding buggy inducing commits.
@@ -164,18 +159,7 @@ class CommitsMiner():
         # Get releases for repository        
         for commit in RepositoryMining(self.repo_path, only_releases=True).traverse_commits():
             self.__releases.append(commit.hash)
-        
-        try:
-            self.__set_commits_closing_issues()
-        except github.RateLimitExceededException: # TO TEST
-            print('API rate limit exceeded')
-            
-            # Wait self.__g.rate_limiting_resettime()
-            t = (datetime.fromtimestamp(self.__g.rate_limiting_resettime) - datetime.now()).total_seconds() + 10
-            print(f'Execution stopped. Quota will be reset in {round(t/60)} minutes')
-            time.sleep(t)
-            self.__g = Git()
-            self.__set_commits_closing_issues()
+            self.__release_dates[commit.hash] = commit.committer_date
 
         self.__set_buggy_inducing_commits()
         self.__handle_renamed_files()
