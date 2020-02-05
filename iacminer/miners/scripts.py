@@ -7,7 +7,7 @@ from pydriller.repository_mining import GitRepository
 
 from iacminer import filters
 from iacminer.entities.content import ContentFile
-from iacminer.entities.commit import BuggyInducingCommit
+from iacminer.entities.release import Release
 
 class ScriptsMiner():
 
@@ -47,19 +47,20 @@ class ScriptsMiner():
 
         return _all
 
-    def mine(self, bic: BuggyInducingCommit):
+    #def mine(self, bic: BuggyInducingCommit):
+    def mine(self, release: Release):
         """ 
         Extract the content of defect-prone and unclassified files \
-        from the repository at that point in time (i.e. bic.hash).
+        from the repository at that point in time (i.e. release.end).
 
-        :bic: a buggy inducing commit to analyze
+        :release: a release to analyze
 
         :return: yield tuple (content: str, defective: bool)
         """
         
         all_files = self.all_files()
-        defect_prone_files = bic.release_filepaths
-        unclassified_files = all_files - bic.release_filepaths
+        defect_prone_files = release.defective_filepaths
+        unclassified_files = all_files - defect_prone_files
         
         yield_unclassified = False
 

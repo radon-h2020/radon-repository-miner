@@ -9,8 +9,9 @@ sys.path.append(path)
 
 from io import StringIO
 
-from iacminer.miners.metrics import MetricsMiner
+from iacminer.entities.release import Release
 from iacminer.miners.commits import CommitsMiner
+from iacminer.miners.metrics import MetricsMiner
 from iacminer.miners.scripts import ScriptsMiner
 from iacminer.utils import load_repositories
 
@@ -21,7 +22,7 @@ from pathlib import Path
 from pydriller.repository_mining import GitRepository
 
 
-DESTINATION_PATH = os.path.join('data', 'metrics.csv')
+DESTINATION_PATH = os.path.join('data', 'metrics_new.csv')
 
 
 def clone_repo(repo: str):
@@ -54,39 +55,48 @@ def main():
         scripts_miner = ScriptsMiner(git_repo)
         metrics_miner = MetricsMiner()
         process_metrics = {}
-        
-        for commit in commits_miner.mine():
+
+        buggy_inducing_commits = commits_miner.mine()
+        # TODO: save buggy inducing commits to json
+
+        releases = []
+
+        for commit in buggy_inducing_commits:
+            r = Release(commit.release_starts_at, commit.release_ends_at)
+            r.defective_filepaths = commit.release_filepaths
+            r.repo = commit.repo
+            r.date = str(commit.release_date)
+            r.buggy_inducing_commits.add(commit)
+            
+            if r not in releases:
+                releases.append(r)
+            else:
+                idx = releases.index(r)
+                releases[idx].defective_filepaths.union(r.defective_filepaths)
+                releases[idx].buggy_inducing_commits.add(commit)
+
+        for release in releases:
  
-            if not commit.release_filepaths:
+            if not release.defective_filepaths:
                 continue
+          
+            print(f'Analyzing release: [{release.start}, {release.end}]')
             
-            release_commit = commit.release_ends_at
-            
-            if release_commit not in process_metrics:
-                pms = metrics_miner.mine_process_metrics(str(git_repo.path), commit.hash, commit.release_starts_at, commit.release_ends_at)
-                process_metrics[release_commit] = pms
+            process_metrics = metrics_miner.mine_process_metrics(str(git_repo.path), release.start, release.end)
+            git_repo.checkout(release.end)
 
-            print()
-            print(f'Buggy inducing commit hash: {commit.hash}')
-            print(f'Checkout to commit {commit.release_ends_at}')
-
-            git_repo.checkout(commit.release_ends_at)
-
-            print(f'Extracting product metrics for files at release {commit.release_ends_at}')
-            for content in scripts_miner.mine(commit):
+            for content in scripts_miner.mine(release):
                 metadata = {
-                    'repo': repo,
-                    'commit': commit.hash,
-                    'commit_date': str(commit.date),
+                    'repo': release.repo,
+                    'release_start': release.start,
+                    'release_end': release.end,
+                    'release_date': release.date,
                     'filepath': content.filepath,
-                    'defective': 'yes' if content.defective else 'no',
-                    'release_starts_at': commit.release_starts_at,
-                    'release_ends_at': commit.release_ends_at,
-                    'release_date': str(commit.release_date)
-                } 
-                
+                    'defective': 'yes' if content.defective else 'no'
+                }
+
                 product_metrics = metrics_miner.mine_product_metrics(content.content)
-                save(content.filepath, metadata, process_metrics[release_commit], product_metrics)
+                save(content.filepath, metadata, process_metrics, product_metrics)
 
             git_repo.reset()
 
@@ -130,16 +140,16 @@ def save(filepath:str, metadata:dict, process_metrics:dict, product_metrics:dict
         metrics['median_hunks_count'] = process_metrics[4].get(filepath, 0)
         metrics['total_added_loc'] = process_metrics[5].get(filepath, {}).get('added', 0)
         metrics['total_removed_loc'] = process_metrics[5].get(filepath, {}).get('removed', 0)
-        metrics['norm_added_loc'] = process_metrics[6].get(filepath, {}).get('added', 0)
-        metrics['norm_removed_loc'] = process_metrics[6].get(filepath, {}).get('removed', 0)
+        #metrics['norm_added_loc'] = process_metrics[6].get(filepath, {}).get('added', 0)
+        #metrics['norm_removed_loc'] = process_metrics[6].get(filepath, {}).get('removed', 0)
 
-        if metrics['total_added_loc'] and metrics['norm_added_loc']:
-            metrics['norm_added_loc'] /= metrics['total_added_loc']
-            metrics['norm_added_loc'] = round(100 * metrics['norm_added_loc'], 2)
+        #if metrics['total_added_loc'] and metrics['norm_added_loc']:
+        #    metrics['norm_added_loc'] /= metrics['total_added_loc']
+        #    metrics['norm_added_loc'] = round(100 * metrics['norm_added_loc'], 2)
         
-        if metrics['total_removed_loc'] and metrics['norm_removed_loc']:
-            metrics['norm_removed_loc'] /= metrics['total_removed_loc']
-            metrics['norm_removed_loc'] = round(100 * metrics['norm_removed_loc'], 2)
+        #if metrics['total_removed_loc'] and metrics['norm_removed_loc']:
+        #    metrics['norm_removed_loc'] /= metrics['total_removed_loc']
+        #    metrics['norm_removed_loc'] = round(100 * metrics['norm_removed_loc'], 2)
 
         dataset = pd.DataFrame()
         

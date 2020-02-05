@@ -21,12 +21,11 @@ DESTINATION_PATH = os.path.join('data', 'new_metrics.csv')
 
 class MetricsMiner():
 
-    def mine_process_metrics(self, path_to_repo: str, commit_hash: str, from_commit: str=None, to_commit: str=None) -> list:
+    def mine_process_metrics(self, path_to_repo: str, from_commit: str=None, to_commit: str=None) -> list:
         """
         Extract process metrics from a commit.
         Save the result in the instance and returns it.
 
-        :commit_hash: str - hash of buggy inducing commit
         :from_commit: str - hash of release start
         :to_commit: str - hash of release end
         """
@@ -36,7 +35,7 @@ class MetricsMiner():
         history_complexity = HistoryComplexity(path_to_repo, from_commit, to_commit).count()
         median_hunks_count = HunksCount(path_to_repo, from_commit, to_commit).count()
         lines_count = LinesCount(path_to_repo, from_commit, to_commit).count()
-        lines_count_in_commit = LinesCount(path_to_repo, commit_hash, commit_hash).count()
+        #lines_count_in_commit = LinesCount(path_to_repo, commit_hash, commit_hash).count()
 
         return [
                 commits_count,
@@ -44,9 +43,10 @@ class MetricsMiner():
                 highest_contributors_experience,
                 history_complexity,
                 median_hunks_count,
-                lines_count,
-                lines_count_in_commit
+                lines_count
+                #lines_count_in_commit
             ]
+            
     
     def mine_product_metrics(self, content: str) -> list:
         """

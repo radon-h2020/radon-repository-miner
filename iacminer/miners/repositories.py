@@ -1,6 +1,5 @@
 """
 A module to get information of repositories
-TODO: completare
 """
 
 import requests
@@ -9,73 +8,19 @@ import os
 import re
 from datetime import datetime, timedelta
 
-headers = {"Authorization": "token b603dd89b36fe882419ad825ddf72762a564dff0"}
+from iacminer.configuration import Configuration
 
-# ...
 
-query = """
-{
-    search(query: "is:public stars:>10 mirror:false archived:false created:DATE_FROM..DATE_TO", type: REPOSITORY, first: 50 <after>) {
-        repositoryCount
-        pageInfo {
-            endCursor
-            startCursor
-            hasNextPage
-        }
-        edges {
-            node {
-                ... on Repository {
-                    id
-                    name
-                    url
-                    description
-                    primaryLanguage { name }
-                    stargazers { totalCount }
-                    watchers { totalCount }
-                    releases { totalCount }
-                    issues { totalCount }
-                    createdAt
-                    pushedAt
-                    updatedAt
-                    hasIssuesEnabled
-                    isArchived
-                    isDisabled
-                    isMirror
-                    collaborators { totalCount }
-                    object(expression: "master") {
-                        ... on Commit {
-                            tree {
-                                entries {
-                                    name
-                                    type
-                                }
-                            }
-                            history {
-                                totalCount
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+HEADERS = {"Authorization": "token b603dd89b36fe882419ad825ddf72762a564dff0"} # TODO get token from env
 
-    rateLimit {
-        limit
-        cost
-        remaining
-        resetAt
-    }
-}
-"""
 
 def run_query(query): # A simple function to use requests.post to make the API call. Note the json= section.
-    request = requests.post('https://api.github.com/graphql', json={'query': query}, headers=headers)
+    request = requests.post('https://api.github.com/graphql', json={'query': query}, headers=HEADERS)
     if request.status_code == 200:
         return request.json()
     else:
-        raise Exception("Query failed to run by returning code of {}. {}".format(request.status_code, query))
-
+        print("Query failed to run by returning code of {}. {}".format(request.status_code, query))
+        return None
 
 def has_ansible_folders(d):
     return d.get('name') in ['tasks', 'playbooks', 'handlers', 'roles', 'meta'] and d.get('type') == 'tree'
@@ -83,21 +28,16 @@ def has_ansible_folders(d):
 
 if __name__ == '__main__':
 
-    if not os.path.isfile('all_repos.json'):
-        open('all_repos.json', 'a').close()
+    config = Configuration()
 
-    with open('all_repos.json', 'r') as infile:
-        try:
-            data = json.load(infile)
-        except json.decoder.JSONDecodeError:
-            data = {}
 
-    remaining_calls = data.get('rateLimit', {}).get('remaining', 1)
+    remaining_calls = 1
     
     # First commit ansible/Ansible Feb 23 14:17:24 2012
-    date_from = data.get('dateFrom', "2014-11-27T00:00:00Z")
-    date_to = data.get('dateTo', "2014-11-28T00:00:00Z")
+    date_from = config.date_from()
+    date_to = config.date_to()
 
+    data = {}
     
     while remaining_calls > 0:
 
@@ -105,7 +45,7 @@ if __name__ == '__main__':
         end_cursor = None
         
         while remaining_calls > 0 and has_next_page:
-            modified_query = re.sub('DATE_FROM', date_from, query) 
+            modified_query = re.sub('DATE_FROM', date_from, config.build_query()) 
             modified_query = re.sub('DATE_TO', date_to, modified_query) 
 
             if not end_cursor:
@@ -113,13 +53,15 @@ if __name__ == '__main__':
             else:
                 modified_query = re.sub('<after>', ', after: "{}"'.format(str(end_cursor)), modified_query) 
 
+            """
             print(f'Remaining calls: {remaining_calls}')
             print(f'Searching after: {str(end_cursor)}')
             print(modified_query[2:150])
+            """
+
+            result = run_query(modified_query) # Execute the query
             
-            try:
-                result = run_query(modified_query) # Execute the query
-            except Exception:
+            if not result:
                 break
                 
             data['repositoryCount'] = result["data"]["search"]["repositoryCount"]
@@ -190,7 +132,7 @@ if __name__ == '__main__':
             data['dateFrom'] = date_from
             data['dateTo'] = date_to
 
-            with open('all_repos.json', 'w') as outfile:
+            with open(os.path.join('data','all_repos.json'), 'w') as outfile:
                 json.dump(data, outfile)
 
             remaining_calls = int(data['rateLimit']['remaining'])

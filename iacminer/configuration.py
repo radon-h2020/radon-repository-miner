@@ -183,9 +183,14 @@ class Configuration():
 
     @property
     def timespan(self):
+
         timespan = str(self.__yml.get('repositories', {}).get('created', {}).get('timespan', 24))
 
         if not re.match('^\d{2}$', timespan.strip()):
             raise Exception('Invalid value for timespan')
 
         return timespan
+    
+    @property
+    def pushedAt(self):
+        pass
