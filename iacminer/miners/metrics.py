@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-import yaml
 
 from io import StringIO
 
@@ -13,7 +12,7 @@ from pydriller.metrics.process.lines_count import LinesCount
 
 from pathlib import Path
 
-from ansiblemetrics.main import MetricExtractor, LoadingError
+from ansiblemetrics.main import MetricExtractor
 from iacminer.entities.commit import BuggyInducingCommit
 from iacminer.entities.content import ContentFile
 
@@ -29,6 +28,10 @@ class MetricsMiner():
         :from_commit: str - hash of release start
         :to_commit: str - hash of release end
         """
+        tmp = to_commit
+        to_commit = from_commit
+        from_commit = tmp
+
         commits_count = CommitsCount(path_to_repo, from_commit, to_commit).count()
         contributors_count = ContributorsCount(path_to_repo, from_commit, to_commit).count()
         highest_contributors_experience = ContributorsExperience(path_to_repo, from_commit, to_commit).count()
@@ -55,22 +58,15 @@ class MetricsMiner():
         """
         product_metrics = {}
 
-        try:
-            ansible_metrics = MetricExtractor().run(StringIO(content))
+        ansible_metrics = MetricExtractor().run(StringIO(content))
 
-            for item in ansible_metrics:    
-                if ansible_metrics[item]['count'] is None:
-                    break
+        for item in ansible_metrics:    
+            if ansible_metrics[item]['count'] is None:
+                break
 
-                for k in ansible_metrics[item]:
-                    metric = f'{item}_{k}'
-                    product_metrics[metric] = ansible_metrics[item][k]
+            for k in ansible_metrics[item]:
+                metric = f'{item}_{k}'
+                product_metrics[metric] = ansible_metrics[item][k]
 
-        except LoadingError:
-            print('\033[91m' + 'Error: failed to load {}. Insert a valid file!'.format('FILENAME HERE') + '\033[0m')
-        except yaml.YAMLError:
-            print('The input file is not a yaml file')
-        except Exception:
-            print('An unknown error has occurred')
-            
+    
         return product_metrics
