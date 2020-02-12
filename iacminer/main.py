@@ -10,6 +10,7 @@ sys.path.append(path)
 from pathlib import Path
 from pydriller.repository_mining import GitRepository, RepositoryMining
 
+from iacminer import filters
 from iacminer.entities.release import Release
 from iacminer.miners.commits import CommitsMiner
 from iacminer.miners.metrics import MetricsMiner
@@ -49,6 +50,27 @@ class Main():
     def get_content(self, filepath):
         with open(os.path.join(self.repo_path, filepath), 'r') as f:
             return f.read()
+    
+    def all_files(self):
+        """
+        Obtain the list of the files (excluding .git directory).
+
+        :return: the set of the files
+        """
+        _all = set()
+
+        for root, _, filenames in os.walk(str(self.repo_path)):
+            if '.git' in root:
+                continue
+            for filename in filenames: 
+                path = os.path.join(root, filename)
+                path = path.replace(str(self.repo_path), '')
+                if path.startswith('/'):
+                    path = path[1:]
+
+                _all.add(path)
+
+        return _all
 
     def save(self, filepath:str, metadata:dict, process_metrics:dict, product_metrics:dict):
         
@@ -104,11 +126,12 @@ class Main():
         
         for release in releases:
             
+            """
             all_keys = set(self.commits_miner.defect_prone_files.keys()).union(set(self.commits_miner.defect_free_files.keys()))
             
             if release.end not in all_keys:
                 continue
-            
+            """
             process_metrics = self.metrics_miner.mine_process_metrics(self.repo_path, release.start, release.end)
             self.__git_repo.checkout(release.end)
 
@@ -119,23 +142,33 @@ class Main():
                     'release_date': release.date                    
             }
 
-            for filepath in self.commits_miner.defect_prone_files.get(release.end, []):
+            defect_prone_files = self.commits_miner.defect_prone_files.get(release.end, set())
+            unclassified_files = self.all_files() - defect_prone_files
+
+            for filepath in defect_prone_files:
                 metadata['filepath'] = filepath
                 metadata['defective'] = 'yes'
 
                 try:
+
                     product_metrics = self.metrics_miner.mine_product_metrics(self.get_content(filepath))
                     self.save(filepath, metadata, process_metrics, product_metrics)
+
                 except Exception:
                     print(f'An unknown error has occurred for file {self.repo_name}/{filepath}')
 
-            for filepath in self.commits_miner.defect_free_files.get(release.end, []):
+            for filepath in unclassified_files:
+                if not filters.is_ansible_file(filepath):
+                    continue
+
                 metadata['filepath'] = filepath
                 metadata['defective'] = 'no'
 
                 try:
+
                     product_metrics = self.metrics_miner.mine_product_metrics(self.get_content(filepath))
                     self.save(filepath, metadata, process_metrics, product_metrics)
+
                 except Exception:
                     print(f'An unknown error has occurred for file {self.repo_name}/{filepath}')
 

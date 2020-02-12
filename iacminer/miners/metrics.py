@@ -20,7 +20,7 @@ DESTINATION_PATH = os.path.join('data', 'new_metrics.csv')
 
 class MetricsMiner():
 
-    def mine_process_metrics(self, path_to_repo: str, from_commit: str=None, to_commit: str=None) -> list:
+    def mine_process_metrics(self, path_to_repo: str, from_commit: str, to_commit: str) -> list:
         """
         Extract process metrics from a commit.
         Save the result in the instance and returns it.
@@ -28,10 +28,6 @@ class MetricsMiner():
         :from_commit: str - hash of release start
         :to_commit: str - hash of release end
         """
-        tmp = to_commit
-        to_commit = from_commit
-        from_commit = tmp
-
         commits_count = CommitsCount(path_to_repo, from_commit, to_commit).count()
         contributors_count = ContributorsCount(path_to_repo, from_commit, to_commit).count()
         highest_contributors_experience = ContributorsExperience(path_to_repo, from_commit, to_commit).count()
