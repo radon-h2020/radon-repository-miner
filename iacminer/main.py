@@ -126,12 +126,13 @@ class Main():
         
         for release in releases:
             
-            """
+            ###
             all_keys = set(self.commits_miner.defect_prone_files.keys()).union(set(self.commits_miner.defect_free_files.keys()))
             
             if release.end not in all_keys:
                 continue
-            """
+            ###
+
             process_metrics = self.metrics_miner.mine_process_metrics(self.repo_path, release.start, release.end)
             self.__git_repo.checkout(release.end)
 
@@ -143,19 +144,22 @@ class Main():
             }
 
             defect_prone_files = self.commits_miner.defect_prone_files.get(release.end, set())
-            unclassified_files = self.all_files() - defect_prone_files
+            #unclassified_files = self.all_files() - defect_prone_files
+            unclassified_files = self.commits_miner.defect_free_files.get(release.end, set())
 
             for filepath in defect_prone_files:
                 metadata['filepath'] = filepath
                 metadata['defective'] = 'yes'
 
                 try:
-
-                    product_metrics = self.metrics_miner.mine_product_metrics(self.get_content(filepath))
+                    file_content = self.get_content(filepath)
+                    product_metrics = self.metrics_miner.mine_product_metrics(file_content)
+                    tokens = self.metrics_miner.mine_text(file_content)
+                    metadata['tokens'] = ' '.join(tokens)
                     self.save(filepath, metadata, process_metrics, product_metrics)
 
                 except Exception:
-                    print(f'An unknown error has occurred for file {self.repo_name}/{filepath}')
+                    pass#print(f'An unknown error has occurred for file {self.repo_name}/{filepath}')
 
             for filepath in unclassified_files:
                 if not filters.is_ansible_file(filepath):
@@ -165,12 +169,14 @@ class Main():
                 metadata['defective'] = 'no'
 
                 try:
-
-                    product_metrics = self.metrics_miner.mine_product_metrics(self.get_content(filepath))
+                    file_content = self.get_content(filepath)
+                    product_metrics = self.metrics_miner.mine_product_metrics(file_content)
+                    tokens = self.metrics_miner.mine_text(file_content)
+                    metadata['tokens'] = ' '.join(tokens)
                     self.save(filepath, metadata, process_metrics, product_metrics)
 
                 except Exception:
-                    print(f'An unknown error has occurred for file {self.repo_name}/{filepath}')
+                    pass#print(f'An unknown error has occurred for file {self.repo_name}/{filepath}')
 
             self.__git_repo.reset()
         

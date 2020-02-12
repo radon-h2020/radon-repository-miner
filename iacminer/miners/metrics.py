@@ -13,17 +13,13 @@ from pydriller.metrics.process.lines_count import LinesCount
 from pathlib import Path
 
 from ansiblemetrics.main import MetricExtractor
-from iacminer.entities.commit import BuggyInducingCommit
-from iacminer.entities.content import ContentFile
-
-DESTINATION_PATH = os.path.join('data', 'new_metrics.csv')
+from iacminer.text.text_processing import TextProcessing
 
 class MetricsMiner():
 
     def mine_process_metrics(self, path_to_repo: str, from_commit: str, to_commit: str) -> list:
         """
-        Extract process metrics from a commit.
-        Save the result in the instance and returns it.
+        Extract and return process metrics from a commit.
 
         :from_commit: str - hash of release start
         :to_commit: str - hash of release end
@@ -46,11 +42,9 @@ class MetricsMiner():
                 #lines_count_in_commit
             ]
             
-    
     def mine_product_metrics(self, content: str) -> list:
         """
-        Extract product metrics from a file.
-        Save the result in the instance and returns it.
+        Extract and return product metrics from a file.
         """
         product_metrics = {}
 
@@ -66,3 +60,9 @@ class MetricsMiner():
 
     
         return product_metrics
+
+    def mine_text(self, content: str) -> list:
+        """
+        Extract textual metrics from a file.
+        """
+        return TextProcessing(content).process()
