@@ -128,6 +128,25 @@ class CommitsMiner():
             if commit.hash in self.__releases:
                 yield (commit.hash, file.filepath)
 
+    def __save_fixing_commit(self, commit):
+        DESTINATION_PATH = os.path.join('data', 'fixing_commits.json')
+
+        obj = []
+        if os.path.isfile(DESTINATION_PATH):
+            with open(DESTINATION_PATH, 'r') as in_file:
+                obj = json.load(in_file)
+        
+        obj.append(
+            {
+                'repo': self.repo_name,
+                'hash': commit.hash,
+                'msg': commit.msg
+            }
+        )
+        
+        with open(DESTINATION_PATH, 'w') as out:
+            json.dump(obj, out)
+
     def find_defective_files(self):
        
         renamed_files = {}  # To keep track of renamed files
@@ -136,7 +155,8 @@ class CommitsMiner():
         for commit in RepositoryMining(self.repo_path, only_in_branch='master', reversed_order=True).traverse_commits():
             
             is_fixing_commit = self.__has_fix_in_message(commit.msg) or (commit.hash in self.__commits_closing_issues)
-                        
+            modifies_iac_files = False
+
             for modified_file in commit.modifications:
                
                 # Handle renaming
@@ -150,6 +170,8 @@ class CommitsMiner():
                 # Keep only Ansible files
                 if not filters.is_ansible_file(modified_file.new_path):
                     continue
+                
+                modifies_iac_files = True
 
                 if not is_fixing_commit:
                     break
@@ -185,6 +207,9 @@ class CommitsMiner():
 
                 except ValueError: # defective file not present in list
                     defective_files.append(df)
+
+            if is_fixing_commit and modifies_iac_files:
+                self.__save_fixing_commit(commit)
 
         return defective_files
 

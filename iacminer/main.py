@@ -16,7 +16,7 @@ from iacminer.miners.commits import CommitsMiner
 from iacminer.miners.metrics import MetricsMiner
 from iacminer.utils import load_repositories
 
-DESTINATION_PATH = os.path.join('data', 'metrics.csv')
+DESTINATION_PATH = os.path.join('data', 'metrics_new.csv')
 
 class Main():
 
@@ -125,13 +125,6 @@ class Main():
         self.commits_miner.mine()
         
         for release in releases:
-            
-            ###
-            all_keys = set(self.commits_miner.defect_prone_files.keys()).union(set(self.commits_miner.defect_free_files.keys()))
-            
-            if release.end not in all_keys:
-                continue
-            ###
 
             process_metrics = self.metrics_miner.mine_process_metrics(self.repo_path, release.start, release.end)
             self.__git_repo.checkout(release.end)
