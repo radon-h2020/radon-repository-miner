@@ -100,33 +100,39 @@ class CommitsMiner():
         """
         Return the names of the file at each release within the "buggy-free period" [start-end]\[file.from_commit, file.to_commit)
         """
-   
+
         # From file.bic_commit (i.e., bic commit) to the oldest commit
+        filepath = file.filepath
+        
         for commit in RepositoryMining(self.repo_path, from_commit=file.bic_commit, reversed_order=True, only_in_branch='master').traverse_commits():
             
             for modified_file in commit.modifications:
-                if file.filepath not in (modified_file.old_path, modified_file.new_path):
+                if filepath not in (modified_file.old_path, modified_file.new_path):
                     continue
                 
                 # Handle renaming
                 if modified_file.change_type == ModificationType.RENAME:
-                    file.filepath = modified_file.old_path
+                    filepath = modified_file.old_path
 
             if commit.hash != file.bic_commit and commit.hash in self.__releases:
-                yield (commit.hash, file.filepath)
+                yield (commit.hash, filepath)
+        
 
         # From file.to_commit (fixing commit) to the newest commit
+        filepath = file.filepath
+        
         for commit in RepositoryMining(self.repo_path, from_commit=file.fix_commit, only_in_branch='master').traverse_commits():
             
             for modified_file in commit.modifications:
-                if file.filepath not in (modified_file.old_path, modified_file.new_path):
+                if filepath not in (modified_file.old_path, modified_file.new_path):
                     continue
                 
                 if modified_file.change_type == ModificationType.RENAME:
-                    file.filepath = modified_file.new_path
+                    filepath = modified_file.new_path
 
             if commit.hash in self.__releases:
-                yield (commit.hash, file.filepath)
+                yield (commit.hash, filepath)
+
 
     def __save_fixing_commit(self, commit):
         DESTINATION_PATH = os.path.join('data', 'fixing_commits.json')
@@ -143,7 +149,7 @@ class CommitsMiner():
                 'msg': commit.msg
             }
         )
-        
+
         with open(DESTINATION_PATH, 'w') as out:
             json.dump(obj, out)
 
@@ -154,7 +160,8 @@ class CommitsMiner():
 
         for commit in RepositoryMining(self.repo_path, only_in_branch='master', reversed_order=True).traverse_commits():
             
-            is_fixing_commit = self.__has_fix_in_message(commit.msg) or (commit.hash in self.__commits_closing_issues)
+            #is_fixing_commit = self.__has_fix_in_message(commit.msg) or (commit.hash in self.__commits_closing_issues)
+            is_fixing_commit = commit.hash in self.__commits_closing_issues
             modifies_iac_files = False
 
             for modified_file in commit.modifications:
@@ -219,7 +226,10 @@ class CommitsMiner():
         """
 
         self.__set_commits_closing_issues()
-     
+
+        if not self.__commits_closing_issues:
+            return
+
         for file in self.find_defective_files():
 
             # Get list of defect-prone files

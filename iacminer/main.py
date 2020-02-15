@@ -16,7 +16,7 @@ from iacminer.miners.commits import CommitsMiner
 from iacminer.miners.metrics import MetricsMiner
 from iacminer.utils import load_repositories
 
-DESTINATION_PATH = os.path.join('data', 'metrics_new.csv')
+DESTINATION_PATH = os.path.join('data', 'metrics.csv')
 
 class Main():
 
