@@ -119,12 +119,16 @@ class Main():
             date = releases_date.pop(0)
             idx = commits_hash.index(hash)
             releases.append(Release(commits_hash[0], commits_hash[idx], date))
-            del commits_hash[:idx+1] 
+            del commits_hash[:idx+1]
 
         # Mine fixing commits
         self.commits_miner.mine()
-        
+
         for release in releases:
+
+            # If the release does not have any affected files, do not consider it
+            if not self.commits_miner.defect_prone_files.get(release.end) and not self.commits_miner.defect_free_files.get(release.end):
+                continue
 
             process_metrics = self.metrics_miner.mine_process_metrics(self.repo_path, release.start, release.end)
             self.__git_repo.checkout(release.end)

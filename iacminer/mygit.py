@@ -27,12 +27,16 @@ class Git():
         """
         repo = self.__github.get_repo(repo)
 
-        try: 
-            label_bug = repo.get_label('Bug')
-
-            issues = repo.get_issues(state='closed', labels=[label_bug], sort='created', direction='desc')
+        labels = []
+        for label in ('bug', 'ansible_bug', 'type:bug', 'fix'):
+            try: 
+                labels.append(repo.get_label(label))
+            except Exception:
+                continue # label not found
+        
+        for label in labels:
+            issues = repo.get_issues(state='closed', labels=[label], sort='created', direction='desc')
             for issue in issues:
                 yield issue
 
-        except Exception:
-            yield
+        yield

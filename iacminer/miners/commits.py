@@ -76,9 +76,9 @@ class CommitsMiner():
             except ReadTimeout:
                 pass                
    
-    def __get_defect_prone_files(self, file: DefectiveFile):
+    def __set_defect_prone_files(self, file: DefectiveFile):
         """
-        Return the names of the file at each release within the "buggy period" [file.from_commit, file.to_commit)
+        Return the names of the file at each release within the buggy-free period: [file.bic_commit, file.fix_commit)
         """
         for commit in RepositoryMining(self.repo_path, from_commit=file.bic_commit, to_commit=file.fix_commit, only_in_branch='master', reversed_order=True).traverse_commits():
 
@@ -94,11 +94,12 @@ class CommitsMiner():
                     file.filepath = modified_file.old_path
 
             if commit.hash in self.__releases:
-                yield (commit.hash, file.filepath)
+                self.defect_prone_files.setdefault(commit.hash, set()).add(file.filepath)
 
-    def __get_defect_free_files(self, file: DefectiveFile):
+    def __set_defect_free_files(self, file: DefectiveFile):
         """
-        Return the names of the file at each release within the "buggy-free period" [start-end]\[file.from_commit, file.to_commit)
+        Return the names of the file at each release from the beginning of the project
+        to the first buggy inducing commit for that file: [start, file.bic_commit)
         """
 
         # From file.bic_commit (i.e., bic commit) to the oldest commit
@@ -115,9 +116,9 @@ class CommitsMiner():
                     filepath = modified_file.old_path
 
             if commit.hash != file.bic_commit and commit.hash in self.__releases:
-                yield (commit.hash, filepath)
+                self.defect_free_files.setdefault(commit.hash, set()).add(filepath)
         
-
+        """
         # From file.to_commit (fixing commit) to the newest commit
         filepath = file.filepath
         
@@ -129,10 +130,11 @@ class CommitsMiner():
                 
                 if modified_file.change_type == ModificationType.RENAME:
                     filepath = modified_file.new_path
-
+             
             if commit.hash in self.__releases:
                 yield (commit.hash, filepath)
-
+                break # Consider only the first release after the fix 
+        """
 
     def __save_fixing_commit(self, commit):
         DESTINATION_PATH = os.path.join('data', 'fixing_commits.json')
@@ -231,11 +233,5 @@ class CommitsMiner():
             return
 
         for file in self.find_defective_files():
-
-            # Get list of defect-prone files
-            for commit_hash, filepath in self.__get_defect_prone_files(file):
-                self.defect_prone_files.setdefault(commit_hash, set()).add(filepath)
-
-            # Create list of defect-free files
-            for commit_hash, filepath in self.__get_defect_free_files(file):
-                self.defect_free_files.setdefault(commit_hash, set()).add(filepath)
+            self.__set_defect_prone_files(file)
+            self.__set_defect_free_files(file)
