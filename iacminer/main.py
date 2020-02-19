@@ -11,44 +11,42 @@ from pathlib import Path
 from pydriller.repository_mining import GitRepository, RepositoryMining
 
 from iacminer import filters
+from iacminer.configuration import Configuration
 from iacminer.entities.release import Release
+from iacminer.entities.repository import Repository
 from iacminer.miners.commits import CommitsMiner
 from iacminer.miners.metrics import MetricsMiner
+from iacminer.miners.repositories import RepositoryMiner
 from iacminer.utils import load_repositories
 
 DESTINATION_PATH = os.path.join('data', 'metrics.csv')
 
 class Main():
 
-    def __init__(self, repository: str):
+    def __init__(self, repository: Repository):
         
         self.repository = repository
-
-        author = repository.split('/')[0]
-        self.repo_name = repository.split('/')[1]
-        self.root_path = str(Path(f'repositories/{author}'))
-        self.repo_path = os.path.join(self.root_path, self.repo_name)
+        self.__root_path = str(Path(f'repositories/{self.repository.owner}'))
+        self.__repo_path = os.path.join(self.__root_path, self.repository.name)
 
         self.clone_repo()
-
-        self.commits_miner = CommitsMiner(self.__git_repo)
-        self.metrics_miner = MetricsMiner()
+        
 
     def delete_repo(self):
-        if os.path.isdir(self.root_path):
-            shutil.rmtree(self.root_path)
+        if os.path.isdir(self.__root_path):
+            shutil.rmtree(self.__root_path)
 
     def clone_repo(self):
         self.delete_repo()
-        os.makedirs(self.root_path)
+        os.makedirs(self.__root_path)
 
-        git.Git(self.root_path).clone(f'https://github.com/{self.repository}.git', branch='master')
-        git_repo = GitRepository(self.repo_path)
+        git.Git(self.__root_path).clone(f'https://github.com/{self.repository.remote_path}.git', branch='master')
+        git_repo = GitRepository(self.__repo_path)
 
         self.__git_repo = git_repo
     
     def get_content(self, filepath):
-        with open(os.path.join(self.repo_path, filepath), 'r') as f:
+        with open(os.path.join(self.__repo_path, filepath), 'r') as f:
             return f.read()
     
     def all_files(self):
@@ -59,12 +57,12 @@ class Main():
         """
         _all = set()
 
-        for root, _, filenames in os.walk(str(self.repo_path)):
+        for root, _, filenames in os.walk(str(self.__repo_path)):
             if '.git' in root:
                 continue
             for filename in filenames: 
                 path = os.path.join(root, filename)
-                path = path.replace(str(self.repo_path), '')
+                path = path.replace(str(self.__repo_path), '')
                 if path.startswith('/'):
                     path = path[1:]
 
@@ -100,18 +98,21 @@ class Main():
         with open(DESTINATION_PATH, 'w') as out:
             dataset.to_csv(out, mode='w', index=False)
 
-    def run(self):
+    def run(self, branch: str='master'):
         
+        commits_miner = CommitsMiner(self.__git_repo, branch)
+        metrics_miner = MetricsMiner()
+
         releases = []
         releases_hash = []
         releases_date = []
         commits_hash = []
 
-        for commit in RepositoryMining(self.repo_path, only_releases=True).traverse_commits():
+        for commit in RepositoryMining(self.__repo_path, only_releases=True).traverse_commits():
             releases_hash.append(commit.hash)
             releases_date.append(str(commit.committer_date))
 
-        for commit in RepositoryMining(self.repo_path, only_in_branch='master').traverse_commits():
+        for commit in RepositoryMining(self.__repo_path, only_in_branch='master').traverse_commits():
             commits_hash.append(commit.hash)
 
         while releases_hash:
@@ -122,27 +123,27 @@ class Main():
             del commits_hash[:idx+1]
 
         # Mine fixing commits
-        self.commits_miner.mine()
+        commits_miner.mine()
 
         for release in releases:
 
             # If the release does not have any affected files, do not consider it
-            if not self.commits_miner.defect_prone_files.get(release.end) and not self.commits_miner.defect_free_files.get(release.end):
+            if not commits_miner.defect_prone_files.get(release.end) and not commits_miner.defect_free_files.get(release.end):
                 continue
 
-            process_metrics = self.metrics_miner.mine_process_metrics(self.repo_path, release.start, release.end)
+            process_metrics = metrics_miner.mine_process_metrics(self.__repo_path, release.start, release.end)
             self.__git_repo.checkout(release.end)
 
             metadata = {
-                    'repo': self.repository,
+                    'repo': self.repository.remote_path,
                     'release_start': release.start,
                     'release_end': release.end,
                     'release_date': release.date                    
             }
 
-            defect_prone_files = self.commits_miner.defect_prone_files.get(release.end, set())
+            defect_prone_files = commits_miner.defect_prone_files.get(release.end, set())
             #unclassified_files = self.all_files() - defect_prone_files
-            unclassified_files = self.commits_miner.defect_free_files.get(release.end, set())
+            unclassified_files = commits_miner.defect_free_files.get(release.end, set())
 
             for filepath in defect_prone_files:
                 metadata['filepath'] = filepath
@@ -150,13 +151,13 @@ class Main():
 
                 try:
                     file_content = self.get_content(filepath)
-                    product_metrics = self.metrics_miner.mine_product_metrics(file_content)
-                    tokens = self.metrics_miner.mine_text(file_content)
+                    product_metrics = metrics_miner.mine_product_metrics(file_content)
+                    tokens = metrics_miner.mine_text(file_content)
                     metadata['tokens'] = ' '.join(tokens)
                     self.save(filepath, metadata, process_metrics, product_metrics)
 
                 except Exception:
-                    pass#print(f'An unknown error has occurred for file {self.repo_name}/{filepath}')
+                    pass#print(f'An unknown error has occurred for file X)
 
             for filepath in unclassified_files:
                 if not filters.is_ansible_file(filepath):
@@ -167,13 +168,13 @@ class Main():
 
                 try:
                     file_content = self.get_content(filepath)
-                    product_metrics = self.metrics_miner.mine_product_metrics(file_content)
-                    tokens = self.metrics_miner.mine_text(file_content)
+                    product_metrics = metrics_miner.mine_product_metrics(file_content)
+                    tokens = metrics_miner.mine_text(file_content)
                     metadata['tokens'] = ' '.join(tokens)
                     self.save(filepath, metadata, process_metrics, product_metrics)
 
                 except Exception:
-                    pass#print(f'An unknown error has occurred for file {self.repo_name}/{filepath}')
+                    pass#print(f'An unknown error has occurred for file X')
 
             self.__git_repo.reset()
         
@@ -181,8 +182,66 @@ class Main():
         self.delete_repo()
 
 if __name__=='__main__':
-    repos = load_repositories()
-    
-    for repo in repos:
-        print(f'Mining repository: {repo}')
-        Main(repo).run()
+
+    repository_count =  0
+
+    for repo in RepositoryMiner(Configuration()).mine():
+        repository_count += 1
+        print(f'{repository_count} - Repository: {repo.remote_path}')
+        print(f'\tMain branch: {repo.default_branch}')
+        print(f'\tStars: {repo.stars}')
+        print(f'\tReleases: {repo.releases}')
+        print(f'\tIssues: {repo.issues}')
+
+        main = Main(repo)
+        
+        ansible_files = 0
+        all_files = main.all_files()
+
+        for filepath in all_files:
+            if filters.is_ansible_file(filepath):
+                ansible_files += 1
+        
+        print(f'\tAnsible files: {ansible_files}')
+
+        if ansible_files/len(all_files) < 0.11:
+            main.delete_repo()
+            continue
+
+        # Save 
+        # {
+        #   total_repositories: repository_count,
+        #   ansible_repositories:{
+        #      repo_info
+        #   }
+        # }
+        # ansible repo in ansible_repositories.json
+        print(f'Starting analysis for {repo.remote_path}')
+        main.run(branch=repo['defaultBranchRef'])
+
+
+        # filter ansible repo
+
+
+"""
+def save(self, repository):
+                
+    if os.path.isfile(DESTINATION_PATH):
+        with open(DESTINATION_PATH, 'r') as in_file:
+            dataset = pd.read_csv(in_file)
+
+    dataset = dataset.append(metrics, ignore_index=True)
+
+    with open(DESTINATION_PATH, 'w') as out:
+        dataset.to_csv(out, mode='w', index=False)
+
+def load_repositories():
+    patah = os.path.join('data', 'repositories.json')
+    if os.path.isfile(path):
+        with open(path, 'r') as in_file:
+            return json.load(in_file) 
+
+def save_json(fixing_commits, filename: str):
+    with open(os.path.join('data', filename), 'w') as outfile:
+        return json.dump(fixing_commits, outfile)
+"""

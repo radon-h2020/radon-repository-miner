@@ -10,7 +10,7 @@ DEFAULT_ARCHIVED = 'false'
 
 query = """
 {
-    search(query: "is:public stars:STARS mirror:MIRROR archived:ARCHIVED created:DATE_FROM..DATE_TO", type: REPOSITORY, first: 50 <after>) {
+    search(query: "is:public stars:STARS mirror:MIRROR archived:ARCHIVED created:DATE_FROM..DATE_TO", type: REPOSITORY, first: 50 AFTER) {
         repositoryCount
         pageInfo {
             endCursor
@@ -21,6 +21,8 @@ query = """
             node {
                 ... on Repository {
                     id
+                    defaultBranchRef { name }
+                    owner { login }
                     name
                     url
                     description
@@ -36,20 +38,7 @@ query = """
                     isArchived
                     isDisabled
                     isMirror
-                    collaborators { totalCount }
-                    object(expression: "master") {
-                        ... on Commit {
-                            tree {
-                                entries {
-                                    name
-                                    type
-                                }
-                            }
-                            history {
-                                totalCount
-                            }
-                        }
-                    }
+                    isFork
                 }
             }
         }
@@ -76,7 +65,7 @@ class Configuration():
             self.__yml = yaml.safe_load(in_file.read())
        
     @property
-    def build_query(self):
+    def query(self):
         self.__query = re.sub('STARS', self.stars, query)
         self.__query = re.sub('MIRROR', self.mirror, self.__query)
         self.__query = re.sub('ARCHIVED', self.archived, self.__query)
@@ -132,65 +121,90 @@ class Configuration():
         mm = str(self.__yml.get('repositories', {}).get('created', {}).get('date_from', {}).get('mm', '00'))
         ss = str(self.__yml.get('repositories', {}).get('created', {}).get('date_from', {}).get('ss', '00'))
 
-        if not re.match('^\d{4}$', year.strip()):
-            raise Exception('Invalid value for year')
+        if not re.match(r'^\d{4}$', year.strip()):
+            raise ValueError('Invalid value for year')
+        
+        if not re.match(r'^\d{2}$', month.strip()):
+            raise ValueError('Invalid value for month')
 
-        if not re.match('^\d{2}$', month.strip()):
-            raise Exception('Invalid value for month')
+        if not re.match(r'^\d{2}$', day.strip()):
+            raise ValueError('Invalid value for day')
 
-        if not re.match('^\d{2}$', day.strip()):
-            raise Exception('Invalid value for day')
+        if not re.match(r'^\d{2}$', hh):
+            raise ValueError('Invalid value for hour')
 
-        if not re.match('^\d{2}$', hh):
-            raise Exception('Invalid value for hour')
+        if not re.match(r'^\d{2}$', mm):
+            raise ValueError('Invalid value for minutes')
 
-        if not re.match('^\d{2}$', mm):
-            raise Exception('Invalid value for minutes')
+        if not re.match(r'^\d{2}$', ss):
+            raise ValueError('Invalid value for seconds')
 
-        if not re.match('^\d{2}$', ss):
-            raise Exception('Invalid value for seconds')
-
-        return f'{year}-{month}-{day}Z{hh}:{mm}:{ss}Z'
+        return f'{year}-{month}-{day}T{hh}:{mm}:{ss}Z'
 
     @property
     def date_to(self):
-        year = str(self.__yml.get('repositories', {}).get('created', {}).get('date_from', {}).get('year', '2014'))
-        month = str(self.__yml.get('repositories', {}).get('created', {}).get('date_from', {}).get('month', '11'))
-        day = str(self.__yml.get('repositories', {}).get('created', {}).get('date_from', {}).get('day', '28'))
-        hh = str(self.__yml.get('repositories', {}).get('created', {}).get('date_from', {}).get('hh', '00'))
-        mm = str(self.__yml.get('repositories', {}).get('created', {}).get('date_from', {}).get('mm', '00'))
-        ss = str(self.__yml.get('repositories', {}).get('created', {}).get('date_from', {}).get('ss', '00'))
+        year = str(self.__yml.get('repositories', {}).get('created', {}).get('date_to', {}).get('year', '2014'))
+        month = str(self.__yml.get('repositories', {}).get('created', {}).get('date_to', {}).get('month', '11'))
+        day = str(self.__yml.get('repositories', {}).get('created', {}).get('date_to', {}).get('day', '28'))
+        hh = str(self.__yml.get('repositories', {}).get('created', {}).get('date_to', {}).get('hh', '00'))
+        mm = str(self.__yml.get('repositories', {}).get('created', {}).get('date_to', {}).get('mm', '00'))
+        ss = str(self.__yml.get('repositories', {}).get('created', {}).get('date_to', {}).get('ss', '00'))
 
-        if not re.match('^\d{4}$', year.strip()):
-            raise Exception('Invalid value for year')
+        if not re.match(r'^\d{4}$', year.strip()):
+            raise ValueError('Invalid value for year')
 
-        if not re.match('^\d{2}$', month.strip()):
-            raise Exception('Invalid value for month')
+        if not re.match(r'^\d{2}$', month.strip()):
+            raise ValueError('Invalid value for month')
 
-        if not re.match('^\d{2}$', day.strip()):
-            raise Exception('Invalid value for day')
+        if not re.match(r'^\d{2}$', day.strip()):
+            raise ValueError('Invalid value for day')
 
-        if not re.match('^\d{2}$', hh):
-            raise Exception('Invalid value for hour')
+        if not re.match(r'^\d{2}$', hh):
+            raise ValueError('Invalid value for hour')
 
-        if not re.match('^\d{2}$', mm):
-            raise Exception('Invalid value for minutes')
+        if not re.match(r'^\d{2}$', mm):
+            raise ValueError('Invalid value for minutes')
 
-        if not re.match('^\d{2}$', ss):
-            raise Exception('Invalid value for seconds')
+        if not re.match(r'^\d{2}$', ss):
+            raise ValueError('Invalid value for seconds')
 
-        return f'{year}-{month}-{day}Z{hh}:{mm}:{ss}Z'
+        return f'{year}-{month}-{day}T{hh}:{mm}:{ss}Z'
 
     @property
-    def timespan(self):
+    def timedelta(self):
 
-        timespan = str(self.__yml.get('repositories', {}).get('created', {}).get('timespan', 24))
+        timedelta = str(self.__yml.get('repositories', {}).get('created', {}).get('timedelta', {}).get('hours', '24'))
 
-        if not re.match('^\d{2}$', timespan.strip()):
-            raise Exception('Invalid value for timespan')
+        if not re.match(r'^\d{2}$', timedelta.strip()):
+            raise ValueError('Invalid value for timedelta')
 
-        return timespan
+        return int(timedelta)
     
     @property
-    def pushedAt(self):
-        pass
+    def pushed_after(self):
+        year = str(self.__yml.get('repositories', {}).get('pushed', {}).get('after', {}).get('year', '2019'))
+        month = str(self.__yml.get('repositories', {}).get('pushed', {}).get('after', {}).get('month', '01'))
+        day = str(self.__yml.get('repositories', {}).get('pushed', {}).get('after', {}).get('day', '01'))
+        hh = str(self.__yml.get('repositories', {}).get('pushed', {}).get('after', {}).get('hh', '00'))
+        mm = str(self.__yml.get('repositories', {}).get('pushed', {}).get('after', {}).get('mm', '00'))
+        ss = str(self.__yml.get('repositories', {}).get('pushed', {}).get('after', {}).get('ss', '00'))
+        
+        if not re.match(r'^\d{4}$', year.strip()):
+            raise ValueError('Invalid value for year')
+
+        if not re.match(r'^\d{2}$', month.strip()):
+            raise ValueError('Invalid value for month')
+
+        if not re.match(r'^\d{2}$', day.strip()):
+            raise ValueError('Invalid value for day')
+
+        if not re.match(r'^\d{2}$', hh):
+            raise ValueError('Invalid value for hour')
+
+        if not re.match(r'^\d{2}$', mm):
+            raise ValueError('Invalid value for minutes')
+
+        if not re.match(r'^\d{2}$', ss):
+            raise ValueError('Invalid value for seconds')
+
+        return f'{year}-{month}-{day}T{hh}:{mm}:{ss}Z'

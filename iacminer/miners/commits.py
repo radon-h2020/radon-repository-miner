@@ -21,7 +21,7 @@ from iacminer.mygit import Git
 
 class CommitsMiner():
 
-    def __init__(self, git_repo: GitRepository):
+    def __init__(self, git_repo: GitRepository, branch: str='master'):
         """
         :git_repo: a GitRepository object
         """
@@ -29,6 +29,7 @@ class CommitsMiner():
         self.__commits = []
         self.__releases = []
 
+        self.branch = branch
         self.repo = git_repo
         owner_repo = str(git_repo.path).split('/')[1:]
         self.repo_name = f'{owner_repo[0]}/{owner_repo[1]}'
@@ -42,7 +43,7 @@ class CommitsMiner():
             self.__releases.append(commit.hash)
         
         # Get commits for repository        
-        for commit in RepositoryMining(self.repo_path, only_in_branch='master').traverse_commits():
+        for commit in RepositoryMining(self.repo_path, only_in_branch=self.branch).traverse_commits():
             self.__commits.append(commit.hash)
 
 
@@ -78,9 +79,9 @@ class CommitsMiner():
    
     def __set_defect_prone_files(self, file: DefectiveFile):
         """
-        Return the names of the file at each release within the buggy-free period: [file.bic_commit, file.fix_commit)
+        Set the names of the file at each release within the buggy-free period: [file.bic_commit, file.fix_commit)
         """
-        for commit in RepositoryMining(self.repo_path, from_commit=file.bic_commit, to_commit=file.fix_commit, only_in_branch='master', reversed_order=True).traverse_commits():
+        for commit in RepositoryMining(self.repo_path, from_commit=file.bic_commit, to_commit=file.fix_commit, only_in_branch=self.branch, reversed_order=True).traverse_commits():
 
             if commit.hash == file.fix_commit:
                 continue
@@ -98,14 +99,14 @@ class CommitsMiner():
 
     def __set_defect_free_files(self, file: DefectiveFile):
         """
-        Return the names of the file at each release from the beginning of the project
+        Set the names of the file at each release from the beginning of the project
         to the first buggy inducing commit for that file: [start, file.bic_commit)
         """
 
         # From file.bic_commit (i.e., bic commit) to the oldest commit
         filepath = file.filepath
         
-        for commit in RepositoryMining(self.repo_path, from_commit=file.bic_commit, reversed_order=True, only_in_branch='master').traverse_commits():
+        for commit in RepositoryMining(self.repo_path, from_commit=file.bic_commit, reversed_order=True, only_in_branch=self.branch).traverse_commits():
             
             for modified_file in commit.modifications:
                 if filepath not in (modified_file.old_path, modified_file.new_path):
@@ -117,24 +118,6 @@ class CommitsMiner():
 
             if commit.hash != file.bic_commit and commit.hash in self.__releases:
                 self.defect_free_files.setdefault(commit.hash, set()).add(filepath)
-        
-        """
-        # From file.to_commit (fixing commit) to the newest commit
-        filepath = file.filepath
-        
-        for commit in RepositoryMining(self.repo_path, from_commit=file.fix_commit, only_in_branch='master').traverse_commits():
-            
-            for modified_file in commit.modifications:
-                if filepath not in (modified_file.old_path, modified_file.new_path):
-                    continue
-                
-                if modified_file.change_type == ModificationType.RENAME:
-                    filepath = modified_file.new_path
-             
-            if commit.hash in self.__releases:
-                yield (commit.hash, filepath)
-                break # Consider only the first release after the fix 
-        """
 
     def __save_fixing_commit(self, commit):
         DESTINATION_PATH = os.path.join('data', 'fixing_commits.json')
@@ -160,7 +143,7 @@ class CommitsMiner():
         renamed_files = {}  # To keep track of renamed files
         defective_files = []
 
-        for commit in RepositoryMining(self.repo_path, only_in_branch='master', reversed_order=True).traverse_commits():
+        for commit in RepositoryMining(self.repo_path, only_in_branch=self.branch, reversed_order=True).traverse_commits():
             
             #is_fixing_commit = self.__has_fix_in_message(commit.msg) or (commit.hash in self.__commits_closing_issues)
             is_fixing_commit = commit.hash in self.__commits_closing_issues

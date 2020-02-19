@@ -1,25 +1,33 @@
 repositories:
-    stars: '>10'
-    releases: '>10'
+    stars: ">10"
+    releases: ">10"
         
     mirror: false
     archived: false
     created:
         date_from:
-            year: 2014
-            month: 11
-            day: 28
-            HH: 00
-            mm: 00
-            ss: 00
+            year: "2014"
+            month: "02"
+            day: "23"
+            HH: "00"
+            mm: "00"
+            ss: "00"
         date_to:
-            year: 2020
-            month: 01
-            day: 20
-            HH: 00
-            mm: 00
-            ss: 00
-        timespan: 
-            hours: 24
-
-    ansible_filter: true
+            year: "2020"
+            month: "02"
+            day: "20"
+            HH: "00"
+            mm: "00"
+            ss: "00"
+        timedelta: 
+            hours: "24"
+    
+    pushed:
+        after:
+            year: "2019"
+            month: "08"
+            day: "20"
+            HH: "00"
+            mm: "00"
+            ss: "00"
+            

@@ -1,6 +1,8 @@
 """
 A module to get information of repositories
 """
+from dotenv import load_dotenv
+load_dotenv()
 
 import requests
 import json
@@ -9,144 +11,134 @@ import re
 from datetime import datetime, timedelta
 
 from iacminer.configuration import Configuration
+from iacminer.entities.repository import Repository
 
+token = os.getenv('GITHUB_ACCESS_TOKEN')
+HEADERS = {'Authorization': f'token {token}'} 
 
-HEADERS = {"Authorization": "token b603dd89b36fe882419ad825ddf72762a564dff0"} # TODO get token from env
+class RepositoryMiner():
 
+    def __init__(self, configuration:Configuration):
+        self.config = configuration
 
-def run_query(query): # A simple function to use requests.post to make the API call. Note the json= section.
-    request = requests.post('https://api.github.com/graphql', json={'query': query}, headers=HEADERS)
-    if request.status_code == 200:
-        return request.json()
-    else:
-        print("Query failed to run by returning code of {}. {}".format(request.status_code, query))
-        return None
+        # First commit ansible/Ansible Feb 23 14:17:24 2012
+        self.date_from = self.config.date_from
+        self.date_to = self.__update_delta(self.date_from) # = date_from + self.config.timedelta
+        self.date_end = self.config.date_to
 
-def has_ansible_folders(d):
-    return d.get('name') in ['tasks', 'playbooks', 'handlers', 'roles', 'meta'] and d.get('type') == 'tree'
+        # data
+        self.remaining_calls = 1 
+
+    def __update_delta(self, date):
+        """
+        Update a date by the timedelta defined in self.config
+        """
+        date = date.replace('T', ' ').replace('Z', '')
+        date = datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+        date += timedelta(hours=self.config.timedelta)
+        date = date.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return date
+
+    def __update_dates(self):
+        self.date_from = self.__update_delta(self.date_from)
+        self.date_to = self.__update_delta(self.date_to)
+
+    def __run_query(self, query): 
+        """
+        Run a graphql query 
+        """
+        request = requests.post('https://api.github.com/graphql', json={'query': query}, headers=HEADERS)
+        if request.status_code == 200:
+            return request.json()
+        else:
+            print("Query failed to run by returning code of {}. {}".format(request.status_code, query))
+            return None
     
+    def is_ansible_dir(self, d):
+        return d.get('name') in ['tasks', 'playbooks', 'handlers', 'roles', 'meta'] and d.get('type') == 'tree'
 
-if __name__ == '__main__':
+    def __filter_repositories(self, edges):
+        for node in edges:
+            node = node.get('node', {})
 
-    config = Configuration()
+            has_issues_enabled = node.get('hasIssuesEnabled', True)
+            has_issues = node.get('issues', {}).get('totalCount', 0) > 0
+            has_releases = node.get('releases', {}).get('totalCount', 0) > 0 
+            is_archived = node.get('isArchived', False)
+            is_disabled = node.get('isDisabled', False)
+            is_mirror = node.get('isMirror', False)
+            is_fork = node.get('isFork', False)
+            is_locked = node.get('isLocked', False)
+            is_template = node.get('isTemplate', False)
+            is_active = node.get('pushedAt') >= self.config.pushed_after
 
+            if not has_issues_enabled:
+                continue
 
-    remaining_calls = 1
-    
-    # First commit ansible/Ansible Feb 23 14:17:24 2012
-    date_from = config.date_from()
-    date_to = config.date_to()
+            if is_archived or is_disabled or is_mirror or is_fork or is_locked or is_template:
+                continue
 
-    data = {}
-    
-    while remaining_calls > 0:
+            if not has_issues:
+                continue
 
-        has_next_page = True
-        end_cursor = None
+            if not has_releases:
+                continue
+
+            if not is_active:
+                continue
+
+            node['defaultBranchRef'] = node.get('defaultBranchRef', {}).get('name')
+            node['owner'] = node.get('owner', {}).get('login')
+            node['stargazers'] = node.get('stargazers', {}).get('totalCount')
+            node['watchers'] = node.get('watchers', {}).get('totalCount')
+            node['releases'] = node.get('releases', {}).get('totalCount')
+            node['issues'] = node.get('issues', {}).get('totalCount')
+
+            yield node
+
+    def mine(self):
         
-        while remaining_calls > 0 and has_next_page:
-            modified_query = re.sub('DATE_FROM', date_from, config.build_query()) 
-            modified_query = re.sub('DATE_TO', date_to, modified_query) 
-
-            if not end_cursor:
-                modified_query = re.sub('<after>', '', modified_query) 
-            else:
-                modified_query = re.sub('<after>', ', after: "{}"'.format(str(end_cursor)), modified_query) 
-
-            """
-            print(f'Remaining calls: {remaining_calls}')
-            print(f'Searching after: {str(end_cursor)}')
-            print(modified_query[2:150])
-            """
-
-            result = run_query(modified_query) # Execute the query
+        while self.remaining_calls > 0 and self.date_from <= self.date_end:
+            print(f'From: {self.date_from} to {self.date_to}')
             
-            if not result:
-                break
-                
-            data['repositoryCount'] = result["data"]["search"]["repositoryCount"]
-            data['pageInfo'] = result["data"]["search"]["pageInfo"]
+            has_next_page = True
+            end_cursor = None
 
-            repositories = []
+            while self.remaining_calls > 0 and has_next_page:
+                query = re.sub('DATE_FROM', self.date_from, self.config.query) 
+                query = re.sub('DATE_TO', self.date_to, query) 
+                query = re.sub('AFTER', '', query) if not end_cursor else re.sub('AFTER', f', after: "{end_cursor}"', query)
 
-            edges = result.get("data", {}).get("search", {}).get("edges", [])
+                """
+                print(f'Searching after: {str(end_cursor)}')
+                print(str(query[2:150]).strip())
+                """
+                result = self.__run_query(query) # Execute the query
+                print(f'Remaining calls: {self.remaining_calls}')
             
-            for node in edges:
-                node = node.get('node', {})
-
-                has_issues_enabled = node.get("hasIssuesEnabled", True)
-                has_issues = node.get('issues', {}).get('totalCount', 0) > 0 
-                has_releases = node.get('releases', {}).get('totalCount', 0) > 0 
-                is_archived = node.get("isArchived", False)
-                is_disabled = node.get("isDisabled", False)
-                is_mirror = node.get("isMirror", False)
-
-                #pushedAt = dateutils.parse(node.get('pushedAt'))
-                #is_inactive = pushedAt < YYYY-MM-DD?? 
+                if not result:
+                    break
                 
-                #if is_inactive:
-                #    continue
+                self.remaining_calls = int(result['data']['rateLimit']['remaining'])
 
-                if not has_issues_enabled:
-                    continue
-                
-                if is_archived or is_disabled or is_mirror:
-                    continue
+                has_next_page = bool(result['data']['search']['pageInfo']['hasNextPage'])
+                end_cursor = str(result['data']['search']['pageInfo']['endCursor'])
 
-                if not has_issues:
-                    continue
+                edges = result.get('data', {}).get('search', {}).get('edges', [])
 
-                if not has_releases:
-                    continue
+                for node in self.__filter_repositories(edges):
 
-                object = node.get('object')
+                    yield Repository(id=node.get('id'),
+                                     default_branch=node.get('defaultBranchRef'),
+                                     owner=node.get('owner'),
+                                     name=node.get('name'),
+                                     url=node.get('url'),
+                                     primary_language=node.get('primaryLanguage', {}).get('name'),
+                                     created_at=node.get('createdAt'),
+                                     pushed_at=node.get('pushedAt'),
+                                     stars=int(node.get('stargazers', 0)),
+                                     releases=int(node.get('releases', 0)),
+                                     issues=int(node.get('issues', 0)))
 
-                if not object:
-                    continue
-                
-                entries = object.get('tree', {}).get('entries', [])
-                
-                found = 0
-                for entry in entries:
-                    if has_ansible_folders(entry):
-                        found += 1
-                        if entry.get('name') in ['playbooks']:
-                            found += 1
-                    
-                if found >= 2:  # change this number if you want to be more conservative and filter more repos. It was set to 2
-                    node['totalCommits'] = object.get('history', {}).get('totalCount', 0)
-                    node.pop('object', None)
-                    node['ansibleFolders'] = found 
-                    repositories.append(node)
-                    #break
-                    
-
-            current_repos = data.get('repositories', None)
-            if not current_repos:
-                current_repos = repositories
-            elif len(repositories) > 0:
-                current_repos.extend(repositories)
-
-            data['repositories'] = current_repos    
-            data['rateLimit'] = result["data"]["rateLimit"]
-            data['dateFrom'] = date_from
-            data['dateTo'] = date_to
-
-            with open(os.path.join('data','all_repos.json'), 'w') as outfile:
-                json.dump(data, outfile)
-
-            remaining_calls = int(data['rateLimit']['remaining'])
-            has_next_page = bool(data['pageInfo']['hasNextPage'])
-            end_cursor = str(data['pageInfo']['endCursor'])
-            
-        data['totalCount'] = data.get('totalCount', 0) + data.get('repositoryCount', 0)
-        
-        date_from = date_from.replace('T', ' ').replace('Z', '')
-        date_from = datetime.strptime(date_from, '%Y-%m-%d %H:%M:%S')
-        date_from += timedelta(hours=24)
-        date_from = date_from.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-        date_to = date_from.replace('T', ' ').replace('Z', '')
-        date_to = datetime.strptime(date_to, '%Y-%m-%d %H:%M:%S')  
-        date_to += timedelta(hours=24)
-        date_to = date_to.strftime('%Y-%m-%dT%H:%M:%SZ')
+            #print('\033c')
+            self.__update_dates()
