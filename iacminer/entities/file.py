@@ -1,7 +1,7 @@
 class DefectiveFile():
 
     def __init__(self, filepath: str, bic_commit: str, fix_commit: str, ):
-        self.filepath = filepath  # Name at fixing commit
+        self.filepath = filepath  # Name at FIXING COMMIT
         self.bic_commit = bic_commit
         self.fix_commit = fix_commit
 

@@ -39,6 +39,19 @@ query = """
                     isDisabled
                     isMirror
                     isFork
+                    object(expression: "master") {
+                        ... on Commit {
+                            tree {
+                                entries {
+                                    name
+                                    type
+                                }
+                            }
+                            history {
+                                totalCount
+                            }
+                        }
+                    }
                 }
             }
         }

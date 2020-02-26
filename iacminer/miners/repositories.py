@@ -59,18 +59,22 @@ class RepositoryMiner():
 
     def __filter_repositories(self, edges):
         for node in edges:
-            node = node.get('node', {})
+            
+            node = node.get('node')
+
+            if not node:
+                continue
 
             has_issues_enabled = node.get('hasIssuesEnabled', True)
             has_issues = node.get('issues', {}).get('totalCount', 0) > 0
-            has_releases = node.get('releases', {}).get('totalCount', 0) > 0 
+            has_releases = node.get('releases', {}).get('totalCount', 0) > 0 # TODO: handle number of releases
             is_archived = node.get('isArchived', False)
             is_disabled = node.get('isDisabled', False)
             is_mirror = node.get('isMirror', False)
             is_fork = node.get('isFork', False)
             is_locked = node.get('isLocked', False)
             is_template = node.get('isTemplate', False)
-            is_active = node.get('pushedAt') >= self.config.pushed_after
+            is_active = (node.get('pushedAt') and node.get('pushedAt') >= self.config.pushed_after) or node.get('createdAt') >= self.config.pushed_after
 
             if not has_issues_enabled:
                 continue
@@ -86,6 +90,14 @@ class RepositoryMiner():
 
             if not is_active:
                 continue
+            
+            object = node.get('object')
+            if not object:
+                continue
+
+            entries = object.get('tree', {}).get('entries', [])
+            if not any([self.is_ansible_dir(entry) for entry in entries]):
+                continue
 
             node['defaultBranchRef'] = node.get('defaultBranchRef', {}).get('name')
             node['owner'] = node.get('owner', {}).get('login')
@@ -93,7 +105,7 @@ class RepositoryMiner():
             node['watchers'] = node.get('watchers', {}).get('totalCount')
             node['releases'] = node.get('releases', {}).get('totalCount')
             node['issues'] = node.get('issues', {}).get('totalCount')
-
+            node['primaryLanguage'] = '' if not node.get('primaryLanguage') else node['primaryLanguage']['name']
             yield node
 
     def mine(self):
@@ -119,6 +131,9 @@ class RepositoryMiner():
                 if not result:
                     break
                 
+                if not result.get('data'):
+                    break
+                
                 self.remaining_calls = int(result['data']['rateLimit']['remaining'])
 
                 has_next_page = bool(result['data']['search']['pageInfo']['hasNextPage'])
@@ -128,17 +143,17 @@ class RepositoryMiner():
 
                 for node in self.__filter_repositories(edges):
 
-                    yield Repository(id=node.get('id'),
-                                     default_branch=node.get('defaultBranchRef'),
-                                     owner=node.get('owner'),
-                                     name=node.get('name'),
-                                     url=node.get('url'),
-                                     primary_language=node.get('primaryLanguage', {}).get('name'),
-                                     created_at=node.get('createdAt'),
-                                     pushed_at=node.get('pushedAt'),
+                    yield Repository(id=str(node.get('id')),
+                                     default_branch=str(node.get('defaultBranchRef')),
+                                     owner=str(node.get('owner')),
+                                     name=str(node.get('name')),
+                                     url=str(node.get('url')),
+                                     primary_language=str(node.get('primaryLanguage')),
+                                     created_at=str(node.get('createdAt')),
+                                     pushed_at=str(node.get('pushedAt')),
                                      stars=int(node.get('stargazers', 0)),
+                                     watchers=int(node.get('watchers', 0)),
                                      releases=int(node.get('releases', 0)),
                                      issues=int(node.get('issues', 0)))
 
-            #print('\033c')
             self.__update_dates()

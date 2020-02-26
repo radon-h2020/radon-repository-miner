@@ -1,19 +1,28 @@
-import csv
 import json
 import os
 
-def load_repositories():
-    repositories = []
-    with open(os.path.join('data','repositories.csv'), 'r') as infile:
-        reader = csv.reader(infile)
-        next(reader, None)
-        
-        for row in reader:
-            repositories.append('{}/{}'.format(row[0], row[1]))
+from iacminer.entities.repository import RepositoryEncoder, RepositoryDecoder
 
-    return repositories
+def load_ansible_repositories():
+    path = os.path.join('data', 'ansible_repositories.json')
+    if os.path.isfile(path):
+        with open(path, 'r') as in_file:
+            return json.load(in_file, cls=RepositoryDecoder) 
+    
+    return []
 
+def save_ansible_repositories(repositories: list):
 
-def save_json(fixing_commits, filename: str):
-    with open(os.path.join('data', filename), 'w') as outfile:
-        return json.dump(fixing_commits, outfile)
+    dict_repos = []
+    for r in repositories:
+        dict_repos.append(r.__dict__) 
+
+    path = os.path.join('data', 'ansible_repositories.json')
+    with open(path, 'w') as outfile:
+        return json.dump(repositories, outfile, cls=RepositoryEncoder)
+
+def difference(list1, list2):
+    new_list = []
+    new_list.extend([j for j in list1 if j not in list2])
+    new_list.extend([j for j in list2 if j not in list1])
+    return new_list

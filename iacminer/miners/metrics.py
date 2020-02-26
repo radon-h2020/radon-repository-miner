@@ -12,7 +12,7 @@ from pydriller.metrics.process.lines_count import LinesCount
 
 from pathlib import Path
 
-from ansiblemetrics.main import MetricExtractor
+from ansiblemetrics.metrics_extractor import MetricExtractor
 from iacminer.text.text_processing import TextProcessing
 
 class MetricsMiner():
@@ -30,17 +30,13 @@ class MetricsMiner():
         history_complexity = HistoryComplexity(path_to_repo, from_commit, to_commit).count()
         median_hunks_count = HunksCount(path_to_repo, from_commit, to_commit).count()
         lines_count = LinesCount(path_to_repo, from_commit, to_commit).count()
-        #lines_count_in_commit = LinesCount(path_to_repo, commit_hash, commit_hash).count()
 
-        return [
-                commits_count,
+        return [commits_count,
                 contributors_count,
                 highest_contributors_experience,
                 history_complexity,
                 median_hunks_count,
-                lines_count
-                #lines_count_in_commit
-            ]
+                lines_count]
             
     def mine_product_metrics(self, content: str) -> list:
         """
@@ -56,9 +52,9 @@ class MetricsMiner():
 
             for k in ansible_metrics[item]:
                 metric = f'{item}_{k}'
-                product_metrics[metric] = ansible_metrics[item][k]
+                value = ansible_metrics[item][k]
+                product_metrics[metric] = value if value else 0
 
-    
         return product_metrics
 
     def mine_text(self, content: str) -> list:

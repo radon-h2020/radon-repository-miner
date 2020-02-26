@@ -1,33 +1,31 @@
 repositories:
-    stars: ">10"
-    releases: ">10"
+    stars: ">=0"
+    releases: ">0"
         
     mirror: false
     archived: false
     created:
         date_from:
-            year: "2014"
-            month: "02"
-            day: "23"
+            year: "2019"
+            month: "09"
+            day: "19"
             HH: "00"
             mm: "00"
             ss: "00"
         date_to:
             year: "2020"
             month: "02"
-            day: "20"
+            day: "01"
             HH: "00"
             mm: "00"
             ss: "00"
         timedelta: 
             hours: "24"
-    
     pushed:
         after:
             year: "2019"
-            month: "08"
-            day: "20"
+            month: "01"
+            day: "01"
             HH: "00"
             mm: "00"
             ss: "00"
-            

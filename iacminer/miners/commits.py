@@ -31,28 +31,21 @@ class CommitsMiner():
 
         self.branch = branch
         self.repo = git_repo
-        owner_repo = str(git_repo.path).split('/')[1:]
-        self.repo_name = f'{owner_repo[0]}/{owner_repo[1]}'
+        #owner_repo = str(git_repo.path).split('/')[1:]
+        self.repo_name = git_repo.path.name #f'{owner_repo[0]}/{owner_repo[1]}'
+        print(self.repo_name)
         self.repo_path = str(git_repo.path)
         
-        self.defect_prone_files = {}
-        self.defect_free_files = {}
+        self.defect_prone_files = dict()
+        self.defect_free_files = dict()
 
         # Get releases for repository        
         for commit in RepositoryMining(self.repo_path, only_releases=True).traverse_commits():
             self.__releases.append(commit.hash)
         
         # Get commits for repository        
-        for commit in RepositoryMining(self.repo_path, only_in_branch=self.branch).traverse_commits():
+        for commit in RepositoryMining(self.repo_path).traverse_commits():
             self.__commits.append(commit.hash)
-
-
-    def __has_fix_in_message(self, message: str):
-        """
-        Analyze a message and check whether it contains references to some fix for an issue 
-        """
-        fix = re.match(r'fix(e(d|s))?\s+.*\(?#\d+\)?', message.lower())
-        return fix is not None
 
     def __set_commits_closing_issues(self):
         """ 
@@ -61,63 +54,54 @@ class CommitsMiner():
         """
         g = Git()
         for issue in g.get_issues(self.repo_name):
-            
             if not issue:
                 continue
-            
             try:
                 issue_events = issue.get_events()
+
                 if issue_events is None or issue_events.totalCount == 0:
                     return None
                 
                 for e in issue_events: 
+
                     if e.event.lower() == 'closed' and e.commit_id:
                         self.__commits_closing_issues.add(e.commit_id)
 
             except ReadTimeout:
                 pass                
    
-    def __set_defect_prone_files(self, file: DefectiveFile):
+    def __set_defect_prone_and_free_files(self, file: DefectiveFile):
         """
-        Set the names of the file at each release within the buggy-free period: [file.bic_commit, file.fix_commit)
+        Traverse the commits from the fixing commit to the beginning of the project, and save the filename at each snapshot as defect-prone or defect-free.
         """
-        for commit in RepositoryMining(self.repo_path, from_commit=file.bic_commit, to_commit=file.fix_commit, only_in_branch=self.branch, reversed_order=True).traverse_commits():
-
-            if commit.hash == file.fix_commit:
-                continue
-
-            for modified_file in commit.modifications:
-                if file.filepath not in (modified_file.old_path, modified_file.new_path):
-                    continue
-                
-                # Handle renaming
-                if modified_file.change_type == ModificationType.RENAME:
-                    file.filepath = modified_file.old_path
-
-            if commit.hash in self.__releases:
-                self.defect_prone_files.setdefault(commit.hash, set()).add(file.filepath)
-
-    def __set_defect_free_files(self, file: DefectiveFile):
-        """
-        Set the names of the file at each release from the beginning of the project
-        to the first buggy inducing commit for that file: [start, file.bic_commit)
-        """
-
-        # From file.bic_commit (i.e., bic commit) to the oldest commit
-        filepath = file.filepath
         
-        for commit in RepositoryMining(self.repo_path, from_commit=file.bic_commit, reversed_order=True, only_in_branch=self.branch).traverse_commits():
+        filepath = file.filepath
+        defect_prone = True
+
+        for commit in RepositoryMining(self.repo_path, from_commit=file.fix_commit, reversed_order=True).traverse_commits():
             
+            # get modified file where filepath not in (modified_file.old_path, modified_file.new_path)
             for modified_file in commit.modifications:
+                
                 if filepath not in (modified_file.old_path, modified_file.new_path):
                     continue
-                
+
                 # Handle renaming
                 if modified_file.change_type == ModificationType.RENAME:
                     filepath = modified_file.old_path
 
-            if commit.hash != file.bic_commit and commit.hash in self.__releases:
-                self.defect_free_files.setdefault(commit.hash, set()).add(filepath)
+            if commit.hash == file.fix_commit:
+                continue
+
+            if commit.hash in self.__releases:
+                if defect_prone:
+                    self.defect_prone_files.setdefault(commit.hash, set()).add(filepath)
+                else:
+                    self.defect_free_files.setdefault(commit.hash, set()).add(filepath)
+                                    
+            # From here on the file is defect_free
+            if commit.hash == file.bic_commit:
+                defect_prone = False
 
     def __save_fixing_commit(self, commit):
         DESTINATION_PATH = os.path.join('data', 'fixing_commits.json')
@@ -143,9 +127,8 @@ class CommitsMiner():
         renamed_files = {}  # To keep track of renamed files
         defective_files = []
 
-        for commit in RepositoryMining(self.repo_path, only_in_branch=self.branch, reversed_order=True).traverse_commits():
-            
-            #is_fixing_commit = self.__has_fix_in_message(commit.msg) or (commit.hash in self.__commits_closing_issues)
+        for commit in RepositoryMining(self.repo_path, reversed_order=True).traverse_commits():
+
             is_fixing_commit = commit.hash in self.__commits_closing_issues
             modifies_iac_files = False
 
@@ -158,6 +141,9 @@ class CommitsMiner():
                 # Keep only files that have been modified (no renamed or deleted files)
                 elif modified_file.change_type != ModificationType.MODIFY:
                     continue
+                
+                if not is_fixing_commit:
+                    break
 
                 # Keep only Ansible files
                 if not filters.is_ansible_file(modified_file.new_path):
@@ -165,13 +151,11 @@ class CommitsMiner():
                 
                 modifies_iac_files = True
 
-                if not is_fixing_commit:
-                    break
-
                 buggy_inducing_commits = self.repo.get_commits_last_modified_lines(commit, modified_file)
                 if not buggy_inducing_commits:
                     continue
                 
+                # Get the index of the oldest commit among those that induced the bug
                 min_idx = len(self.__commits)-1
                 for hash in buggy_inducing_commits[modified_file.new_path]:
                     idx = self.__commits.index(hash)
@@ -186,13 +170,12 @@ class CommitsMiner():
                                    fix_commit=commit.hash)
 
                 try:
-
                     # Get defective file
                     idx = defective_files.index(df)
                     df = defective_files[idx]
 
                     # If the oldest buggy inducing commit found in the previous step is 
-                    # older than the bic saved previously, then replace it
+                    # older than a bic saved previously, then replace it
                     idx = self.__commits.index(df.bic_commit)
                     if min_idx < idx:  
                         df.bic_commit = oldest_bic_hash  
@@ -211,10 +194,7 @@ class CommitsMiner():
         """
 
         self.__set_commits_closing_issues()
-
-        if not self.__commits_closing_issues:
-            return
-
-        for file in self.find_defective_files():
-            self.__set_defect_prone_files(file)
-            self.__set_defect_free_files(file)
+        
+        if self.__commits_closing_issues:
+            for file in self.find_defective_files():
+                self.__set_defect_prone_and_free_files(file)

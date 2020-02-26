@@ -1,14 +1,17 @@
+import copy
 import git
 import os
 import pandas as pd
 import shutil
 import sys
+import json
 
 path = os.path.join(os.path.dirname(__file__), os.pardir)
 sys.path.append(path)
 
 from pathlib import Path
 from pydriller.repository_mining import GitRepository, RepositoryMining
+from pydriller.domain.commit import ModificationType
 
 from iacminer import filters
 from iacminer.configuration import Configuration
@@ -17,9 +20,9 @@ from iacminer.entities.repository import Repository
 from iacminer.miners.commits import CommitsMiner
 from iacminer.miners.metrics import MetricsMiner
 from iacminer.miners.repositories import RepositoryMiner
-from iacminer.utils import load_repositories
+from iacminer import utils
 
-DESTINATION_PATH = os.path.join('data', 'metrics.csv')
+DESTINATION_PATH = os.path.join('data', 'delta_metrics.csv')
 
 class Main():
 
@@ -40,7 +43,7 @@ class Main():
         self.delete_repo()
         os.makedirs(self.__root_path)
 
-        git.Git(self.__root_path).clone(f'https://github.com/{self.repository.remote_path}.git', branch='master')
+        git.Git(self.__root_path).clone(f'https://github.com/{self.repository.remote_path}.git', branch=self.repository.default_branch)
         git_repo = GitRepository(self.__repo_path)
 
         self.__git_repo = git_repo
@@ -70,12 +73,13 @@ class Main():
 
         return _all
 
-    def save(self, filepath:str, metadata:dict, process_metrics:dict, product_metrics:dict):
+    def save(self, filepath:str, metadata:dict, process_metrics:dict, product_metrics:dict, delta_metrics:dict):
         
         filepath = str(Path(filepath))
         
         metrics = metadata
         metrics.update(product_metrics)
+        metrics.update(delta_metrics)
 
         # Saving process metrics
         metrics['commits_count'] = process_metrics[0].get(filepath, 0)
@@ -112,11 +116,12 @@ class Main():
             releases_hash.append(commit.hash)
             releases_date.append(str(commit.committer_date))
 
-        for commit in RepositoryMining(self.__repo_path, only_in_branch='master').traverse_commits():
+        for commit in RepositoryMining(self.__repo_path, only_in_branch=branch).traverse_commits():
             commits_hash.append(commit.hash)
 
-        while releases_hash:
-            hash = releases_hash.pop(0)
+        tmp_releases_hash = releases_hash.copy()
+        while tmp_releases_hash:
+            hash = tmp_releases_hash.pop(0)
             date = releases_date.pop(0)
             idx = commits_hash.index(hash)
             releases.append(Release(commits_hash[0], commits_hash[idx], date))
@@ -124,8 +129,13 @@ class Main():
 
         # Mine fixing commits
         commits_miner.mine()
-
-        for release in releases:
+        
+        previous_release_product_metrics = dict()
+        previous_release_tokens = dict()
+        
+        for i in range(0, len(releases)-1):
+            
+            release = releases[i]
 
             # If the release does not have any affected files, do not consider it
             if not commits_miner.defect_prone_files.get(release.end) and not commits_miner.defect_free_files.get(release.end):
@@ -141,40 +151,64 @@ class Main():
                     'release_date': release.date                    
             }
 
+            # Getting filenames in previous release
+            renamed_files = dict()
+            previous_name_of = dict()
+
+            if i < len(releases)-1:
+                for commit in RepositoryMining(self.__repo_path, from_commit=release.end, to_commit=releases[i+1].end).traverse_commits():
+
+                    for modified_file in commit.modifications:
+
+                        if modified_file.change_type != ModificationType.RENAME:
+                            continue
+
+                        oldest_filepath = renamed_files.get(modified_file.old_path,
+                                                            modified_file.old_path)
+                        renamed_files[modified_file.new_path] = filepath
+                        previous_name_of[modified_file.new_path] = oldest_filepath
+                
+                    if commit.hash in releases_hash and commit.hash != release.end:
+                        break
+            
             defect_prone_files = commits_miner.defect_prone_files.get(release.end, set())
-            #unclassified_files = self.all_files() - defect_prone_files
             unclassified_files = commits_miner.defect_free_files.get(release.end, set())
-
-            for filepath in defect_prone_files:
-                metadata['filepath'] = filepath
-                metadata['defective'] = 'yes'
-
-                try:
-                    file_content = self.get_content(filepath)
-                    product_metrics = metrics_miner.mine_product_metrics(file_content)
-                    tokens = metrics_miner.mine_text(file_content)
-                    metadata['tokens'] = ' '.join(tokens)
-                    self.save(filepath, metadata, process_metrics, product_metrics)
-
-                except Exception:
-                    pass#print(f'An unknown error has occurred for file X)
-
-            for filepath in unclassified_files:
+            
+            for filepath in defect_prone_files.union(unclassified_files):
+                
                 if not filters.is_ansible_file(filepath):
                     continue
 
-                metadata['filepath'] = filepath
-                metadata['defective'] = 'no'
-
                 try:
                     file_content = self.get_content(filepath)
                     product_metrics = metrics_miner.mine_product_metrics(file_content)
                     tokens = metrics_miner.mine_text(file_content)
-                    metadata['tokens'] = ' '.join(tokens)
-                    self.save(filepath, metadata, process_metrics, product_metrics)
+                except Exception as e:
+                    print(release.end)
+                    print(str(e))
+                    continue
 
-                except Exception:
-                    pass#print(f'An unknown error has occurred for file X')
+                #### DELTA METRICS 
+                previous_filepath = previous_name_of.get(filepath, filepath)
+                delta_metrics = dict()
+
+                for k, v in product_metrics.items():
+                    delta_k = f'delta_{k}'
+                    delta_metrics[delta_k] = v - previous_release_product_metrics.get(previous_filepath, {}).get(k, 0)
+
+                previous_tokens = previous_release_tokens.get(previous_filepath, []) 
+                delta_tokens = utils.difference(tokens, previous_tokens)
+
+                previous_release_product_metrics[filepath] = product_metrics
+                previous_release_tokens[filepath] = tokens
+
+                #### END DELTA METRICS
+                
+                metadata['filepath'] = filepath
+                metadata['defective'] = 'yes' if filepath in defect_prone_files else 'no'
+                metadata['tokens'] = ' '.join(tokens)
+                metadata['delta_tokens'] = ' '.join(delta_tokens)
+                self.save(filepath, metadata, process_metrics, product_metrics, delta_metrics)
 
             self.__git_repo.reset()
         
@@ -183,65 +217,35 @@ class Main():
 
 if __name__=='__main__':
 
-    repository_count =  0
+    ansible_repositories = utils.load_ansible_repositories()
 
+    """ This is for the entire process
     for repo in RepositoryMiner(Configuration()).mine():
-        repository_count += 1
-        print(f'{repository_count} - Repository: {repo.remote_path}')
-        print(f'\tMain branch: {repo.default_branch}')
-        print(f'\tStars: {repo.stars}')
-        print(f'\tReleases: {repo.releases}')
-        print(f'\tIssues: {repo.issues}')
-
+        if repo in ansible_repositories:
+            continue
+    
         main = Main(repo)
         
-        ansible_files = 0
+        n_ansible_files = 0
         all_files = main.all_files()
 
         for filepath in all_files:
             if filters.is_ansible_file(filepath):
-                ansible_files += 1
+                n_ansible_files += 1
         
-        print(f'\tAnsible files: {ansible_files}')
-
-        if ansible_files/len(all_files) < 0.11:
+        if n_ansible_files == 0:
             main.delete_repo()
             continue
+        
+        ansible_repositories.append(copy.deepcopy(repo))
+        utils.save_ansible_repositories(ansible_repositories)
 
-        # Save 
-        # {
-        #   total_repositories: repository_count,
-        #   ansible_repositories:{
-        #      repo_info
-        #   }
-        # }
-        # ansible repo in ansible_repositories.json
+        repository_count = len(ansible_repositories)
+        print(f'{repository_count} - Starting analysis for {repo.remote_path}')
+        main.run(branch=repo.default_branch)
+    """
+
+    for repo in ansible_repositories:
         print(f'Starting analysis for {repo.remote_path}')
-        main.run(branch=repo['defaultBranchRef'])
-
-
-        # filter ansible repo
-
-
-"""
-def save(self, repository):
-                
-    if os.path.isfile(DESTINATION_PATH):
-        with open(DESTINATION_PATH, 'r') as in_file:
-            dataset = pd.read_csv(in_file)
-
-    dataset = dataset.append(metrics, ignore_index=True)
-
-    with open(DESTINATION_PATH, 'w') as out:
-        dataset.to_csv(out, mode='w', index=False)
-
-def load_repositories():
-    patah = os.path.join('data', 'repositories.json')
-    if os.path.isfile(path):
-        with open(path, 'r') as in_file:
-            return json.load(in_file) 
-
-def save_json(fixing_commits, filename: str):
-    with open(os.path.join('data', filename), 'w') as outfile:
-        return json.dump(fixing_commits, outfile)
-"""
+        main = Main(repo)
+        main.run()
