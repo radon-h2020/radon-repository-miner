@@ -29,7 +29,22 @@ class Git():
         repo = self.__github.get_repo(repo)
 
         labels = []
-        for label in ('bug', 'ansible_bug', 'type:bug', 'fix'):
+        for label in ('bug', 
+                      'Bug',
+                      'bug :bug:',
+                      'ansible_bug',
+                      'Type: Bug',
+                      'Type: bug',
+                      'type: bug 🐛',
+                      'type:bug',
+                      'type: bug',
+                      'kind/bug',
+                      'kind/bugs',
+                      'bugfix',
+                      'critical-bug',
+                      '01 type: bug',
+                      'bug_report',
+                      'minor-bug'):
             try: 
                 labels.append(repo.get_label(label))
             except Exception:
@@ -42,11 +57,15 @@ class Git():
 
         yield
 
+
     def get_all_issues(self, repo: str):
 
         repo = self.__github.get_repo(repo)
-        issues = repo.get_issues(state='closed', sort='created', direction='desc')
-        for issue in issues:
-            yield issue
+        try: 
+            issues = repo.get_issues(state='closed', labels=[repo.get_label('kind/bug')], sort='created', direction='desc')
+            for issue in issues:
+                yield issue
+        except Exception:
+            pass
 
         yield

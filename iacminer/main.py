@@ -242,25 +242,26 @@ if __name__=='__main__':
         main.run(branch=repo.default_branch)
     """
 
-    labels = {}
-    from mygit import Git
+    #labels = {}
+    #from mygit import Git
+    #g = Git()
+
     i = 0
-    g = Git()
 
     for repo in ansible_repositories:
+        """
         print(f'Starting analysis for {repo.remote_path}')
         for issue in g.get_all_issues(repo.remote_path):
             if not issue:
                 continue
             for label in issue.labels:
-                labels[label.name.lower()] = labels.get(label.name.lower(), 0) + 1
+                labels[label.name] = labels.get(label.name, 0) + 1
 
         print(str(labels))
         """
         i += 1
-        if i <= 1:
-            continue
-        print(f'Starting analysis for {repo.remote_path}')
+        #if i <= X:
+        #    continue
+        print(f'{i} Starting analysis for {repo.remote_path}')
         main = Main(repo)
         main.run()
-        """
