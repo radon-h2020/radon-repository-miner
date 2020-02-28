@@ -51,6 +51,9 @@ class MetricsMiner():
                 break
 
             for k in ansible_metrics[item]:
+                if 'relative' in k: # for the moment keep only absolute metrics
+                    continue
+
                 metric = f'{item}_{k}'
                 value = ansible_metrics[item][k]
                 product_metrics[metric] = value if value else 0

@@ -41,3 +41,12 @@ class Git():
                 yield issue
 
         yield
+
+    def get_all_issues(self, repo: str):
+
+        repo = self.__github.get_repo(repo)
+        issues = repo.get_issues(state='closed', sort='created', direction='desc')
+        for issue in issues:
+            yield issue
+
+        yield

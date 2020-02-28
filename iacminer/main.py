@@ -22,7 +22,7 @@ from iacminer.miners.metrics import MetricsMiner
 from iacminer.miners.repositories import RepositoryMiner
 from iacminer import utils
 
-DESTINATION_PATH = os.path.join('data', 'delta_metrics.csv')
+DESTINATION_PATH = os.path.join('data', 'metrics.csv')
 
 class Main():
 
@@ -43,7 +43,7 @@ class Main():
         self.delete_repo()
         os.makedirs(self.__root_path)
 
-        git.Git(self.__root_path).clone(f'https://github.com/{self.repository.remote_path}.git', branch=self.repository.default_branch)
+        git.Git(self.__root_path).clone(f'https://github.com/{self.repository.remote_path}.git')#, branch=self.repository.default_branch)
         git_repo = GitRepository(self.__repo_path)
 
         self.__git_repo = git_repo
@@ -116,7 +116,7 @@ class Main():
             releases_hash.append(commit.hash)
             releases_date.append(str(commit.committer_date))
 
-        for commit in RepositoryMining(self.__repo_path, only_in_branch=branch).traverse_commits():
+        for commit in RepositoryMining(self.__repo_path).traverse_commits():
             commits_hash.append(commit.hash)
 
         tmp_releases_hash = releases_hash.copy()
@@ -131,7 +131,6 @@ class Main():
         commits_miner.mine()
         
         previous_release_product_metrics = dict()
-        previous_release_tokens = dict()
         
         for i in range(0, len(releases)-1):
             
@@ -145,10 +144,10 @@ class Main():
             self.__git_repo.checkout(release.end)
 
             metadata = {
-                    'repo': self.repository.remote_path,
-                    'release_start': release.start,
-                    'release_end': release.end,
-                    'release_date': release.date                    
+                'repo': self.repository.remote_path,
+                'release_start': release.start,
+                'release_end': release.end,
+                'release_date': release.date                    
             }
 
             # Getting filenames in previous release
@@ -181,12 +180,14 @@ class Main():
 
                 try:
                     file_content = self.get_content(filepath)
-                    product_metrics = metrics_miner.mine_product_metrics(file_content)
-                    tokens = metrics_miner.mine_text(file_content)
                 except Exception as e:
                     print(release.end)
                     print(str(e))
                     continue
+
+                
+                product_metrics = metrics_miner.mine_product_metrics(file_content)
+                tokens = metrics_miner.mine_text(file_content)
 
                 #### DELTA METRICS 
                 previous_filepath = previous_name_of.get(filepath, filepath)
@@ -196,18 +197,14 @@ class Main():
                     delta_k = f'delta_{k}'
                     delta_metrics[delta_k] = v - previous_release_product_metrics.get(previous_filepath, {}).get(k, 0)
 
-                previous_tokens = previous_release_tokens.get(previous_filepath, []) 
-                delta_tokens = utils.difference(tokens, previous_tokens)
 
                 previous_release_product_metrics[filepath] = product_metrics
-                previous_release_tokens[filepath] = tokens
 
                 #### END DELTA METRICS
                 
                 metadata['filepath'] = filepath
                 metadata['defective'] = 'yes' if filepath in defect_prone_files else 'no'
                 metadata['tokens'] = ' '.join(tokens)
-                metadata['delta_tokens'] = ' '.join(delta_tokens)
                 self.save(filepath, metadata, process_metrics, product_metrics, delta_metrics)
 
             self.__git_repo.reset()
@@ -245,7 +242,25 @@ if __name__=='__main__':
         main.run(branch=repo.default_branch)
     """
 
+    labels = {}
+    from mygit import Git
+    i = 0
+    g = Git()
+
     for repo in ansible_repositories:
+        print(f'Starting analysis for {repo.remote_path}')
+        for issue in g.get_all_issues(repo.remote_path):
+            if not issue:
+                continue
+            for label in issue.labels:
+                labels[label.name.lower()] = labels.get(label.name.lower(), 0) + 1
+
+        print(str(labels))
+        """
+        i += 1
+        if i <= 1:
+            continue
         print(f'Starting analysis for {repo.remote_path}')
         main = Main(repo)
         main.run()
+        """

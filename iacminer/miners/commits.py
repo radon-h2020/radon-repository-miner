@@ -31,9 +31,8 @@ class CommitsMiner():
 
         self.branch = branch
         self.repo = git_repo
-        #owner_repo = str(git_repo.path).split('/')[1:]
-        self.repo_name = git_repo.path.name #f'{owner_repo[0]}/{owner_repo[1]}'
-        print(self.repo_name)
+        owner_repo = str(git_repo.path).split('/')[1:]
+        self.repo_name = f'{owner_repo[0]}/{owner_repo[1]}'
         self.repo_path = str(git_repo.path)
         
         self.defect_prone_files = dict()
@@ -47,12 +46,19 @@ class CommitsMiner():
         for commit in RepositoryMining(self.repo_path).traverse_commits():
             self.__commits.append(commit.hash)
 
-    def __set_commits_closing_issues(self):
+    def __set_commits_closing_issues(self, retry=0):
         """ 
         Analyze a repository, and set the commits that fix some issues \
         by looking at the commit that explicitly closes or fixes those issues.
         """
-        g = Git()
+        try:
+            g = Git()
+        except Exception:
+            if retry == 2:
+                return
+                    
+            self.__set_commits_closing_issues(retry + 1)
+
         for issue in g.get_issues(self.repo_name):
             if not issue:
                 continue
@@ -70,7 +76,7 @@ class CommitsMiner():
             except ReadTimeout:
                 pass                
    
-    def __set_defect_prone_and_free_files(self, file: DefectiveFile):
+    def __label_files(self, file: DefectiveFile):
         """
         Traverse the commits from the fixing commit to the beginning of the project, and save the filename at each snapshot as defect-prone or defect-free.
         """
@@ -80,7 +86,6 @@ class CommitsMiner():
 
         for commit in RepositoryMining(self.repo_path, from_commit=file.fix_commit, reversed_order=True).traverse_commits():
             
-            # get modified file where filepath not in (modified_file.old_path, modified_file.new_path)
             for modified_file in commit.modifications:
                 
                 if filepath not in (modified_file.old_path, modified_file.new_path):
@@ -90,10 +95,13 @@ class CommitsMiner():
                 if modified_file.change_type == ModificationType.RENAME:
                     filepath = modified_file.old_path
 
+                if modified_file.change_type == ModificationType.ADD:
+                    filepath = None
+
             if commit.hash == file.fix_commit:
                 continue
 
-            if commit.hash in self.__releases:
+            if commit.hash in self.__releases and filepath:
                 if defect_prone:
                     self.defect_prone_files.setdefault(commit.hash, set()).add(filepath)
                 else:
@@ -197,4 +205,4 @@ class CommitsMiner():
         
         if self.__commits_closing_issues:
             for file in self.find_defective_files():
-                self.__set_defect_prone_and_free_files(file)
+                self.__label_files(file)

@@ -64,6 +64,10 @@ class TextProcessing():
         return tokens
 
     def camel_case_split(self, token): 
+        
+        if not token:
+            return ''
+
         words = [[token[0]]] 
     
         for c in token[1:]: 
