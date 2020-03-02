@@ -17,8 +17,12 @@ class Git():
         return self.__github.rate_limiting_resettime
 
     @property
-    def quota(self):
+    def quota(self): # search
         return self.__github.rate_limiting[0]
+
+    #@quota_core
+    #def quota_core(self):
+    #    self.__github.get_rate_limit().core .()
 
     def get_issues(self, repo: str):
         """ 
@@ -62,7 +66,7 @@ class Git():
 
         repo = self.__github.get_repo(repo)
         try: 
-            issues = repo.get_issues(state='closed', labels=[repo.get_label('kind/bug')], sort='created', direction='desc')
+            issues = repo.get_issues(state='closed', sort='created', direction='desc')
             for issue in issues:
                 yield issue
         except Exception:

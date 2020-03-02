@@ -6,6 +6,10 @@ import shutil
 import sys
 import json
 
+import github
+import time
+from datetime import datetime
+
 path = os.path.join(os.path.dirname(__file__), os.pardir)
 sys.path.append(path)
 
@@ -20,6 +24,7 @@ from iacminer.entities.repository import Repository
 from iacminer.miners.commits import CommitsMiner
 from iacminer.miners.metrics import MetricsMiner
 from iacminer.miners.repositories import RepositoryMiner
+from mygit import Git
 from iacminer import utils
 
 DESTINATION_PATH = os.path.join('data', 'metrics.csv')
@@ -90,6 +95,7 @@ class Main():
         metrics['median_hunks_count'] = process_metrics[4].get(filepath, 0)
         metrics['total_added_loc'] = process_metrics[5].get(filepath, {}).get('added', 0)
         metrics['total_removed_loc'] = process_metrics[5].get(filepath, {}).get('removed', 0)
+        metrics['files_count'] = process_metrics[6].get(filepath, 0)
 
         dataset = pd.DataFrame()
         
@@ -130,8 +136,8 @@ class Main():
         # Mine fixing commits
         commits_miner.mine()
         
-        previous_release_product_metrics = dict()
-        
+        #previous_release_product_metrics = dict()
+
         for i in range(0, len(releases)-1):
             
             release = releases[i]
@@ -150,6 +156,7 @@ class Main():
                 'release_date': release.date                    
             }
 
+            """
             # Getting filenames in previous release
             renamed_files = dict()
             previous_name_of = dict()
@@ -169,7 +176,8 @@ class Main():
                 
                     if commit.hash in releases_hash and commit.hash != release.end:
                         break
-            
+            """
+
             defect_prone_files = commits_miner.defect_prone_files.get(release.end, set())
             unclassified_files = commits_miner.defect_free_files.get(release.end, set())
             
@@ -180,15 +188,14 @@ class Main():
 
                 try:
                     file_content = self.get_content(filepath)
+                    product_metrics = metrics_miner.mine_product_metrics(file_content)
+                    tokens = metrics_miner.mine_text(file_content)
                 except Exception as e:
-                    print(release.end)
+                    print(f'commit: {release.end}')
                     print(str(e))
                     continue
-
-                
-                product_metrics = metrics_miner.mine_product_metrics(file_content)
-                tokens = metrics_miner.mine_text(file_content)
-
+    
+                """
                 #### DELTA METRICS 
                 previous_filepath = previous_name_of.get(filepath, filepath)
                 delta_metrics = dict()
@@ -201,11 +208,12 @@ class Main():
                 previous_release_product_metrics[filepath] = product_metrics
 
                 #### END DELTA METRICS
+                """
                 
                 metadata['filepath'] = filepath
                 metadata['defective'] = 'yes' if filepath in defect_prone_files else 'no'
                 metadata['tokens'] = ' '.join(tokens)
-                self.save(filepath, metadata, process_metrics, product_metrics, delta_metrics)
+                self.save(filepath, metadata, process_metrics, product_metrics, delta_metrics={})
 
             self.__git_repo.reset()
         
@@ -243,7 +251,6 @@ if __name__=='__main__':
     """
 
     #labels = {}
-    #from mygit import Git
     #g = Git()
 
     i = 0
@@ -259,9 +266,23 @@ if __name__=='__main__':
 
         print(str(labels))
         """
-        i += 1
-        #if i <= X:
-        #    continue
-        print(f'{i} Starting analysis for {repo.remote_path}')
-        main = Main(repo)
-        main.run()
+        try:
+        
+            i += 1
+            if i < 429:
+                continue
+            
+            print(f'{i} Starting analysis for {repo.remote_path}')
+            main = Main(repo)
+            main.run()
+
+        except github.RateLimitExceededException: 
+            t = (datetime.fromtimestamp(Git().rate_limiting_resettime) - datetime.now()).total_seconds() + 60
+            print(f'{datetime.now()} - API rate limit exceeded. Execution will restart in {round(t/60)} minutes')
+            t = (datetime.fromtimestamp(Git().rate_limiting_resettime) - datetime.now()).total_seconds() + 60
+            time.sleep(t)
+            Git()
+            print(f'{i} Re-Starting analysis for {repo.remote_path}')
+            main = Main(repo)
+            main.run()
+            

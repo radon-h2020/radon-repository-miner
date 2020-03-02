@@ -2296,20 +2296,6 @@
         "issues": 64
     },
     {
-        "id": "MDEwOlJlcG9zaXRvcnk0MTU3MTU0MQ==",
-        "default_branch": "None",
-        "owner": "inspec",
-        "name": "inspec",
-        "remote_path": "inspec/inspec",
-        "primary_language": "None",
-        "created_at": "None",
-        "pushed_at": "None",
-        "stars": 0,
-        "watchers": 164,
-        "releases": 153,
-        "issues": 2104
-    },
-    {
         "id": "MDEwOlJlcG9zaXRvcnk0MTYzNjQyNA==",
         "default_branch": "None",
         "owner": "netbootxyz",

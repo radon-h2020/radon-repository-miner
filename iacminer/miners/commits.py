@@ -27,7 +27,6 @@ class CommitsMiner():
         """
         self.__commits_closing_issues = set() # Set of commits sha closing issues
         self.__commits = []
-        self.__releases = []
 
         self.branch = branch
         self.repo = git_repo
@@ -37,10 +36,6 @@ class CommitsMiner():
         
         self.defect_prone_files = dict()
         self.defect_free_files = dict()
-
-        # Get releases for repository        
-        for commit in RepositoryMining(self.repo_path, only_releases=True).traverse_commits():
-            self.__releases.append(commit.hash)
         
         # Get commits for repository        
         for commit in RepositoryMining(self.repo_path).traverse_commits():
@@ -69,8 +64,10 @@ class CommitsMiner():
                     return None
                 
                 for e in issue_events: 
+                    is_merged = e.event.lower() == 'merged'
+                    is_closed = e.event.lower() == 'closed'
 
-                    if e.event.lower() == 'closed' and e.commit_id:
+                    if (is_merged or is_closed) and e.commit_id:
                         self.__commits_closing_issues.add(e.commit_id)
 
             except ReadTimeout:
@@ -78,7 +75,8 @@ class CommitsMiner():
    
     def __label_files(self, file: DefectiveFile):
         """
-        Traverse the commits from the fixing commit to the beginning of the project, and save the filename at each snapshot as defect-prone or defect-free.
+        Traverse the commits from the fixing commit to the beginning of the project,
+        and label the files as defect-prone or defect-free.
         """
         
         filepath = file.filepath
@@ -86,27 +84,22 @@ class CommitsMiner():
 
         for commit in RepositoryMining(self.repo_path, from_commit=file.fix_commit, reversed_order=True).traverse_commits():
             
-            for modified_file in commit.modifications:
-                
-                if filepath not in (modified_file.old_path, modified_file.new_path):
-                    continue
-
-                # Handle renaming
-                if modified_file.change_type == ModificationType.RENAME:
-                    filepath = modified_file.old_path
-
-                if modified_file.change_type == ModificationType.ADD:
-                    filepath = None
-
-            if commit.hash == file.fix_commit:
-                continue
-
-            if commit.hash in self.__releases and filepath:
+            # Label current filepath
+            if filepath and commit.hash != file.fix_commit:
                 if defect_prone:
                     self.defect_prone_files.setdefault(commit.hash, set()).add(filepath)
                 else:
                     self.defect_free_files.setdefault(commit.hash, set()).add(filepath)
-                                    
+
+            # Handle file renaming
+            for modified_file in commit.modifications:
+
+                if filepath not in (modified_file.old_path, modified_file.new_path):
+                    continue
+            
+                if modified_file.change_type == ModificationType.RENAME:
+                    filepath = modified_file.old_path
+            
             # From here on the file is defect_free
             if commit.hash == file.bic_commit:
                 defect_prone = False
@@ -145,14 +138,14 @@ class CommitsMiner():
                 # Handle renaming
                 if modified_file.change_type == ModificationType.RENAME:
                     renamed_files[modified_file.old_path] = renamed_files.get(modified_file.new_path, modified_file.new_path)
-                
-                # Keep only files that have been modified (no renamed or deleted files)
+                    continue
+
                 elif modified_file.change_type != ModificationType.MODIFY:
                     continue
                 
                 if not is_fixing_commit:
                     break
-
+                
                 # Keep only Ansible files
                 if not filters.is_ansible_file(modified_file.new_path):
                     continue

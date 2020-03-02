@@ -9,6 +9,7 @@ from pydriller.metrics.process.contributors_experience import ContributorsExperi
 from pydriller.metrics.process.history_complexity import HistoryComplexity
 from pydriller.metrics.process.hunks_count import HunksCount
 from pydriller.metrics.process.lines_count import LinesCount
+from pydriller.metrics.process.files_count import FilesCount
 
 from pathlib import Path
 
@@ -30,13 +31,15 @@ class MetricsMiner():
         history_complexity = HistoryComplexity(path_to_repo, from_commit, to_commit).count()
         median_hunks_count = HunksCount(path_to_repo, from_commit, to_commit).count()
         lines_count = LinesCount(path_to_repo, from_commit, to_commit).count()
+        files_count = FilesCount(path_to_repo, from_commit, to_commit).count()
 
         return [commits_count,
                 contributors_count,
                 highest_contributors_experience,
                 history_complexity,
                 median_hunks_count,
-                lines_count]
+                lines_count,
+                files_count]
             
     def mine_product_metrics(self, content: str) -> list:
         """
