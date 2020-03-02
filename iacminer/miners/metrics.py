@@ -31,15 +31,15 @@ class MetricsMiner():
         history_complexity = HistoryComplexity(path_to_repo, from_commit, to_commit).count()
         median_hunks_count = HunksCount(path_to_repo, from_commit, to_commit).count()
         lines_count = LinesCount(path_to_repo, from_commit, to_commit).count()
-        files_count = FilesCount(path_to_repo, from_commit, to_commit).count()
+        #files_count = FilesCount(path_to_repo, from_commit, to_commit).count()
 
         return [commits_count,
                 contributors_count,
                 highest_contributors_experience,
                 history_complexity,
                 median_hunks_count,
-                lines_count,
-                files_count]
+                lines_count]
+                #files_count]
             
     def mine_product_metrics(self, content: str) -> list:
         """

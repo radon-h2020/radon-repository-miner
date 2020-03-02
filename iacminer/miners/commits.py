@@ -78,7 +78,6 @@ class CommitsMiner():
         Traverse the commits from the fixing commit to the beginning of the project,
         and label the files as defect-prone or defect-free.
         """
-        
         filepath = file.filepath
         defect_prone = True
 
@@ -93,12 +92,14 @@ class CommitsMiner():
 
             # Handle file renaming
             for modified_file in commit.modifications:
-
+                
+                if not filepath:
+                    continue
+                
                 if filepath not in (modified_file.old_path, modified_file.new_path):
                     continue
-            
-                if modified_file.change_type == ModificationType.RENAME:
-                    filepath = modified_file.old_path
+        
+                filepath = modified_file.old_path
             
             # From here on the file is defect_free
             if commit.hash == file.bic_commit:
@@ -125,34 +126,44 @@ class CommitsMiner():
 
     def find_defective_files(self):
        
-        renamed_files = {}  # To keep track of renamed files
+        renamed_files = {}
         defective_files = []
 
         for commit in RepositoryMining(self.repo_path, reversed_order=True).traverse_commits():
-
+            
             is_fixing_commit = commit.hash in self.__commits_closing_issues
-            modifies_iac_files = False
 
+            modified_ansible_files = []
+
+            # Filter Modified Ansible files
             for modified_file in commit.modifications:
-               
-                # Handle renaming
-                if modified_file.change_type == ModificationType.RENAME:
-                    renamed_files[modified_file.old_path] = renamed_files.get(modified_file.new_path, modified_file.new_path)
-                    continue
-
-                elif modified_file.change_type != ModificationType.MODIFY:
-                    continue
                 
-                if not is_fixing_commit:
-                    break
-                
-                # Keep only Ansible files
                 if not filters.is_ansible_file(modified_file.new_path):
                     continue
                 
-                modifies_iac_files = True
+                if modified_file.change_type == ModificationType.ADD:
+                    continue
 
+                if modified_file.change_type == ModificationType.DELETE:
+                    continue
+
+                if modified_file.change_type == ModificationType.RENAME:
+                    if modified_file.old_path in renamed_files:
+                        renamed_files[modified_file.old_path] = renamed_files.get(modified_file.new_path, modified_file.new_path)
+                    elif is_fixing_commit:
+                        renamed_files[modified_file.old_path] = modified_file.new_path
+                    
+                modified_ansible_files.append(modified_file)
+
+            if not is_fixing_commit or not modified_ansible_files:
+                continue
+            
+            self.__save_fixing_commit(commit)
+
+            for modified_file in modified_ansible_files:
+               
                 buggy_inducing_commits = self.repo.get_commits_last_modified_lines(commit, modified_file)
+                
                 if not buggy_inducing_commits:
                     continue
                 
@@ -183,9 +194,6 @@ class CommitsMiner():
 
                 except ValueError: # defective file not present in list
                     defective_files.append(df)
-
-            if is_fixing_commit and modifies_iac_files:
-                self.__save_fixing_commit(commit)
 
         return defective_files
 

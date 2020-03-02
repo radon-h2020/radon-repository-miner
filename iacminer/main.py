@@ -148,7 +148,7 @@ class Main():
 
             process_metrics = metrics_miner.mine_process_metrics(self.__repo_path, release.start, release.end)
             self.__git_repo.checkout(release.end)
-
+            
             metadata = {
                 'repo': self.repository.remote_path,
                 'release_start': release.start,
@@ -180,7 +180,7 @@ class Main():
 
             defect_prone_files = commits_miner.defect_prone_files.get(release.end, set())
             unclassified_files = commits_miner.defect_free_files.get(release.end, set())
-            
+
             for filepath in defect_prone_files.union(unclassified_files):
                 
                 if not filters.is_ansible_file(filepath):
@@ -269,7 +269,7 @@ if __name__=='__main__':
         try:
         
             i += 1
-            if i < 429:
+            if i < 241:
                 continue
             
             print(f'{i} Starting analysis for {repo.remote_path}')
