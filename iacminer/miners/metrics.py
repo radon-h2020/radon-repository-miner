@@ -3,13 +3,14 @@ import pandas as pd
 
 from io import StringIO
 
+from pydriller.metrics.process.change_set import ChangeSet
+from pydriller.metrics.process.code_churn import CodeChurn
 from pydriller.metrics.process.commits_count import CommitsCount
 from pydriller.metrics.process.contributors_count import ContributorsCount
 from pydriller.metrics.process.contributors_experience import ContributorsExperience
 from pydriller.metrics.process.history_complexity import HistoryComplexity
 from pydriller.metrics.process.hunks_count import HunksCount
 from pydriller.metrics.process.lines_count import LinesCount
-from pydriller.metrics.process.files_count import FilesCount
 
 from pathlib import Path
 
@@ -25,21 +26,31 @@ class MetricsMiner():
         :from_commit: str - hash of release start
         :to_commit: str - hash of release end
         """
-        commits_count = CommitsCount(path_to_repo, from_commit, to_commit).count()
-        contributors_count = ContributorsCount(path_to_repo, from_commit, to_commit).count()
-        highest_contributors_experience = ContributorsExperience(path_to_repo, from_commit, to_commit).count()
-        history_complexity = HistoryComplexity(path_to_repo, from_commit, to_commit).count()
-        median_hunks_count = HunksCount(path_to_repo, from_commit, to_commit).count()
-        lines_count = LinesCount(path_to_repo, from_commit, to_commit).count()
-        #files_count = FilesCount(path_to_repo, from_commit, to_commit).count()
-
-        return [commits_count,
-                contributors_count,
-                highest_contributors_experience,
-                history_complexity,
-                median_hunks_count,
-                lines_count]
-                #files_count]
+        change_set = ChangeSet(path_to_repo, from_commit, to_commit)
+        code_churn = CodeChurn(path_to_repo, from_commit, to_commit)
+        commits_count = CommitsCount(path_to_repo, from_commit, to_commit)
+        contributors_count = ContributorsCount(path_to_repo, from_commit, to_commit)
+        highest_contributors_experience = ContributorsExperience(path_to_repo, from_commit, to_commit)
+        median_hunks_count = HunksCount(path_to_repo, from_commit, to_commit)
+        lines_count = LinesCount(path_to_repo, from_commit, to_commit)
+        #history_complexity = HistoryComplexity(path_to_repo, from_commit, to_commit).count()
+        
+        return [change_set.max(),
+                change_set.avg(),
+                code_churn.count(),
+                code_churn.max(),
+                code_churn.avg(),
+                commits_count.count(),
+                contributors_count.count(),
+                contributors_count.count_minor(),
+                highest_contributors_experience.count(),
+                median_hunks_count.count(),
+                lines_count.count_added(),
+                lines_count.max_added(),
+                lines_count.avg_added(),
+                lines_count.count_removed(),
+                lines_count.max_removed(),
+                lines_count.avg_removed()]
             
     def mine_product_metrics(self, content: str) -> list:
         """

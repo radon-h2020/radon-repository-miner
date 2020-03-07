@@ -1,0 +1,57 @@
+import os
+import pytest
+
+from datetime import datetime
+from dotenv import load_dotenv
+
+from iacminer.miners.github_miner import GithubMiner
+
+load_dotenv()
+
+
+TEST_DATA = [
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), None, 0, 0, 1000, 0, False, None, 2),
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), None, 0, 0, 1000, 0, True, None, 2),
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), None, 0, 0, 1000, 0, False, 'TypeScript', 1),
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2020-01-20', '%Y-%m-%d'), 0, 0, 1000, 0, False, None, 1),
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2020-01-20', '%Y-%m-%d'), 0, 0, 1000, 0, False, 'TypeScript', 1)
+]
+
+@pytest.mark.parametrize('date_from, date_to, pushed_after, min_collaborators, min_releases, min_stars, min_watchers, include_fork, primary_language, expected_len', TEST_DATA)
+def test(date_from, date_to, pushed_after, min_collaborators, min_releases, min_stars, min_watchers, include_fork, primary_language, expected_len):
+    
+    miner = GithubMiner(
+        date_from=date_from,
+        date_to=date_to,
+        pushed_after=pushed_after,
+        min_stars=min_stars,
+        min_releases=min_releases,
+        min_collaborators=min_collaborators,
+        min_watchers=min_watchers,
+        primary_language=primary_language,
+        include_fork=include_fork
+    )
+    
+    miner.set_token(os.getenv('GITHUB_ACCESS_TOKEN'))
+
+    date_from = date_from.strftime('%Y-%m-%dT%H:%M:%SZ') 
+    date_to = date_to.strftime('%Y-%m-%dT%H:%M:%SZ') 
+    pushed_after = pushed_after.strftime('%Y-%m-%dT%H:%M:%SZ') if pushed_after else ''
+
+    repos = list(miner.mine())
+    assert repos
+    assert len(repos) == expected_len
+
+    for repo in repos:
+        assert repo['id']
+        assert repo['default_branch']
+        assert repo['owner']
+        assert repo['name']
+        assert repo['collaborators'] >= min_collaborators
+        assert repo['issues'] > 0
+        assert repo['releases'] >= min_releases
+        assert repo['stars'] >= min_stars
+        assert repo['watchers'] >= min_watchers
+        assert repo['primary_language'] == primary_language if primary_language else True
+        assert repo['created_at'] >= date_from and repo['created_at'] <= date_to
+        assert repo['pushed_at'] >= pushed_after

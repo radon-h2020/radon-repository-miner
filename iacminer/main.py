@@ -21,9 +21,9 @@ from iacminer import filters
 from iacminer.configuration import Configuration
 from iacminer.entities.release import Release
 from iacminer.entities.repository import Repository
-from iacminer.miners.commits import CommitsMiner
+from iacminer.miners.repository_miner import RepositoryMiner
 from iacminer.miners.metrics import MetricsMiner
-from iacminer.miners.repositories import RepositoryMiner
+from iacminer.miners.github_miner import GithubMiner
 from mygit import Git
 from iacminer import utils
 
@@ -87,16 +87,23 @@ class Main():
         metrics.update(delta_metrics)
 
         # Saving process metrics
-        metrics['commits_count'] = process_metrics[0].get(filepath, 0)
-        metrics['contributors_count'] = process_metrics[1].get(filepath, {}).get('contributors_count', 0)
-        metrics['minor_contributors_count'] = process_metrics[1].get(filepath, {}).get('minor_contributors_count', 0)
-        metrics['highest_experience'] = process_metrics[2].get(filepath, 0)
-        metrics['history_complexity'] = process_metrics[3].get(filepath, 0)
-        metrics['median_hunks_count'] = process_metrics[4].get(filepath, 0)
-        metrics['total_added_loc'] = process_metrics[5].get(filepath, {}).get('added', 0)
-        metrics['total_removed_loc'] = process_metrics[5].get(filepath, {}).get('removed', 0)
-        metrics['files_count'] = process_metrics[6].get(filepath, 0)
-
+        metrics['change_set_max'] = process_metrics[0]
+        metrics['change_set_avg'] = process_metrics[1]
+        metrics['code_churn'] = process_metrics[2].get(filepath, 0)
+        metrics['code_churn_max'] = process_metrics[3].get(filepath, 0)
+        metrics['code_churn_avg'] = process_metrics[4].get(filepath, 0)
+        metrics['commits_count'] = process_metrics[5].get(filepath, 0)
+        metrics['contributors'] = process_metrics[6].get(filepath, 0)
+        metrics['minor_contributors'] = process_metrics[7].get(filepath, 0)
+        metrics['highest_experience'] = process_metrics[8].get(filepath, 0)
+        metrics['median_hunks_count'] = process_metrics[9].get(filepath, 0)
+        metrics['loc_added'] = process_metrics[10].get(filepath, 0)
+        metrics['loc_added_max'] = process_metrics[11].get(filepath, 0)
+        metrics['loc_added_avg'] = process_metrics[12].get(filepath, 0)
+        metrics['loc_removed'] = process_metrics[13].get(filepath, 0)
+        metrics['loc_removed_max'] = process_metrics[14].get(filepath, 0)
+        metrics['loc_removed_avg'] = process_metrics[15].get(filepath, 0)
+        
         dataset = pd.DataFrame()
         
         if os.path.isfile(DESTINATION_PATH):
@@ -110,7 +117,7 @@ class Main():
 
     def run(self, branch: str='master'):
         
-        commits_miner = CommitsMiner(self.__git_repo, branch)
+        repository_miner = RepositoryMiner(self.__git_repo, branch)
         metrics_miner = MetricsMiner()
 
         releases = []
@@ -134,16 +141,16 @@ class Main():
             del commits_hash[:idx+1]
 
         # Mine fixing commits
-        commits_miner.mine()
+        repository_miner.mine()
         
-        #previous_release_product_metrics = dict()
+        previous_release_product_metrics = dict()
 
         for i in range(0, len(releases)-1):
             
             release = releases[i]
 
             # If the release does not have any affected files, do not consider it
-            if not commits_miner.defect_prone_files.get(release.end) and not commits_miner.defect_free_files.get(release.end):
+            if not repository_miner.defect_prone_files.get(release.end) and not repository_miner.defect_free_files.get(release.end):
                 continue
 
             process_metrics = metrics_miner.mine_process_metrics(self.__repo_path, release.start, release.end)
@@ -156,11 +163,10 @@ class Main():
                 'release_date': release.date                    
             }
 
-            """
             # Getting filenames in previous release
             renamed_files = dict()
             previous_name_of = dict()
-
+            
             if i < len(releases)-1:
                 for commit in RepositoryMining(self.__repo_path, from_commit=release.end, to_commit=releases[i+1].end).traverse_commits():
 
@@ -171,15 +177,14 @@ class Main():
 
                         oldest_filepath = renamed_files.get(modified_file.old_path,
                                                             modified_file.old_path)
-                        renamed_files[modified_file.new_path] = filepath
+                        renamed_files[modified_file.new_path] = modified_file.old_path
                         previous_name_of[modified_file.new_path] = oldest_filepath
                 
                     if commit.hash in releases_hash and commit.hash != release.end:
                         break
-            """
 
-            defect_prone_files = commits_miner.defect_prone_files.get(release.end, set())
-            unclassified_files = commits_miner.defect_free_files.get(release.end, set())
+            defect_prone_files = repository_miner.defect_prone_files.get(release.end, set())
+            unclassified_files = repository_miner.defect_free_files.get(release.end, set())
 
             for filepath in defect_prone_files.union(unclassified_files):
                 
@@ -194,26 +199,23 @@ class Main():
                     print(f'commit: {release.end}')
                     print(str(e))
                     continue
-    
-                """
+                
                 #### DELTA METRICS 
                 previous_filepath = previous_name_of.get(filepath, filepath)
                 delta_metrics = dict()
 
                 for k, v in product_metrics.items():
                     delta_k = f'delta_{k}'
-                    delta_metrics[delta_k] = v - previous_release_product_metrics.get(previous_filepath, {}).get(k, 0)
-
+                    delta_v = v - previous_release_product_metrics.get(previous_filepath, {}).get(k, 0)
+                    delta_metrics[delta_k] = round(delta_v, 3)
 
                 previous_release_product_metrics[filepath] = product_metrics
-
                 #### END DELTA METRICS
-                """
-                
+
                 metadata['filepath'] = filepath
                 metadata['defective'] = 'yes' if filepath in defect_prone_files else 'no'
                 metadata['tokens'] = ' '.join(tokens)
-                self.save(filepath, metadata, process_metrics, product_metrics, delta_metrics={})
+                self.save(filepath, metadata, process_metrics, product_metrics, delta_metrics=delta_metrics)
 
             self.__git_repo.reset()
         
@@ -222,10 +224,20 @@ class Main():
 
 if __name__=='__main__':
 
+    miner = GithubMiner(
+        date_from=datetime.strptime('2020-01-01', '%Y-%m-%d'),
+        date_to=datetime.strptime('2020-01-03', '%Y-%m-%d'),
+        min_stars=1000
+    )
+    
+    miner.set_token(os.getenv('GITHUB_ACCESS_TOKEN'))
+    repos = list(miner.mine())
+    exit()
+
     ansible_repositories = utils.load_ansible_repositories()
 
     """ This is for the entire process
-    for repo in RepositoryMiner(Configuration()).mine():
+    for repo in GithubMiner(Configuration()).mine():
         if repo in ansible_repositories:
             continue
     
@@ -269,7 +281,7 @@ if __name__=='__main__':
         try:
         
             i += 1
-            if i < 241:
+            if i < 429:
                 continue
             
             print(f'{i} Starting analysis for {repo.remote_path}')
@@ -285,4 +297,3 @@ if __name__=='__main__':
             print(f'{i} Re-Starting analysis for {repo.remote_path}')
             main = Main(repo)
             main.run()
-            
