@@ -33,7 +33,7 @@ class LabeledFile():
     def __init__(self, 
                  filepath: str,
                  commit: str,
-                 label: str,
+                 label: Label,
                  ref: str):
         """
         Initialize a new labeled file

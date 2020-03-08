@@ -99,15 +99,15 @@ class GithubMiner():
     def quota_reset_at(self):
         return self._quota_reset_at
 
-    def run_query(self): 
+    def run_query(self, query): 
         """
         Run a graphql query 
         """
-        request = requests.post('https://api.github.com/graphql', json={'query': self.query}, headers={'Authorization': f'token {self.__token}'})
+        request = requests.post('https://api.github.com/graphql', json={'query': query}, headers={'Authorization': f'token {self.__token}'})
         if request.status_code == 200:
             return request.json()
         else:
-            print("Query failed to run by returning code of {}. {}".format(request.status_code, self.query))
+            print("Query failed to run by returning code of {}. {}".format(request.status_code, query))
             return None
 
     def filter_repositories(self, edges):
@@ -180,10 +180,10 @@ class GithubMiner():
 
         while has_next_page:
             
-            self.query = re.sub('AFTER', '', self.query) if not end_cursor else re.sub('AFTER', f', after: "{end_cursor}"', self.query)
+            tmp_query = re.sub('AFTER', '', self.query) if not end_cursor else re.sub('AFTER', f', after: "{end_cursor}"', self.query)
 
-            result = self.run_query()
-                        
+            result = self.run_query(tmp_query)
+
             if not result:
                 break
             

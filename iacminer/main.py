@@ -1,215 +1,39 @@
-import copy
-import git
 import os
-import pandas as pd
-import shutil
 import sys
-import json
-
-import github
-import time
-from datetime import datetime
-
 path = os.path.join(os.path.dirname(__file__), os.pardir)
 sys.path.append(path)
 
+import copy
+import git
+import json
+import pandas as pd
+import shutil
+
+from datetime import datetime, timedelta
+
 from pathlib import Path
 from pydriller.repository_mining import GitRepository, RepositoryMining
-from pydriller.domain.commit import ModificationType
 
-from iacminer import filters
-from iacminer.entities.release import Release
-from iacminer.entities.repository import Repository
-from iacminer.miners.repository_miner import RepositoryMiner
+from iacminer import filters, utils
+from iacminer.entities.file import LabeledFile
 from iacminer.miners.metrics import MetricsMiner
 from iacminer.miners.github_miner import GithubMiner
-from mygit import Git
-from iacminer import utils
+from iacminer.miners.repository_miner import RepositoryMiner
+
 
 DESTINATION_PATH = os.path.join('data', 'metrics.csv')
-"""
-class Main():
-
-    def __init__(self, repository: Repository):
-        
-        self.repository = repository
-        self.__root_path = str(Path(f'repositories/{self.repository.owner}'))
-        self.__repo_path = os.path.join(self.__root_path, self.repository.name)
-
-        self.clone_repo()
-
-
-        print(self.__git_repo.path)
-        print(self.__repo_path)
-        exit()
- 
-
-        git.Git(self.__root_path).clone(f'https://github.com/{self.repository.remote_path}.git')#, branch=self.repository.default_branch)
-        git_repo = GitRepository(self.__repo_path)
-
-        self.__git_repo = git_repo
-    
-    def get_content(self, filepath):
-        with open(os.path.join(self.__repo_path, filepath), 'r') as f:
-            return f.read()
-    
-
-    def save(self, filepath:str, metadata:dict, process_metrics:dict, product_metrics:dict, delta_metrics:dict):
-        
-        filepath = str(Path(filepath))
-        
-        metrics = metadata
-        metrics.update(product_metrics)
-        metrics.update(delta_metrics)
-
-        # Saving process metrics
-        metrics['change_set_max'] = process_metrics[0]
-        metrics['change_set_avg'] = process_metrics[1]
-        metrics['code_churn'] = process_metrics[2].get(filepath, 0)
-        metrics['code_churn_max'] = process_metrics[3].get(filepath, 0)
-        metrics['code_churn_avg'] = process_metrics[4].get(filepath, 0)
-        metrics['commits_count'] = process_metrics[5].get(filepath, 0)
-        metrics['contributors'] = process_metrics[6].get(filepath, 0)
-        metrics['minor_contributors'] = process_metrics[7].get(filepath, 0)
-        metrics['highest_experience'] = process_metrics[8].get(filepath, 0)
-        metrics['median_hunks_count'] = process_metrics[9].get(filepath, 0)
-        metrics['loc_added'] = process_metrics[10].get(filepath, 0)
-        metrics['loc_added_max'] = process_metrics[11].get(filepath, 0)
-        metrics['loc_added_avg'] = process_metrics[12].get(filepath, 0)
-        metrics['loc_removed'] = process_metrics[13].get(filepath, 0)
-        metrics['loc_removed_max'] = process_metrics[14].get(filepath, 0)
-        metrics['loc_removed_avg'] = process_metrics[15].get(filepath, 0)
-        
-        dataset = pd.DataFrame()
-        
-        if os.path.isfile(DESTINATION_PATH):
-            with open(DESTINATION_PATH, 'r') as in_file:
-                dataset = pd.read_csv(in_file)
-
-        dataset = dataset.append(metrics, ignore_index=True)
-
-        with open(DESTINATION_PATH, 'w') as out:
-            dataset.to_csv(out, mode='w', index=False)
-
-    def run(self, branch: str='master'):
-        
-        repository_miner = RepositoryMiner(self.__git_repo, branch)
-        metrics_miner = MetricsMiner()
-
-        releases = []
-        releases_hash = []
-        releases_date = []
-        commits_hash = []
-
-        for commit in RepositoryMining(self.__repo_path, only_releases=True).traverse_commits():
-            releases_hash.append(commit.hash)
-            releases_date.append(str(commit.committer_date))
-
-        for commit in RepositoryMining(self.__repo_path).traverse_commits():
-            commits_hash.append(commit.hash)
-
-        tmp_releases_hash = releases_hash.copy()
-        while tmp_releases_hash:
-            hash = tmp_releases_hash.pop(0)
-            date = releases_date.pop(0)
-            idx = commits_hash.index(hash)
-            releases.append(Release(commits_hash[0], commits_hash[idx], date))
-            del commits_hash[:idx+1]
-
-        # Mine fixing commits
-        repository_miner.mine()
-        
-        previous_release_product_metrics = dict()
-
-        for i in range(0, len(releases)-1):
-            
-            release = releases[i]
-
-            # If the release does not have any affected files, do not consider it
-            if not repository_miner.defect_prone_files.get(release.end) and not repository_miner.defect_free_files.get(release.end):
-                continue
-
-            process_metrics = metrics_miner.mine_process_metrics(self.__repo_path, release.start, release.end)
-            self.__git_repo.checkout(release.end)
-            
-            metadata = {
-                'repo': self.repository.remote_path,
-                'release_start': release.start,
-                'release_end': release.end,
-                'release_date': release.date                    
-            }
-
-            # Getting filenames in previous release
-            renamed_files = dict()
-            previous_name_of = dict()
-            
-            if i < len(releases)-1:
-                for commit in RepositoryMining(self.__repo_path, from_commit=release.end, to_commit=releases[i+1].end).traverse_commits():
-
-                    for modified_file in commit.modifications:
-
-                        if modified_file.change_type != ModificationType.RENAME:
-                            continue
-
-                        oldest_filepath = renamed_files.get(modified_file.old_path,
-                                                            modified_file.old_path)
-                        renamed_files[modified_file.new_path] = modified_file.old_path
-                        previous_name_of[modified_file.new_path] = oldest_filepath
-                
-                    if commit.hash in releases_hash and commit.hash != release.end:
-                        break
-
-            defect_prone_files = repository_miner.defect_prone_files.get(release.end, set())
-            unclassified_files = repository_miner.defect_free_files.get(release.end, set())
-
-            for filepath in defect_prone_files.union(unclassified_files):
-                
-                if not filters.is_ansible_file(filepath):
-                    continue
-
-                try:
-                    file_content = self.get_content(filepath)
-                    product_metrics = metrics_miner.mine_product_metrics(file_content)
-                    tokens = metrics_miner.mine_text(file_content)
-                except Exception as e:
-                    print(f'commit: {release.end}')
-                    print(str(e))
-                    continue
-                
-                #### DELTA METRICS 
-                previous_filepath = previous_name_of.get(filepath, filepath)
-                delta_metrics = dict()
-
-                for k, v in product_metrics.items():
-                    delta_k = f'delta_{k}'
-                    delta_v = v - previous_release_product_metrics.get(previous_filepath, {}).get(k, 0)
-                    delta_metrics[delta_k] = round(delta_v, 3)
-
-                previous_release_product_metrics[filepath] = product_metrics
-                #### END DELTA METRICS
-
-                metadata['filepath'] = filepath
-                metadata['defective'] = 'yes' if filepath in defect_prone_files else 'no'
-                metadata['tokens'] = ' '.join(tokens)
-                self.save(filepath, metadata, process_metrics, product_metrics, delta_metrics=delta_metrics)
-
-            self.__git_repo.reset()
-        
-        self.__git_repo.clear()
-        self.delete_repo()
-"""
 
 def all_files(path_to_root):
     """
-    Get the set of all the files in a folder (excluding .git directory)
+    Get the set of all the files in a folder (excluding .git directory).
     
     Parameters
     ----------
-    path_to_root : str : the path to the root of the directory to analyze
+    path_to_root : str : the path to the root of the directory to analyze.
 
     Return
     ----------
-    files : set : the set of strings (filepaths)
+    files : set : the set of strings (filepaths).
     """
 
     files = set()
@@ -229,28 +53,27 @@ def all_files(path_to_root):
 
 def clone_repo(owner: str, name: str):
     """
-    Clone a repository on local machine
+    Clone a repository on local machine.
     
     Parameters
     ----------
-    owner : str : the name of the owner of the repository
+    owner : str : the name of the owner of the repository.
 
-    name : str : the name of the repository
+    name : str : the name of the repository.
     """
 
     path_to_owner = os.path.join('tmp', owner)
     if not os.path.isdir(path_to_owner):
         os.makedirs(path_to_owner)
-
-    git.Git(path_to_owner).clone(f'https://github.com/{owner}/{name}.git')#, branch=self.repository.default_branch)
+        git.Git(path_to_owner).clone(f'https://github.com/{owner}/{name}.git')
 
 def delete_repo(owner: str):
     """
-    Delete a local repository
+    Delete a local repository.
     
     Parameters
     ----------
-    owner : str : the name of the owner of the repository
+    owner : str : the name of the owner of the repository.
     """
 
     path_to_owner = os.path.join('tmp', owner)
@@ -258,50 +81,194 @@ def delete_repo(owner: str):
     if os.path.isdir(path_to_owner):
         shutil.rmtree(path_to_owner)
 
-def main():
-    ansible_repositories = utils.load_ansible_repositories()
+def get_content(path):
+    """
+    Get the content of a file as plain text.
+    
+    Parameters
+    ----------
+    path : str : the path to the file.
+
+    Return
+    ----------
+    str : the content of the file, if exists; None otherwise.
+    """
+    if not os.path.isfile(path):
+        return None
+
+    with open(path, 'r') as f:
+        return f.read()
+
+def save(metadata: dict, iac_metrics: dict, delta_metrics: dict, process_metrics: dict):
+        
+        filepath = str(Path(metadata['filepath']))
+        
+        metrics = metadata
+        metrics.update(iac_metrics)
+        metrics.update(delta_metrics)
+
+        # Getting process metrics for the specific filepath
+        metrics['change_set_max'] = process_metrics[0]
+        metrics['change_set_avg'] = process_metrics[1]
+        metrics['code_churn'] = process_metrics[2].get(filepath, 0)
+        metrics['code_churn_max'] = process_metrics[3].get(filepath, 0)
+        metrics['code_churn_avg'] = process_metrics[4].get(filepath, 0)
+        metrics['commits_count'] = process_metrics[5].get(filepath, 0)
+        metrics['contributors'] = process_metrics[6].get(filepath, 0)
+        metrics['minor_contributors'] = process_metrics[7].get(filepath, 0)
+        metrics['highest_experience'] = process_metrics[8].get(filepath, 0)
+        metrics['median_hunks_count'] = process_metrics[9].get(filepath, 0)
+        metrics['loc_added'] = process_metrics[10].get(filepath, 0)
+        metrics['loc_added_max'] = process_metrics[11].get(filepath, 0)
+        metrics['loc_added_avg'] = process_metrics[12].get(filepath, 0)
+        metrics['loc_removed'] = process_metrics[13].get(filepath, 0)
+        metrics['loc_removed_max'] = process_metrics[14].get(filepath, 0)
+        metrics['loc_removed_avg'] = process_metrics[15].get(filepath, 0)
+        
+        # Create pandas dataframe
+        dataset = pd.DataFrame()
+        
+        # Load dataframe, if exists
+        if os.path.isfile(DESTINATION_PATH):
+            with open(DESTINATION_PATH, 'r') as in_file:
+                dataset = pd.read_csv(in_file)
+
+        # Update dataframe
+        dataset = dataset.append(metrics, ignore_index=True)
+
+        # Save to csv
+        with open(DESTINATION_PATH, 'w') as out:
+            dataset.to_csv(out, mode='w', index=False)
+
+def main(date_from, date_to):
+    
+    github_miner = GithubMiner(
+        date_from=date_from,
+        date_to=date_to,
+        pushed_after=datetime.strptime('2019-09-08 00:00:00', '%Y-%m-%d %H:%M:%S'),
+        min_stars=1,
+        min_releases=1
+    )
+    
+    github_miner.set_token(os.getenv('GITHUB_ACCESS_TOKEN'))
+    
     i = 0 
     
-    for repo in ansible_repositories:
+    for repo in github_miner.mine():
     
         i += 1
 
         # Check if ansible repository
-        # 1) filter by files in repo.dirs (This to avoid cloning more repo before check)
-        if not any(filters.is_ansible_dir(path) for path in repo.dirs):
+        # 1) filter by files in repo['dirs'] (This to avoid cloning more repo before check)
+        if not any(filters.is_ansible_dir(path) for path in repo['dirs']):
             continue
 
-        clone_repo(repo.owner, repo.name)
+        clone_repo(repo['owner'], repo['name'])
         
-        path_to_repo = os.path('tmp', repo.owner, repo.name)
-        if any(filters.is_ansible_file(path) for path in all_files(path_to_repo)):
-            print(f'{i} - Starting analysis for {repo.name}')
-            repo_miner = RepositoryMiner(path_to_repo)#, branch=repo.default_branch)
-            labeled_files = repo_miner.mine()
-            print(labeled_files)
-            # Compute process
-            # Compute product metrics
-            # Compute text metrics
-        delete_repo(repo.owner)
-        exit()
+        path_to_repo = os.path.join('tmp', repo['owner'], repo['name'])
 
+        # 2) filter by all files in cloned repository
+        if not any(filters.is_ansible_file(path) for path in all_files(path_to_repo)):
+            delete_repo(repo['owner'])
+            continue
 
-    
+        utils.save_ansible_repository(copy.deepcopy(repo))
+
+        # Start analysis
+        print(f'Starting analysis for {repo["name"]}')
+        print(repo)
+        
+        git_repo = GitRepository(path_to_repo)
+        repo_miner = RepositoryMiner(path_to_repo, branch=repo['default_branch'])
+        labeled_files = repo_miner.mine()
+        
+        if not labeled_files:
+            continue
+
+        # Save fixing commits
+        utils.save_fixing_commits(git_repo.path.name, repo_miner.fixing_commits)
+
+        # Group labeled files per release
+        commit_file_map = dict()
+        for file in labeled_files:
+            commit_file_map.setdefault(file.commit, set()).add(file)
+
+        # Extract metrics
+        releases = [c.hash for c in RepositoryMining(path_to_repo, only_releases=True).traverse_commits()]
+
+        release_starts_at = None
+        
+        metrics_miner = MetricsMiner()
+        last_iac_metrics = dict() # Store the last iac metrics for each file
+
+        for commit in RepositoryMining(path_to_repo).traverse_commits():
+
+            if not release_starts_at:
+                release_starts_at = commit.hash
+
+            if commit.hash not in releases:
+                continue
+
+            process_metrics = metrics_miner.mine_process_metrics(path_to_repo, release_starts_at, commit.hash)
+            
+            # Checkout to commit to extract product metrics from each file
+            git_repo.checkout(commit.hash)
+            
+            for labeled_file in commit_file_map.get(commit.hash, []):
+                # Compute product and text metrics
+                try:
+                    file_content = get_content(os.path.join(path_to_repo, labeled_file.filepath))
+                    iac_metrics = metrics_miner.mine_product_metrics(file_content)
+                    tokens = metrics_miner.mine_text(file_content)
+                    
+                    delta_metrics = dict()
+
+                    if labeled_file.ref in last_iac_metrics:
+                        # Compute delta metrics
+                        last = last_iac_metrics[labeled_file.ref]
+                        for k, v in iac_metrics.items():
+                            k_delta = f'delta_{k}'
+                            v_delta = v - last[k]
+                            delta_metrics[k_delta] = round(v_delta, 3)
+
+                    last_iac_metrics[labeled_file.ref] = iac_metrics
+
+                    # Save metrics
+                    metadata = {
+                        'defective': 'yes' if labeled_file.label == LabeledFile.Label.DEFECT_PRONE else 'no',
+                        'filepath': labeled_file.filepath,
+                        'fixing_filepath': labeled_file.ref,
+                        'repo': git_repo.path.name,
+                        'release_start': release_starts_at,
+                        'release_end': commit.hash,
+                        'release_date': str(commit.committer_date),
+                        'tokens': tokens
+                    }
+
+                    save(metadata, iac_metrics, delta_metrics, process_metrics)
+
+                except Exception as e:
+                    print(f'commit: {commit.hash}')
+                    print(str(e))
+                    continue
+
+            release_starts_at = None # So the next commit will be the start for the successive release
+            git_repo.reset()    # Reset repository's status
+
+        delete_repo(repo['owner'])
+
+    print(f'{i} repositories mined')
+    print(f'Quota: {github_miner.quota}')
+    print(f'Quota will reset at: {github_miner.quota_reset_at}')
+
 if __name__=='__main__':
 
-    """
-    miner = GithubMiner(
-        date_from=datetime.strptime('2014-01-01', '%Y-%m-%d'),
-        date_to=datetime.strptime('2020-01-01', '%Y-%m-%d'),
-        pushed_after=datetime.strptime('2019-01-01', '%Y-%m-%d'),
-        min_stars=1000,
-        min_releases=1
-    )
-    
-    miner.set_token(os.getenv('GITHUB_ACCESS_TOKEN'))
-    for repo in miner.mine():
-        utils.save_ansible_repositories(copy.deepcopy(repo))
-        mine repository
-    exit()
-    """
-    main()
+    date_from = datetime.strptime('2015-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')
+    date_to = datetime.strptime('2015-01-01 12:00:00', '%Y-%m-%d %H:%M:%S')
+    now = datetime.strptime('2020-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')
+
+    while date_to <= now:
+        print(f'Searching for: {date_from}..{date_to}. Analysis started at {str(datetime.now())}')
+        main(date_from, date_to)
+        date_from = date_to
+        date_to += timedelta(hours=12)
