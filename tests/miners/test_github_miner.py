@@ -2,23 +2,23 @@ import os
 import pytest
 
 from datetime import datetime
-from dotenv import load_dotenv
 
 from iacminer.miners.github_miner import GithubMiner
 
+from dotenv import load_dotenv
 load_dotenv()
 
 
 TEST_DATA = [
-    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), None, 0, 0, 1000, 0, False, None, 2),
-    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), None, 0, 0, 1000, 0, True, None, 2),
-    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), None, 0, 0, 1000, 0, False, 'TypeScript', 1),
-    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2020-01-20', '%Y-%m-%d'), 0, 0, 1000, 0, False, None, 1),
-    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2020-01-20', '%Y-%m-%d'), 0, 0, 1000, 0, False, 'TypeScript', 1)
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2019-01-01', '%Y-%m-%d'), 0, 1000, 0, False, None, 2),
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2019-01-01', '%Y-%m-%d'), 0, 1000, 0, True, None, 2),
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2019-01-01', '%Y-%m-%d'), 0, 1000, 0, False, 'TypeScript', 1),
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2020-01-20', '%Y-%m-%d'), 0, 1000, 0, False, None, 1),
+    (datetime.strptime('2020-01-01', '%Y-%m-%d'), datetime.strptime('2020-01-03', '%Y-%m-%d'), datetime.strptime('2020-01-20', '%Y-%m-%d'), 0, 1000, 0, False, 'TypeScript', 1)
 ]
 
-@pytest.mark.parametrize('date_from, date_to, pushed_after, min_collaborators, min_releases, min_stars, min_watchers, include_fork, primary_language, expected_len', TEST_DATA)
-def test(date_from, date_to, pushed_after, min_collaborators, min_releases, min_stars, min_watchers, include_fork, primary_language, expected_len):
+@pytest.mark.parametrize('date_from, date_to, pushed_after, min_releases, min_stars, min_watchers, include_fork, primary_language, expected_len', TEST_DATA)
+def test(date_from, date_to, pushed_after, min_releases, min_stars, min_watchers, include_fork, primary_language, expected_len):
     
     miner = GithubMiner(
         date_from=date_from,
@@ -26,7 +26,6 @@ def test(date_from, date_to, pushed_after, min_collaborators, min_releases, min_
         pushed_after=pushed_after,
         min_stars=min_stars,
         min_releases=min_releases,
-        min_collaborators=min_collaborators,
         min_watchers=min_watchers,
         primary_language=primary_language,
         include_fork=include_fork
@@ -47,7 +46,6 @@ def test(date_from, date_to, pushed_after, min_collaborators, min_releases, min_
         assert repo['default_branch']
         assert repo['owner']
         assert repo['name']
-        assert repo['collaborators'] >= min_collaborators
         assert repo['issues'] > 0
         assert repo['releases'] >= min_releases
         assert repo['stars'] >= min_stars

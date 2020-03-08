@@ -18,7 +18,6 @@ from pydriller.repository_mining import GitRepository, RepositoryMining
 from pydriller.domain.commit import ModificationType
 
 from iacminer import filters
-from iacminer.configuration import Configuration
 from iacminer.entities.release import Release
 from iacminer.entities.repository import Repository
 from iacminer.miners.repository_miner import RepositoryMiner
@@ -28,7 +27,7 @@ from mygit import Git
 from iacminer import utils
 
 DESTINATION_PATH = os.path.join('data', 'metrics.csv')
-
+"""
 class Main():
 
     def __init__(self, repository: Repository):
@@ -38,15 +37,12 @@ class Main():
         self.__repo_path = os.path.join(self.__root_path, self.repository.name)
 
         self.clone_repo()
-        
 
-    def delete_repo(self):
-        if os.path.isdir(self.__root_path):
-            shutil.rmtree(self.__root_path)
 
-    def clone_repo(self):
-        self.delete_repo()
-        os.makedirs(self.__root_path)
+        print(self.__git_repo.path)
+        print(self.__repo_path)
+        exit()
+ 
 
         git.Git(self.__root_path).clone(f'https://github.com/{self.repository.remote_path}.git')#, branch=self.repository.default_branch)
         git_repo = GitRepository(self.__repo_path)
@@ -57,26 +53,6 @@ class Main():
         with open(os.path.join(self.__repo_path, filepath), 'r') as f:
             return f.read()
     
-    def all_files(self):
-        """
-        Obtain the list of the files (excluding .git directory).
-
-        :return: the set of the files
-        """
-        _all = set()
-
-        for root, _, filenames in os.walk(str(self.__repo_path)):
-            if '.git' in root:
-                continue
-            for filename in filenames: 
-                path = os.path.join(root, filename)
-                path = path.replace(str(self.__repo_path), '')
-                if path.startswith('/'):
-                    path = path[1:]
-
-                _all.add(path)
-
-        return _all
 
     def save(self, filepath:str, metadata:dict, process_metrics:dict, product_metrics:dict, delta_metrics:dict):
         
@@ -221,79 +197,111 @@ class Main():
         
         self.__git_repo.clear()
         self.delete_repo()
+"""
 
+def all_files(path_to_root):
+    """
+    Get the set of all the files in a folder (excluding .git directory)
+    
+    Parameters
+    ----------
+    path_to_root : str : the path to the root of the directory to analyze
+
+    Return
+    ----------
+    files : set : the set of strings (filepaths)
+    """
+
+    files = set()
+
+    for root, _, filenames in os.walk(path_to_root):
+        if '.git' in root:
+            continue
+        for filename in filenames: 
+            path = os.path.join(root, filename)
+            path = path.replace(path_to_root, '')
+            if path.startswith('/'):
+                path = path[1:]
+
+            files.add(path)
+
+    return files
+
+def clone_repo(owner: str, name: str):
+    """
+    Clone a repository on local machine
+    
+    Parameters
+    ----------
+    owner : str : the name of the owner of the repository
+
+    name : str : the name of the repository
+    """
+
+    path_to_owner = os.path.join('tmp', owner)
+    if not os.path.isdir(path_to_owner):
+        os.makedirs(path_to_owner)
+
+    git.Git(path_to_owner).clone(f'https://github.com/{owner}/{name}.git')#, branch=self.repository.default_branch)
+
+def delete_repo(owner: str):
+    """
+    Delete a local repository
+    
+    Parameters
+    ----------
+    owner : str : the name of the owner of the repository
+    """
+
+    path_to_owner = os.path.join('tmp', owner)
+
+    if os.path.isdir(path_to_owner):
+        shutil.rmtree(path_to_owner)
+
+def main():
+    ansible_repositories = utils.load_ansible_repositories()
+    i = 0 
+    
+    for repo in ansible_repositories:
+    
+        i += 1
+
+        # Check if ansible repository
+        # 1) filter by files in repo.dirs (This to avoid cloning more repo before check)
+        if not any(filters.is_ansible_dir(path) for path in repo.dirs):
+            continue
+
+        clone_repo(repo.owner, repo.name)
+        
+        path_to_repo = os.path('tmp', repo.owner, repo.name)
+        if any(filters.is_ansible_file(path) for path in all_files(path_to_repo)):
+            print(f'{i} - Starting analysis for {repo.name}')
+            repo_miner = RepositoryMiner(path_to_repo)#, branch=repo.default_branch)
+            labeled_files = repo_miner.mine()
+            print(labeled_files)
+            # Compute process
+            # Compute product metrics
+            # Compute text metrics
+        delete_repo(repo.owner)
+        exit()
+
+
+    
 if __name__=='__main__':
 
+    """
     miner = GithubMiner(
-        date_from=datetime.strptime('2020-01-01', '%Y-%m-%d'),
-        date_to=datetime.strptime('2020-01-03', '%Y-%m-%d'),
-        min_stars=1000
+        date_from=datetime.strptime('2014-01-01', '%Y-%m-%d'),
+        date_to=datetime.strptime('2020-01-01', '%Y-%m-%d'),
+        pushed_after=datetime.strptime('2019-01-01', '%Y-%m-%d'),
+        min_stars=1000,
+        min_releases=1
     )
     
     miner.set_token(os.getenv('GITHUB_ACCESS_TOKEN'))
-    repos = list(miner.mine())
+    for repo in miner.mine():
+        utils.save_ansible_repositories(copy.deepcopy(repo))
+        mine repository
     exit()
-
-    ansible_repositories = utils.load_ansible_repositories()
-
-    """ This is for the entire process
-    for repo in GithubMiner(Configuration()).mine():
-        if repo in ansible_repositories:
-            continue
-    
-        main = Main(repo)
-        
-        n_ansible_files = 0
-        all_files = main.all_files()
-
-        for filepath in all_files:
-            if filters.is_ansible_file(filepath):
-                n_ansible_files += 1
-        
-        if n_ansible_files == 0:
-            main.delete_repo()
-            continue
-        
-        ansible_repositories.append(copy.deepcopy(repo))
-        utils.save_ansible_repositories(ansible_repositories)
-
-        repository_count = len(ansible_repositories)
-        print(f'{repository_count} - Starting analysis for {repo.remote_path}')
-        main.run(branch=repo.default_branch)
     """
-
-    #labels = {}
-    #g = Git()
-
-    i = 0
-
-    for repo in ansible_repositories:
-        """
-        print(f'Starting analysis for {repo.remote_path}')
-        for issue in g.get_all_issues(repo.remote_path):
-            if not issue:
-                continue
-            for label in issue.labels:
-                labels[label.name] = labels.get(label.name, 0) + 1
-
-        print(str(labels))
-        """
-        try:
-        
-            i += 1
-            if i < 429:
-                continue
-            
-            print(f'{i} Starting analysis for {repo.remote_path}')
-            main = Main(repo)
-            main.run()
-
-        except github.RateLimitExceededException: 
-            t = (datetime.fromtimestamp(Git().rate_limiting_resettime) - datetime.now()).total_seconds() + 60
-            print(f'{datetime.now()} - API rate limit exceeded. Execution will restart in {round(t/60)} minutes')
-            t = (datetime.fromtimestamp(Git().rate_limiting_resettime) - datetime.now()).total_seconds() + 60
-            time.sleep(t)
-            Git()
-            print(f'{i} Re-Starting analysis for {repo.remote_path}')
-            main = Main(repo)
-            main.run()
+    main()

@@ -1,7 +1,28 @@
-def is_ansible_file(filepath: str) -> bool:
-    """ 
-    Return True if the file is supposed to be an Ansible file, False otherwise
-    :filepath: the path of the file to analyze
-    :return: bool
+def is_ansible_dir(path: str) -> bool:
     """
-    return filepath and ('playbooks' in filepath or 'meta' in filepath or 'tasks' in filepath or 'handlers' in filepath or 'roles' in filepath) and filepath.endswith('.yml')
+    Verify if a path is an Ansible directory
+    
+    Parameters
+    ----------
+    path : str: the to analyze
+
+    Return
+    ----------
+    bool : True if the path is an Ansible directory, False otherwise
+    """
+
+    return path and ('playbooks' in path or 'meta' in path or 'tasks' in path or 'handlers' in path or 'roles' in path)
+
+def is_ansible_file(path: str) -> bool:
+    """
+    Verify if a path is an Ansible file
+    
+    Parameters
+    ----------
+    path : str: the to analyze
+
+    Return
+    ----------
+    bool : True if the path is an Ansible file, False otherwise
+    """
+    return path and ('playbooks' in path or 'meta' in path or 'tasks' in path or 'handlers' in path or 'roles' in path) and path.endswith('.yml')
