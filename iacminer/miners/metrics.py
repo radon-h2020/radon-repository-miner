@@ -56,23 +56,7 @@ class MetricsMiner():
         """
         Extract and return product metrics from a file.
         """
-        product_metrics = {}
-
-        ansible_metrics = MetricExtractor().run(StringIO(content))
-
-        for item in ansible_metrics:    
-            if ansible_metrics[item]['count'] is None:
-                break
-
-            for k in ansible_metrics[item]:
-                if 'relative' in k: # for the moment keep only absolute metrics
-                    continue
-
-                metric = f'{item}_{k}'
-                value = ansible_metrics[item][k]
-                product_metrics[metric] = value if value else 0
-
-        return product_metrics
+        return MetricExtractor().run(StringIO(content))
 
     def mine_text(self, content: str) -> list:
         """

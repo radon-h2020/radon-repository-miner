@@ -77,21 +77,6 @@ class RepositoryMiner():
                 if (is_merged or is_closed) and e.commit_id:
                     self.fixing_commits.add(e.commit_id)
 
-    def save_fixing_commits(self, commit):
-        DESTINATION_PATH = os.path.join('data', 'fixing_commits.json')
-
-        obj = list()
-        if os.path.isfile(DESTINATION_PATH):
-            with open(DESTINATION_PATH, 'r') as in_file:
-                obj = json.load(in_file)
-
-        obj.append(dict(repo=self.path_to_repo,
-                        hash=commit.hash,
-                        msg=commit.msg))
-
-        with open(DESTINATION_PATH, 'w') as out:
-            json.dump(obj, out)
-
     def get_fixing_files(self):
         """
         Find files fixing issues related to bug.
@@ -101,14 +86,18 @@ class RepositoryMiner():
 
         fixing_files : set : the list of files.
         """
+        fixing_files = list()
 
         # Order fixing commits
         sorted_fixing_commits = [hash for hash in self.commits_hash if hash in list(self.fixing_commits)]
+        
+        if not sorted_fixing_commits:
+            return list()
+
         first_fix, last_fix = sorted_fixing_commits[0], sorted_fixing_commits[-1]
         renamed_files = dict()
         git_repo = GitRepository(self.path_to_repo)
 
-        fixing_files = list()
 
         for commit in RepositoryMining(self.path_to_repo, 
                                        from_commit=last_fix,
@@ -123,9 +112,6 @@ class RepositoryMiner():
                 
                 continue
             
-            # Save fixing commit
-            #self.save_fixing_commits(commit)
-
             # Find buggy inducing commits
             for modified_file in commit.modifications:
                 

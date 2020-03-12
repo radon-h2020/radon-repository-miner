@@ -8,6 +8,7 @@ import git
 import json
 import pandas as pd
 import shutil
+import yaml
 
 from datetime import datetime, timedelta
 
@@ -63,6 +64,9 @@ def clone_repo(owner: str, name: str):
     """
 
     path_to_owner = os.path.join('tmp', owner)
+    if os.path.isdir(path_to_owner):
+        delete_repo(owner)
+
     if not os.path.isdir(path_to_owner):
         os.makedirs(path_to_owner)
         git.Git(path_to_owner).clone(f'https://github.com/{owner}/{name}.git')
@@ -77,9 +81,10 @@ def delete_repo(owner: str):
     """
 
     path_to_owner = os.path.join('tmp', owner)
-
-    if os.path.isdir(path_to_owner):
+    try:
         shutil.rmtree(path_to_owner)
+    except:
+        print('Error while deleting directory')
 
 def get_content(path):
     """
@@ -140,12 +145,12 @@ def save(metadata: dict, iac_metrics: dict, delta_metrics: dict, process_metrics
         with open(DESTINATION_PATH, 'w') as out:
             dataset.to_csv(out, mode='w', index=False)
 
-def main(date_from, date_to):
+def main(date_from, date_to, push_after):
     
     github_miner = GithubMiner(
         date_from=date_from,
         date_to=date_to,
-        pushed_after=datetime.strptime('2019-09-08 00:00:00', '%Y-%m-%d %H:%M:%S'),
+        pushed_after=push_after,
         min_stars=1,
         min_releases=1
     )
@@ -158,20 +163,14 @@ def main(date_from, date_to):
     
         i += 1
 
-        # Check if ansible repository
-        # 1) filter by files in repo['dirs'] (This to avoid cloning more repo before check)
-        if not any(filters.is_ansible_dir(path) for path in repo['dirs']):
-            continue
+        if not ('ansible' in repo['description'].lower() or 'ansible' in repo['owner'].lower() or 'ansible' in repo['name'].lower()):
+            if sum([1 for path in repo['dirs'] if filters.is_ansible_dir(path)]) < 2:
+                # If the repo does not contain at least two among 'playbooks', 'roles', 'handlers', 'tasks', 'meta'
+                # the discard it. Otherwise it means it has Ansible code, but not 'ansible' in the name or description
+                continue
 
         clone_repo(repo['owner'], repo['name'])
-        
         path_to_repo = os.path.join('tmp', repo['owner'], repo['name'])
-
-        # 2) filter by all files in cloned repository
-        if not any(filters.is_ansible_file(path) for path in all_files(path_to_repo)):
-            delete_repo(repo['owner'])
-            continue
-
         utils.save_ansible_repository(copy.deepcopy(repo))
 
         # Start analysis
@@ -186,11 +185,15 @@ def main(date_from, date_to):
             continue
 
         # Save fixing commits
-        utils.save_fixing_commits(git_repo.path.name, repo_miner.fixing_commits)
+        utils.save_fixing_commits(f'{repo["owner"]}/{repo["name"]}', repo_miner.fixing_commits)
 
         # Group labeled files per release
         commit_file_map = dict()
         for file in labeled_files:
+            if not filters.is_ansible_file(file.filepath):
+                    continue
+            
+            utils.save_labeled_file(f'{repo["owner"]}/{repo["name"]}', file)
             commit_file_map.setdefault(file.commit, set()).add(file)
 
         # Extract metrics
@@ -208,49 +211,58 @@ def main(date_from, date_to):
 
             if commit.hash not in releases:
                 continue
-
-            process_metrics = metrics_miner.mine_process_metrics(path_to_repo, release_starts_at, commit.hash)
             
+            try:
+                process_metrics = metrics_miner.mine_process_metrics(path_to_repo, release_starts_at, commit.hash)
+            except Exception as e:
+                print(f'Problem with process metrics: {str(e)}')
+                continue
+
             # Checkout to commit to extract product metrics from each file
             git_repo.checkout(commit.hash)
             
             for labeled_file in commit_file_map.get(commit.hash, []):
+                
                 # Compute product and text metrics
-                try:
-                    file_content = get_content(os.path.join(path_to_repo, labeled_file.filepath))
-                    iac_metrics = metrics_miner.mine_product_metrics(file_content)
-                    tokens = metrics_miner.mine_text(file_content)
-                    
-                    delta_metrics = dict()
-
-                    if labeled_file.ref in last_iac_metrics:
-                        # Compute delta metrics
-                        last = last_iac_metrics[labeled_file.ref]
-                        for k, v in iac_metrics.items():
-                            k_delta = f'delta_{k}'
-                            v_delta = v - last[k]
-                            delta_metrics[k_delta] = round(v_delta, 3)
-
-                    last_iac_metrics[labeled_file.ref] = iac_metrics
-
-                    # Save metrics
-                    metadata = {
-                        'defective': 'yes' if labeled_file.label == LabeledFile.Label.DEFECT_PRONE else 'no',
-                        'filepath': labeled_file.filepath,
-                        'fixing_filepath': labeled_file.ref,
-                        'repo': git_repo.path.name,
-                        'release_start': release_starts_at,
-                        'release_end': commit.hash,
-                        'release_date': str(commit.committer_date),
-                        'tokens': tokens
-                    }
-
-                    save(metadata, iac_metrics, delta_metrics, process_metrics)
-
-                except Exception as e:
-                    print(f'commit: {commit.hash}')
-                    print(str(e))
+                file_content = get_content(os.path.join(path_to_repo, labeled_file.filepath))
+                
+                if not file_content:
+                    print(f'commit: {commit.hash}. File not found')
                     continue
+
+                try:
+                    iac_metrics = metrics_miner.mine_product_metrics(file_content)
+                except yaml.error.YAMLError:
+                    print(f'commit: {commit.hash}. Cannot properly read yaml file')
+                    continue
+                
+                tokens = metrics_miner.mine_text(file_content)
+                
+                delta_metrics = dict()
+
+                if labeled_file.ref in last_iac_metrics:
+                    # Compute delta metrics
+                    last = last_iac_metrics[labeled_file.ref]
+                    for k, v in iac_metrics.items():
+                        k_delta = f'delta_{k}'
+                        v_delta = v - last[k]
+                        delta_metrics[k_delta] = round(v_delta, 3)
+
+                last_iac_metrics[labeled_file.ref] = iac_metrics
+
+                # Save metrics
+                metadata = {
+                    'defective': 'yes' if labeled_file.label == LabeledFile.Label.DEFECT_PRONE else 'no',
+                    'filepath': str(labeled_file.filepath),
+                    'fixing_filepath': str(labeled_file.ref),
+                    'repo': f'{repo["owner"]}/{repo["name"]}',
+                    'release_start': str(release_starts_at),
+                    'release_end': str(commit.hash),
+                    'release_date': str(commit.committer_date),
+                    'tokens': ' '.join(tokens)
+                }
+
+                save(metadata, iac_metrics, delta_metrics, process_metrics)
 
             release_starts_at = None # So the next commit will be the start for the successive release
             git_repo.reset()    # Reset repository's status
@@ -262,13 +274,13 @@ def main(date_from, date_to):
     print(f'Quota will reset at: {github_miner.quota_reset_at}')
 
 if __name__=='__main__':
-
-    date_from = datetime.strptime('2015-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')
-    date_to = datetime.strptime('2015-01-01 12:00:00', '%Y-%m-%d %H:%M:%S')
-    now = datetime.strptime('2020-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')
+    date_from = datetime.strptime('2019-10-21 12:00:00', '%Y-%m-%d %H:%M:%S')
+    date_to = datetime.strptime('2019-10-22 00:00:00', '%Y-%m-%d %H:%M:%S')
+    push_after=datetime.strptime('2019-09-08 00:00:00', '%Y-%m-%d %H:%M:%S')
+    now = datetime.strptime('2020-03-09 00:00:00', '%Y-%m-%d %H:%M:%S')
 
     while date_to <= now:
         print(f'Searching for: {date_from}..{date_to}. Analysis started at {str(datetime.now())}')
-        main(date_from, date_to)
+        main(date_from, date_to, push_after)
         date_from = date_to
         date_to += timedelta(hours=12)

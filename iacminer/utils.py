@@ -1,5 +1,6 @@
 import json
 import os
+from iacminer.entities.file import LabeledFile
 
 def load_ansible_repositories():
     path = os.path.join('data', 'ansible_repositories.json')
@@ -17,7 +18,6 @@ def save_ansible_repository(repo: dict):
     path = os.path.join('data', 'ansible_repositories.json')
     with open(path, 'w') as outfile:
         return json.dump(repos, outfile)
-
 
 def load_fixging_commits():
     path = os.path.join('data', 'fixing_commits.json')
@@ -38,3 +38,26 @@ def save_fixing_commits(repo: str, fixing_commits: set):
     path = os.path.join('data', 'fixing_commits.json')
     with open(path, 'w') as outfile:
         return json.dump(commits, outfile)
+
+
+def load_labeled_files():
+    path = os.path.join('data', 'labeled_files.json')
+    if os.path.isfile(path):
+        with open(path, 'r') as in_file:
+            return json.load(in_file) 
+    
+    return []
+
+def save_labeled_file(repo: str, labeled_file: LabeledFile):
+    file = dict(repo=str(repo),
+                filepath=str(labeled_file.filepath),
+                commit=str(labeled_file.commit),
+                label=str(labeled_file.label.value),
+                ref=str(labeled_file.ref))
+
+    files = load_labeled_files()
+    files.append(file)
+
+    path = os.path.join('data', 'labeled_files.json')
+    with open(path, 'w') as outfile:
+        return json.dump(files, outfile)

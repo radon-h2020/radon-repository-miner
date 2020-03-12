@@ -1,5 +1,6 @@
 # Local folder to clone repositories
-repositories/
+tmp/
+tests/tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

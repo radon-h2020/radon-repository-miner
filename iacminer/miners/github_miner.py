@@ -82,6 +82,7 @@ class GithubMiner():
         self.include_fork = include_fork
         
         self._quota = 0
+        self._quota_reset_at = None
 
         self.query = re.sub('MIN_STARS', str(self.min_stars), QUERY)
         self.query = re.sub('DATE_FROM', str(self.date_from), self.query) 
@@ -160,9 +161,10 @@ class GithubMiner():
             yield dict(
                     id=node.get('id'),
                     default_branch=node.get('defaultBranchRef', {}).get('name'),
-                    owner=node.get('owner', {}).get('login'),
-                    name=node.get('name'),
+                    owner=node.get('owner', {}).get('login', ''),
+                    name=node.get('name', ''),
                     url=node.get('url'),
+                    description=node['description'] if node['description'] else '',
                     issues=issues,
                     releases=releases,
                     stars=stars,
@@ -181,7 +183,6 @@ class GithubMiner():
         while has_next_page:
             
             tmp_query = re.sub('AFTER', '', self.query) if not end_cursor else re.sub('AFTER', f', after: "{end_cursor}"', self.query)
-
             result = self.run_query(tmp_query)
 
             if not result:
