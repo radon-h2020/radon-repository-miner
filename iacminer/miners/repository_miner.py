@@ -10,7 +10,7 @@ from pydriller.repository_mining import GitRepository, RepositoryMining
 
 from iacminer import filters
 from iacminer.entities.file import FixingFile, LabeledFile
-
+from iacminer.miners.labeling import LabelDefectiveFromOldestBic
 from iacminer.mygit import Git
 
 from dotenv import load_dotenv
@@ -134,97 +134,21 @@ class RepositoryMiner():
                 
                 if not buggy_inducing_commits:
                     continue
-                
-                # Get the index of the oldest commit among those that induced the bug
-                min_idx = len(self.commits_hash)-1
-                for hash in buggy_inducing_commits[modified_file.new_path]:
-                    idx = self.commits_hash.index(hash)
-                    if idx < min_idx:
-                        min_idx = idx
-                
-                # First buggy inducing commit hash
-                oldest_bic_hash = self.commits_hash[min_idx]
 
-                fixing_file = FixingFile(renamed_files.get(modified_file.new_path, modified_file.new_path),
-                                   bic_commit=oldest_bic_hash,
+                fixing_file = FixingFile(
+                                   renamed_files.get(modified_file.new_path, modified_file.new_path),
+                                   bics=buggy_inducing_commits[modified_file.new_path],
                                    fix_commit=commit.hash)
 
-                try:
-                    # Get defective file
+                if fixing_file in fixing_files:
+                    # Update existinig fixing file
                     idx = fixing_files.index(fixing_file)
-                    fixing_file = fixing_files[idx]
-
-                    # If the oldest buggy inducing commit found in the previous step is 
-                    # older than a bic saved previously, then replace it
-                    idx = self.commits_hash.index(fixing_file.bic_commit)
-                    if min_idx < idx:  
-                        fixing_file.bic_commit = oldest_bic_hash  
-
-                except ValueError: # fixing file not yet in the list
+                    fixing_files[idx].bics.update(buggy_inducing_commits[modified_file.new_path])
+                else:
                     fixing_files.append(fixing_file)
 
         return fixing_files
    
-    def label_file(self, file: FixingFile):
-        """
-        Traverses the commits from the fixing commit the file belongs to,
-        to the begin of the project and labels each version of the file as
-        'defect-free' or 'defect-prone' depending on whether the versionof
-        the file belongs to a commit before or later the buggy inducing commit,
-        respectively.
-        
-        Parameters
-        ----------
-        file : file.FixingFile: a fixing file to analyze.
-
-        Return
-        ----------
-        labeled_versions : list : the list of all versions of the file labeled as 'defect-free' or 'defect-prone'.
-        """
-
-        labeled_versions = list()
-
-        filepath = file.filepath
-        defect_prone = True
-
-        for commit in RepositoryMining(self.path_to_repo,
-                                       from_commit=self.commits_hash[0],
-                                       to_commit=file.fix_commit,
-                                       reversed_order=True,
-                                       only_in_branch=self.branch).traverse_commits():
-
-            # Label current filepath
-            if filepath and commit.hash != file.fix_commit:
-
-                label = LabeledFile.Label.DEFECT_FREE
-
-                if defect_prone:
-                    label = LabeledFile.Label.DEFECT_PRONE
-
-                labeled_versions.append(
-                    LabeledFile(filepath=filepath,
-                        commit=commit.hash,
-                        label=label,
-                        fixing_filepath=file.filepath,
-                        fixing_commit=file.fix_commit))
-
-            # Handle file renaming
-            for modified_file in commit.modifications:
-                
-                if not filepath:
-                    continue
-                
-                if filepath not in (modified_file.old_path, modified_file.new_path):
-                    continue
-                
-                filepath = modified_file.old_path
-            
-            # From here on the file is defect_free
-            if commit.hash == file.bic_commit:
-                defect_prone = False
-        
-        return labeled_versions
-
     def mine(self):
         """
         Start mining the repository.
@@ -239,7 +163,10 @@ class RepositoryMiner():
         labeled_files = list()
 
         if self.fixing_commits:
+            
+            labeler = LabelDefectiveFromOldestBic(self.path_to_repo)
+
             for file in self.get_fixing_files():
-                labeled_files.extend(self.label_file(file))
+                labeled_files.extend(labeler.label(file))
 
         return labeled_files

@@ -76,15 +76,18 @@ class TestClass():
 
         assert fixing_files[0].filepath == 'roles/openshift-applier/tasks/process-template.yml'
         assert fixing_files[0].fix_commit == 'f375d862c35ef1d28683a9979b32000917b12648'
-        assert fixing_files[0].bic_commit == '0b43e79a8421477e3e25e8c96569f567179e22dc'
-
+        assert fixing_files[0].bics == {'0b43e79a8421477e3e25e8c96569f567179e22dc', 'ab4390f8c3544d75149bddd3ce110248f208bfb7'}
+        print(fixing_files[0].bics)
+        
         assert fixing_files[1].filepath == 'roles/openshift-applier/tasks/process-file.yml'
         assert fixing_files[1].fix_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
-        assert fixing_files[1].bic_commit == '0b43e79a8421477e3e25e8c96569f567179e22dc'
+        assert fixing_files[1].bics == {'0b43e79a8421477e3e25e8c96569f567179e22dc'}
+        print(fixing_files[1].bics)
 
         assert fixing_files[2].filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
         assert fixing_files[2].fix_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
-        assert fixing_files[2].bic_commit == '0b43e79a8421477e3e25e8c96569f567179e22dc'
+        assert fixing_files[2].bics == {'0b43e79a8421477e3e25e8c96569f567179e22dc'}
+        print(fixing_files[2].bics)
 
 
     def test_label_file(self):

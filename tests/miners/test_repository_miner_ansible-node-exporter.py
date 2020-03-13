@@ -82,7 +82,7 @@ class TestClass():
         assert len(fixing_files) == 1
         assert fixing_files[0].filepath == 'tasks/install.yml'
         assert fixing_files[0].fix_commit == '2477fe81d0a4485e34eac332ac4e064a742e01b5'
-        assert fixing_files[0].bic_commit == '212db9feaf274b349af10d7edfaaa377eb94c272'
+        assert fixing_files[0].bics == {'212db9feaf274b349af10d7edfaaa377eb94c272'}
 
     def test_label_file(self):
         miner = RepositoryMiner(

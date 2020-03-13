@@ -2,9 +2,9 @@ from enum import Enum
 
 class FixingFile():
 
-    def __init__(self, filepath: str, bic_commit: str, fix_commit: str):
+    def __init__(self, filepath: str, bics: set, fix_commit: str):
         self.filepath = filepath  # Name at FIXING COMMIT
-        self.bic_commit = bic_commit
+        self.bics = bics
         self.fix_commit = fix_commit
 
     def __eq__(self, other):
