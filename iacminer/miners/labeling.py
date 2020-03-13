@@ -87,8 +87,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
         
         return labeled_versions
 
-"""
-class LabelOnlyBIC(AbstractLabeler):
+class LabelDefectiveAtBic(AbstractLabeler):
 
     def label(self, file: FixingFile):
         
@@ -103,7 +102,7 @@ class LabelOnlyBIC(AbstractLabeler):
             # Label current filepath
             if filepath and commit.hash != file.fix_commit:
 
-                if commit.hash == file.bic_commit:
+                if commit.hash in file.bics:
                     label = LabeledFile.Label.DEFECT_PRONE
                 else:
                     label = LabeledFile.Label.DEFECT_FREE
@@ -126,6 +125,4 @@ class LabelOnlyBIC(AbstractLabeler):
                 
                 filepath = modified_file.old_path
             
-
         return labeled_files
-"""

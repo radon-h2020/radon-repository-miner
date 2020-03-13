@@ -10,7 +10,7 @@ from pydriller.repository_mining import GitRepository, RepositoryMining
 
 from iacminer import filters
 from iacminer.entities.file import FixingFile, LabeledFile
-from iacminer.miners.labeling import LabelTechnique, AbstractLabeler, LabelDefectiveFromOldestBic
+from iacminer.miners.labeling import LabelTechnique, AbstractLabeler, LabelDefectiveFromOldestBic, LabelDefectiveAtBic
 from iacminer.mygit import Git
 
 from dotenv import load_dotenv
@@ -171,8 +171,8 @@ class RepositoryMiner():
             
             if labeling == LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC:
                 labeler = LabelDefectiveFromOldestBic(self.path_to_repo)
-            elif labeling == LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC:
-                pass #labeler = LabelDefectiveAtBic(self.path_to_repo)
+            elif labeling == LabelTechnique.DEFECTIVE_AT_EVERY_BIC:
+                labeler = LabelDefectiveAtBic(self.path_to_repo)
             else:
                 labeler = AbstractLabeler(self.path_to_repo)
 
