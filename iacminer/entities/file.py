@@ -34,7 +34,8 @@ class LabeledFile():
                  filepath: str,
                  commit: str,
                  label: Label,
-                 ref: str):
+                 fixing_filepath: str,
+                 fixing_commit: str):
         """
         Initialize a new labeled file
         
@@ -46,11 +47,14 @@ class LabeledFile():
 
         label : str : the label for the file (i.e., 'defect-prone', 'defect-free')
 
-        ref : str : the reference to the original file (to group different versions \
+        fixing_filepath : str : the name of the file at fixing commit (to group different versions \
             of files with different names, but being the same file)
+        
+        fixing_commit : str : the commit fixing this file 
         """
 
         self.filepath = filepath
         self.commit = commit
         self.label = label
-        self.ref = ref
+        self.fixing_filepath = fixing_filepath
+        self.fixing_commit = fixing_commit

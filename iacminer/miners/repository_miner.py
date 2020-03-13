@@ -205,7 +205,8 @@ class RepositoryMiner():
                     LabeledFile(filepath=filepath,
                         commit=commit.hash,
                         label=label,
-                        ref=file.filepath))
+                        fixing_filepath=file.filepath,
+                        fixing_commit=file.fix_commit))
 
             # Handle file renaming
             for modified_file in commit.modifications:

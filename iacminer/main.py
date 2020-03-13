@@ -240,21 +240,22 @@ def main(date_from, date_to, push_after):
                 
                 delta_metrics = dict()
 
-                if labeled_file.ref in last_iac_metrics:
+                if labeled_file.fixing_filepath in last_iac_metrics:
                     # Compute delta metrics
-                    last = last_iac_metrics[labeled_file.ref]
+                    last = last_iac_metrics[labeled_file.fixing_filepath]
                     for k, v in iac_metrics.items():
                         k_delta = f'delta_{k}'
                         v_delta = v - last[k]
                         delta_metrics[k_delta] = round(v_delta, 3)
 
-                last_iac_metrics[labeled_file.ref] = iac_metrics
+                last_iac_metrics[labeled_file.fixing_filepath] = iac_metrics
 
                 # Save metrics
                 metadata = {
                     'defective': 'yes' if labeled_file.label == LabeledFile.Label.DEFECT_PRONE else 'no',
                     'filepath': str(labeled_file.filepath),
-                    'fixing_filepath': str(labeled_file.ref),
+                    'fixing_filepath': str(labeled_file.fixing_filepath),
+                    'fixing_commit': str(labeled_file.fixing_commit),
                     'repo': f'{repo["owner"]}/{repo["name"]}',
                     'release_start': str(release_starts_at),
                     'release_end': str(commit.hash),
