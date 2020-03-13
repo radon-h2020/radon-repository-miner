@@ -62,6 +62,10 @@ class TestClass():
         assert len(issues) == 5
 
     def test_set_fixing_commits(self):
+        """
+        Test mine() using LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC
+        """
+
         miner = RepositoryMiner(
             os.path.join('tests', 'tmp', 'cloudalchemy', 'ansible-node-exporter')
         )
@@ -85,7 +89,7 @@ class TestClass():
         assert fixing_files[0].fix_commit == '2477fe81d0a4485e34eac332ac4e064a742e01b5'
         assert fixing_files[0].bics == {'212db9feaf274b349af10d7edfaaa377eb94c272'}
 
-    def test_label_file(self):
+    def test_label_file_1(self):
         miner = RepositoryMiner(
             os.path.join('tests', 'tmp', 'cloudalchemy', 'ansible-node-exporter')
         )
@@ -95,17 +99,20 @@ class TestClass():
         assert labeled_files
         assert len(labeled_files) == 88
 
-        labeled_files[0].filepath = 'tasks/install.yml'
-        labeled_files[0].commit = '3f852639ecece4b9d1df3b09c1d79fa277d202fe'
-        labeled_files[0].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[0].ref = 'tasks/install.yml'
+        assert labeled_files[0].filepath == 'tasks/install.yml'
+        assert labeled_files[0].commit == '3f852639ecece4b9d1df3b09c1d79fa277d202fe'
+        assert labeled_files[0].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[0].fixing_filepath == 'tasks/install.yml'
+        assert labeled_files[0].fixing_commit == '2477fe81d0a4485e34eac332ac4e064a742e01b5'
 
-        labeled_files[86].filepath = 'tasks/install.yml'
-        labeled_files[86].commit = '5854ae268658788e1b791458bff68962f8d8c84e'    # Commit after the oldest bic for the file tasks/install.yml
-        labeled_files[86].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[86].ref = 'tasks/install.yml'
+        assert labeled_files[86].filepath == 'tasks/install.yml'
+        assert labeled_files[86].commit == '5854ae268658788e1b791458bff68962f8d8c84e'    # Commit after the oldest bic for the file tasks/install.yml
+        assert labeled_files[86].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[86].fixing_filepath == 'tasks/install.yml'
+        assert labeled_files[0].fixing_commit == '2477fe81d0a4485e34eac332ac4e064a742e01b5'
 
-        labeled_files[87].filepath = 'tasks/install.yml'
-        labeled_files[87].commit = '212db9feaf274b349af10d7edfaaa377eb94c272'    # Oldest bic for the file tasks/install.yml
-        labeled_files[87].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[87].ref = 'tasks/install.yml'
+        assert labeled_files[87].filepath == 'tasks/install.yml'
+        assert labeled_files[87].commit == '212db9feaf274b349af10d7edfaaa377eb94c272'    # Oldest bic for the file tasks/install.yml
+        assert labeled_files[87].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[87].fixing_filepath == 'tasks/install.yml'
+        assert labeled_files[0].fixing_commit == '2477fe81d0a4485e34eac332ac4e064a742e01b5'

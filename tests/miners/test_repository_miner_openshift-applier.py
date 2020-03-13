@@ -101,80 +101,95 @@ class TestClass():
         assert labeled_files
         assert len(labeled_files) == 129
 
-        labeled_files[0].filepath = 'roles/openshift-applier/tasks/process-template.yml'
-        labeled_files[0].commit = '50af08857bef4eef144d97a2764feb5cead5f50f'
-        labeled_files[0].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[0].ref = 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[0].filepath == 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[0].commit == '50af08857bef4eef144d97a2764feb5cead5f50f'
+        assert labeled_files[0].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[0].fixing_filepath == 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[0].fixing_commit == 'f375d862c35ef1d28683a9979b32000917b12648'
 
-        labeled_files[36].filepath = 'roles/openshift-applier/tasks/process-template.yml'
-        labeled_files[36].commit = '6f64f1dc0e1474733b13e0ceb06b614102efa50f'
-        labeled_files[36].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[36].ref = 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[35].filepath == 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[35].commit == '6f64f1dc0e1474733b13e0ceb06b614102efa50f'
+        assert labeled_files[35].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[35].fixing_filepath == 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[35].fixing_commit == 'f375d862c35ef1d28683a9979b32000917b12648'
 
-        labeled_files[37].filepath = 'roles/openshift-applier/tasks/process-template.yml'
-        labeled_files[37].commit = '0b43e79a8421477e3e25e8c96569f567179e22dc'
-        labeled_files[37].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[37].ref = 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[36].filepath == 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[36].commit == '0b43e79a8421477e3e25e8c96569f567179e22dc'
+        assert labeled_files[36].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[36].fixing_filepath == 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[36].fixing_commit == 'f375d862c35ef1d28683a9979b32000917b12648'
 
-        labeled_files[38].filepath = 'roles/openshift-applier/tasks/process-template.yml'
-        labeled_files[38].commit = '1f0d2add97205cf46be9c7d2dbdbbf79f0408b4e'
-        labeled_files[38].label = LabeledFile.Label.DEFECT_FREE
-        labeled_files[38].ref = 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[37].filepath == 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[37].commit == '1f0d2add97205cf46be9c7d2dbdbbf79f0408b4e'
+        assert labeled_files[37].label == LabeledFile.Label.DEFECT_FREE
+        assert labeled_files[37].fixing_filepath == 'roles/openshift-applier/tasks/process-template.yml'
+        assert labeled_files[37].fixing_commit == 'f375d862c35ef1d28683a9979b32000917b12648'
 
         ###
-        labeled_files[39].filepath = 'roles/openshift-applier/tasks/process-file.yml'
-        labeled_files[39].commit = '4a288ea72ef42644bfddfc87914a78cba0bac198'
-        labeled_files[39].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[39].ref = 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[38].filepath == 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[38].commit == '4a288ea72ef42644bfddfc87914a78cba0bac198'
+        assert labeled_files[38].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[38].fixing_filepath == 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[38].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[43].filepath = 'roles/openshift-applier/tasks/process-file.yml'
-        labeled_files[43].commit = '6f64f1dc0e1474733b13e0ceb06b614102efa50f'
-        labeled_files[43].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[43].ref = 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[43].filepath == 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[43].commit == '6f64f1dc0e1474733b13e0ceb06b614102efa50f'
+        assert labeled_files[43].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[43].fixing_filepath == 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[43].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[44].filepath = 'roles/openshift-applier/tasks/process-file.yml'
-        labeled_files[44].commit = '0b43e79a8421477e3e25e8c96569f567179e22dc'
-        labeled_files[44].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[44].ref = 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[44].filepath == 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[44].commit == '0b43e79a8421477e3e25e8c96569f567179e22dc'
+        assert labeled_files[44].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[44].fixing_filepath == 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[44].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[45].filepath = 'roles/openshift-applier/tasks/process-file.yml'
-        labeled_files[45].commit = '1f0d2add97205cf46be9c7d2dbdbbf79f0408b4e'
-        labeled_files[45].label = LabeledFile.Label.DEFECT_FREE
-        labeled_files[45].ref = 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[45].filepath == 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[45].commit == '1f0d2add97205cf46be9c7d2dbdbbf79f0408b4e'
+        assert labeled_files[45].label == LabeledFile.Label.DEFECT_FREE
+        assert labeled_files[45].fixing_filepath == 'roles/openshift-applier/tasks/process-file.yml'
+        assert labeled_files[45].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
         #####
-        labeled_files[46].filepath = 'roles/openshift-applier/tasks/process-one-entry.yml'
-        labeled_files[46].commit = '4a288ea72ef42644bfddfc87914a78cba0bac198'
-        labeled_files[46].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[46].ref = 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[46].filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[46].commit == '4a288ea72ef42644bfddfc87914a78cba0bac198'
+        assert labeled_files[46].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[46].fixing_filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[46].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[51].filepath = 'roles/openshift-applier/tasks/process-one-entry.yml'
-        labeled_files[51].commit = '6f64f1dc0e1474733b13e0ceb06b614102efa50f'
-        labeled_files[51].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[51].ref = 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[51].filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[51].commit == '6f64f1dc0e1474733b13e0ceb06b614102efa50f'
+        assert labeled_files[51].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[51].fixing_filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[51].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[52].filepath = 'roles/openshift-applier/tasks/process-one-entry.yml'
-        labeled_files[52].commit = '0b43e79a8421477e3e25e8c96569f567179e22dc'
-        labeled_files[52].label = LabeledFile.Label.DEFECT_PRONE
-        labeled_files[52].ref = 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[52].filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[52].commit == '0b43e79a8421477e3e25e8c96569f567179e22dc'
+        assert labeled_files[52].label == LabeledFile.Label.DEFECT_PRONE
+        assert labeled_files[52].fixing_filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[52].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[53].filepath = 'roles/openshift-applier/tasks/process-one-entry.yml'
-        labeled_files[53].commit = '1f0d2add97205cf46be9c7d2dbdbbf79f0408b4e'
-        labeled_files[53].label = LabeledFile.Label.DEFECT_FREE
-        labeled_files[53].ref = 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[53].filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[53].commit == '1f0d2add97205cf46be9c7d2dbdbbf79f0408b4e'
+        assert labeled_files[53].label == LabeledFile.Label.DEFECT_FREE
+        assert labeled_files[53].fixing_filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[53].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[82].filepath = 'roles/openshift-applier/tasks/process-one-entry.yml'
-        labeled_files[82].commit = 'a5470ea1371f7f24770147186dc6a5c1b0dcdddf'
-        labeled_files[82].label = LabeledFile.Label.DEFECT_FREE
-        labeled_files[82].ref = 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[82].filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[82].commit == 'a5470ea1371f7f24770147186dc6a5c1b0dcdddf'
+        assert labeled_files[82].label == LabeledFile.Label.DEFECT_FREE
+        assert labeled_files[82].fixing_filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[82].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[83].filepath = 'tasks/process-one-entry.yml'
-        labeled_files[83].commit = '0ce83da4b940616a4ef98263d027ea090c8beaf4'
-        labeled_files[83].label = LabeledFile.Label.DEFECT_FREE
-        labeled_files[83].ref = 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[83].filepath == 'tasks/process-one-entry.yml'
+        assert labeled_files[83].commit == '0ce83da4b940616a4ef98263d027ea090c8beaf4'
+        assert labeled_files[83].label == LabeledFile.Label.DEFECT_FREE
+        assert labeled_files[83].fixing_filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[83].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
-        labeled_files[128].filepath = 'tasks/process-one-entry.yml'
-        labeled_files[128].commit = '31c7db0ac06ff70256553d2ff0e08de5069888c0'
-        labeled_files[128].label = LabeledFile.Label.DEFECT_FREE
-        labeled_files[128].ref = 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[128].filepath == 'tasks/process-one-entry.yml'
+        assert labeled_files[128].commit == '31c7db0ac06ff70256553d2ff0e08de5069888c0'
+        assert labeled_files[128].label == LabeledFile.Label.DEFECT_FREE
+        assert labeled_files[128].fixing_filepath == 'roles/openshift-applier/tasks/process-one-entry.yml'
+        assert labeled_files[128].fixing_commit == '3dae9cd54e7f8b1706a8de5f91338ded600a4127'
 
