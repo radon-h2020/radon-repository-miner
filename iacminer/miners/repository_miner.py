@@ -10,7 +10,7 @@ from pydriller.repository_mining import GitRepository, RepositoryMining
 
 from iacminer import filters
 from iacminer.entities.file import FixingFile, LabeledFile
-from iacminer.miners.labeling import LabelDefectiveFromOldestBic
+from iacminer.miners.labeling import LabelTechnique, AbstractLabeler, LabelDefectiveFromOldestBic
 from iacminer.mygit import Git
 
 from dotenv import load_dotenv
@@ -149,10 +149,15 @@ class RepositoryMiner():
 
         return fixing_files
    
-    def mine(self):
+    def mine(self, labeling: LabelTechnique):
         """
         Start mining the repository.
-        
+
+        Parameters
+        -----------
+        labeling : labeling.LabelTechnique : the labeling technique to label files.\
+            Can be DEFECTIVE_FROM_OLDEST_BIC or DEFECTIVE_AT_EVERY_BIC
+
         Return
         ----------
         labeled_files : list : the list of labeled files (i.e., defect-prone or defect-free), if any.
@@ -164,7 +169,12 @@ class RepositoryMiner():
 
         if self.fixing_commits:
             
-            labeler = LabelDefectiveFromOldestBic(self.path_to_repo)
+            if labeling == LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC:
+                labeler = LabelDefectiveFromOldestBic(self.path_to_repo)
+            elif labeling == LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC:
+                pass #labeler = LabelDefectiveAtBic(self.path_to_repo)
+            else:
+                labeler = AbstractLabeler(self.path_to_repo)
 
             for file in self.get_fixing_files():
                 labeled_files.extend(labeler.label(file))

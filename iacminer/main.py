@@ -20,6 +20,7 @@ from iacminer.entities.file import LabeledFile
 from iacminer.miners.metrics import MetricsMiner
 from iacminer.miners.github_miner import GithubMiner
 from iacminer.miners.repository_miner import RepositoryMiner
+from iacminer.miners.labeling import LabelTechnique
 
 
 DESTINATION_PATH = os.path.join('data', 'metrics.csv')
@@ -179,7 +180,7 @@ def main(date_from, date_to, push_after):
         
         git_repo = GitRepository(path_to_repo)
         repo_miner = RepositoryMiner(path_to_repo, branch=repo['default_branch'])
-        labeled_files = repo_miner.mine()
+        labeled_files = repo_miner.mine(LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC)
         
         if not labeled_files:
             continue

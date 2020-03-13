@@ -1,7 +1,18 @@
+from enum import Enum
 from iacminer.entities.file import FixingFile, LabeledFile
 from pydriller.repository_mining import RepositoryMining
 
-class Labeler():
+class LabelTechnique(Enum):
+    """
+    DEFECTIVE_FROM_OLDEST_BIC - The file is labeled "buggy" from the oldest buggy inducing commit (inclusive) to the fixing commit (exclusive), and "clean" from the start to the oldest bic .
+    
+    DEFECTIVE_AT_EVERY_BIC - The file is labeled "buggy" only for commits that induced bugs, and "clean" for all other commits.
+    """
+    DEFECTIVE_FROM_OLDEST_BIC = 1
+    DEFECTIVE_AT_EVERY_BIC = 2
+
+
+class AbstractLabeler():
 
     def __init__(self, path_to_repo: str):
         """
@@ -28,7 +39,7 @@ class Labeler():
         list()
 
 
-class LabelDefectiveFromOldestBic(Labeler):
+class LabelDefectiveFromOldestBic(AbstractLabeler):
 
     def label(self, file: FixingFile):
         
@@ -77,7 +88,7 @@ class LabelDefectiveFromOldestBic(Labeler):
         return labeled_versions
 
 """
-class LabelOnlyBIC(Labeler):
+class LabelOnlyBIC(AbstractLabeler):
 
     def label(self, file: FixingFile):
         

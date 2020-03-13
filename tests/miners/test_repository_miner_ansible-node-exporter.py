@@ -7,6 +7,7 @@ from datetime import datetime
 import iacminer.mygit as mygit
 from iacminer.entities.file import LabeledFile
 from iacminer.miners.repository_miner import RepositoryMiner
+from iacminer.miners.labeling import LabelTechnique
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -89,7 +90,7 @@ class TestClass():
             os.path.join('tests', 'tmp', 'cloudalchemy', 'ansible-node-exporter')
         )
 
-        labeled_files = miner.mine()
+        labeled_files = miner.mine(LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC)
         
         assert labeled_files
         assert len(labeled_files) == 88
