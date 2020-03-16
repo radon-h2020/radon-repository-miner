@@ -17,9 +17,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Constants
-BUG_RELATED_LABELS = set(['bug', 'Bug', 'bug :bug:', 'ansible_bug', 'Type: Bug', 'Type: bug',
-                          'type: bug 🐛', 'type:bug', 'type: bug', 'kind/bug', 'kind/bugs',
-                          'bugfix', 'critical-bug', '01 type: bug', 'bug_report', 'minor-bug'])
+BUG_RELATED_LABELS = set(['bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical',
+                          'ansible_bug', 'Type: Bug', 'Type: bug', 'Type/Bug',
+                          'type: bug 🐛', 'type:bug', 'type: bug', 'type/bug', 'kind/bug', 'kind/bugs',
+                          'bug/bugfix', 'bugfix', 'critical-bug', '01 type: bug', 'bug_report', 'minor-bug'])
 
 class RepositoryMiner():  
     """
