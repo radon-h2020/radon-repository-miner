@@ -1,8 +1,9 @@
 from enum import Enum
 from iacminer.entities.file import FixingFile, LabeledFile
 from pydriller.repository_mining import RepositoryMining
+from pydriller.domain.commit import ModificationType
 
-class LabelTechnique(Enum):
+class LabelingTechnique(Enum):
     """
     DEFECTIVE_FROM_OLDEST_BIC - The file is labeled "buggy" from the oldest buggy inducing commit (inclusive) to the fixing commit (exclusive), and "clean" from the start to the oldest bic .
     
@@ -43,17 +44,16 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
 
     def label(self, file: FixingFile):
         
-        labeled_versions = list()
+        labeled_files = list()
 
         filepath = file.filepath
         defect_prone = True
-        bics = file.bics
+        bics = file.bics.copy()
         
         for commit in RepositoryMining(self.path_to_repo,
                                        to_commit=file.fix_commit,
                                        reversed_order=True).traverse_commits():
 
-            # From here on the file is defect_free
             if not bics:
                 defect_prone = False
             elif commit.hash in bics:
@@ -67,7 +67,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                 else:
                     label = LabeledFile.Label.DEFECT_FREE
 
-                labeled_versions.append(
+                labeled_files.append(
                     LabeledFile(filepath=filepath,
                                 commit=commit.hash,
                                 label=label,
@@ -76,7 +76,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
 
             # Handle file renaming
             for modified_file in commit.modifications:
-                
+
                 if not filepath:
                     continue
                 
@@ -85,7 +85,8 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                 
                 filepath = modified_file.old_path
         
-        return labeled_versions
+        return labeled_files
+
 
 class LabelDefectiveAtBic(AbstractLabeler):
 
@@ -99,8 +100,11 @@ class LabelDefectiveAtBic(AbstractLabeler):
                                        to_commit=file.fix_commit,
                                        reversed_order=True).traverse_commits():
 
-            # Label current filepath
-            if filepath and commit.hash != file.fix_commit:
+            if not filepath:
+                break
+
+            elif filepath and commit.hash != file.fix_commit:
+                # Label current filepath
 
                 if commit.hash in file.bics:
                     label = LabeledFile.Label.DEFECT_PRONE
@@ -113,7 +117,7 @@ class LabelDefectiveAtBic(AbstractLabeler):
                                 label=label,
                                 fixing_filepath=file.filepath,
                                 fixing_commit=file.fix_commit))
-
+                
             # Handle file renaming
             for modified_file in commit.modifications:
                 
@@ -123,6 +127,9 @@ class LabelDefectiveAtBic(AbstractLabeler):
                 if filepath not in (modified_file.old_path, modified_file.new_path):
                     continue
                 
-                filepath = modified_file.old_path
+                if modified_file.change_type == ModificationType.ADD:
+                        filepath = None
+                else:
+                    filepath = modified_file.old_path
             
         return labeled_files

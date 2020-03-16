@@ -10,7 +10,7 @@ from pydriller.repository_mining import GitRepository, RepositoryMining
 
 from iacminer import filters
 from iacminer.entities.file import FixingFile, LabeledFile
-from iacminer.miners.labeling import LabelTechnique, AbstractLabeler, LabelDefectiveFromOldestBic, LabelDefectiveAtBic
+from iacminer.miners.labeling import LabelingTechnique, AbstractLabeler, LabelDefectiveFromOldestBic, LabelDefectiveAtBic
 from iacminer.mygit import Git
 
 from dotenv import load_dotenv
@@ -104,17 +104,17 @@ class RepositoryMiner():
                                        to_commit=first_fix,
                                        reversed_order=True,
                                        only_in_branch=self.branch).traverse_commits():
-            
-            # If no Ansible file modified, go to next iteration
+
+            # If no Ansible file modified, go to next iteration - TODO: gestire linguaggio
             if not any(filters.is_ansible_file(modified_file.new_path) for modified_file in commit.modifications):
                 if commit.hash in self.fixing_commits:
                     self.fixing_commits.remove(commit.hash)
-                
+
                 continue
-            
+
             # Find buggy inducing commits
             for modified_file in commit.modifications:
-                
+
                 # Not interested that are ADDED or DELETED
                 if modified_file.change_type not in (ModificationType.MODIFY, ModificationType.RENAME):
                     continue
@@ -126,12 +126,12 @@ class RepositoryMiner():
 
                     elif commit.hash in self.fixing_commits:
                         renamed_files[modified_file.old_path] = modified_file.new_path
-                
+
                 if commit.hash not in self.fixing_commits:
                     continue
 
                 buggy_inducing_commits = git_repo.get_commits_last_modified_lines(commit, modified_file)
-                
+
                 if not buggy_inducing_commits:
                     continue
 
@@ -148,14 +148,14 @@ class RepositoryMiner():
                     fixing_files.append(fixing_file)
 
         return fixing_files
-   
-    def mine(self, labeling: LabelTechnique):
+
+    def mine(self, labeling: LabelingTechnique):
         """
         Start mining the repository.
 
         Parameters
         -----------
-        labeling : labeling.LabelTechnique : the labeling technique to label files.\
+        labeling : labeling.LabelingTechnique : the labeling technique to label files.\
             Can be DEFECTIVE_FROM_OLDEST_BIC or DEFECTIVE_AT_EVERY_BIC
 
         Return
@@ -169,9 +169,9 @@ class RepositoryMiner():
 
         if self.fixing_commits:
             
-            if labeling == LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC:
+            if labeling == LabelingTechnique.DEFECTIVE_FROM_OLDEST_BIC:
                 labeler = LabelDefectiveFromOldestBic(self.path_to_repo)
-            elif labeling == LabelTechnique.DEFECTIVE_AT_EVERY_BIC:
+            elif labeling == LabelingTechnique.DEFECTIVE_AT_EVERY_BIC:
                 labeler = LabelDefectiveAtBic(self.path_to_repo)
             else:
                 labeler = AbstractLabeler(self.path_to_repo)

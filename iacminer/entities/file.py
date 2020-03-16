@@ -58,3 +58,10 @@ class LabeledFile():
         self.label = label
         self.fixing_filepath = fixing_filepath
         self.fixing_commit = fixing_commit
+
+    def __eq__(self, other):
+        """Overrides the default implementation"""
+        if isinstance(other, LabeledFile):
+            return self.filepath == other.filepath and self.commit == other.commit
+
+        return False

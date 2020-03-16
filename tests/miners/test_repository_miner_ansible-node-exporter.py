@@ -6,8 +6,8 @@ import shutil
 from datetime import datetime
 import iacminer.mygit as mygit
 from iacminer.entities.file import LabeledFile
-from iacminer.miners.repository_miner import RepositoryMiner
-from iacminer.miners.labeling import LabelTechnique
+from iacminer.miners.repository import RepositoryMiner
+from iacminer.miners.labeling import LabelingTechnique
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -63,7 +63,7 @@ class TestClass():
 
     def test_set_fixing_commits(self):
         """
-        Test mine() using LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC
+        Test mine() using LabelingTechnique.DEFECTIVE_FROM_OLDEST_BIC
         """
 
         miner = RepositoryMiner(
@@ -91,14 +91,14 @@ class TestClass():
 
     def test_label_file_1(self):
         """
-        Test mine() with LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC
+        Test mine() with LabelingTechnique.DEFECTIVE_FROM_OLDEST_BIC
         """
 
         miner = RepositoryMiner(
             os.path.join('tests', 'tmp', 'cloudalchemy', 'ansible-node-exporter')
         )
 
-        labeled_files = miner.mine(LabelTechnique.DEFECTIVE_FROM_OLDEST_BIC)
+        labeled_files = miner.mine(LabelingTechnique.DEFECTIVE_FROM_OLDEST_BIC)
         
         assert labeled_files
         assert len(labeled_files) == 88
@@ -123,14 +123,14 @@ class TestClass():
 
     def test_label_file_2(self):
         """
-        Test mine() with LabelTechnique.DEFECTIVE_AT_EVERY_BIC
+        Test mine() with LabelingTechnique.DEFECTIVE_AT_EVERY_BIC
         """
 
         miner = RepositoryMiner(
             os.path.join('tests', 'tmp', 'cloudalchemy', 'ansible-node-exporter')
         )
 
-        labeled_files = miner.mine(LabelTechnique.DEFECTIVE_AT_EVERY_BIC)
+        labeled_files = miner.mine(LabelingTechnique.DEFECTIVE_AT_EVERY_BIC)
         
         assert labeled_files
         assert len(labeled_files) == 88

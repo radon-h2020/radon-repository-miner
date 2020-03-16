@@ -3,7 +3,7 @@ import pytest
 
 from datetime import datetime
 
-from iacminer.miners.github_miner import GithubMiner
+from iacminer.miners.github import GithubMiner
 
 from dotenv import load_dotenv
 load_dotenv()
