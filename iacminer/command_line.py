@@ -100,6 +100,11 @@ def getParser():
                               dest='repository',
                               type=repo_name,
                               help='Name of the repository (owner/name).')
+    
+    repos_parser.add_argument(action='store',
+                              dest='destination',
+                              type=repo_name,
+                              help='Filepath to save results.')
 
     repos_parser.add_argument('--labeler',
                         action='store',
@@ -132,20 +137,12 @@ if __name__=='__main__':
         print(args)
         print('MINING REPOS')
 
-        dest = os.path.join('data', 'metrics_just_in_time.csv')
-
         dataset = pd.DataFrame()
-        # Load dataframe, if exists
-        if os.path.isfile('data'):
-            with open(dest, 'r') as in_file:
-                dataset = pd.read_csv(in_file)
-
+    
         for metrics in MineRepo(args.repository, int(args.labeler), args.language).start():
             # Update dataframe
             dataset = dataset.append(metrics, ignore_index=True)
 
             # Save to csv
-            with open(dest, 'w') as out:
+            with open(args.destination, 'w') as out:
                 dataset.to_csv(out, mode='w', index=False)
-
-        print('Done!')

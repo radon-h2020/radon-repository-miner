@@ -112,6 +112,9 @@ class RepositoryMiner():
                     self.fixing_commits.remove(commit.hash)
 
                 continue
+            
+            if len(commit.modifications) > 1:
+                continue
 
             # Find buggy inducing commits
             for modified_file in commit.modifications:
