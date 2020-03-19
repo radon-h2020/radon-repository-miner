@@ -4,6 +4,7 @@ A module for mining repositories.
 import github
 import json
 import os
+import re
 
 from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
@@ -44,6 +45,26 @@ class RepositoryMiner():
         self.commits_hash = [c.hash for c in RepositoryMining(self.path_to_repo, only_in_branch=self.branch).traverse_commits()]
         self.fixing_commits = set()
 
+    def linked_issue_num(self, msg: str):
+        """
+        Analyze a message and return the linked issue identifier, if any; None otherwise.
+        """
+        if not msg:
+            return None
+
+        fixes = re.match(r'fix(e(d|s))?\s+.*\(?#(\b\d+\b)\)?', msg.lower())
+        closes = re.match(r'closes\s+.*\(?#(\b\d+\b)\)?', msg.lower())
+        resolves = re.match(r'resolves\s+.*\(?#(\b\d+\b)\)?', msg.lower())
+
+        if fixes and len(fixes.groups()) > 2:
+            return int(fixes.groups()[2])
+        elif closes and len(closes.groups()) > 0:
+            return int(closes.groups()[0])
+        elif resolves and len(resolves.groups()) > 0:
+            return int(resolves.groups()[0])
+        
+        return None
+        
     def set_fixing_commits(self):
         """
         Set commits that have fixed closed bug-related issues
@@ -78,6 +99,26 @@ class RepositoryMiner():
                 if (is_merged or is_closed) and e.commit_id:
                     self.fixing_commits.add(e.commit_id)
 
+        # Iterate commits and find for those fixing/closing an issue
+        # but that are not found with the previous step
+        for commit in RepositoryMining(self.path_to_repo,
+                                       only_in_branch=self.branch).traverse_commits():
+            
+            if commit.hash in self.fixing_commits:
+                continue
+
+            issue_num = self.linked_issue_num(commit.msg)
+            if not issue_num:
+                continue
+            
+            issue_labels = g.get_issue_labels(remote_repo, issue_num)
+
+            if any(l in labels for l in issue_labels):
+                self.fixing_commits.add(commit.hash)
+                #print(issue_labels)
+                #print(commit.msg)
+
+
     def get_fixing_files(self):
         """
         Find files fixing issues related to bug.
@@ -103,7 +144,7 @@ class RepositoryMiner():
         for commit in RepositoryMining(self.path_to_repo, 
                                        from_commit=last_fix,
                                        to_commit=first_fix,
-                                       reversed_order=True,
+                                       order='reverse',
                                        only_in_branch=self.branch).traverse_commits():
 
             # If no Ansible file modified, go to next iteration - TODO: gestire linguaggio

@@ -53,6 +53,7 @@ class Git():
         Analyze a repo, returning a generator of closed issues labeled with 'bug'.
 
         :repo: a repository 'author/repository' (e.g. 'PyGithub/PyGithub')
+        
         :label: the label for the issues to search for
         """
         issues = list()
@@ -62,3 +63,39 @@ class Git():
             issues.append(issue)
 
         return issues
+
+    def get_issue_labels(self, repo: str, num:int):
+        """
+        Return the labels of the issue (closed). An empty list otherwise
+        
+        Parameters
+        ----------
+        repo : str: the repository to analyze (e.g., 'radon-h2020/radon-defect-prediction')
+        
+        num : int: the issue number
+
+        Returns
+        ----------
+        issues : set : The set of labels
+        """ 
+        
+        """ 
+        Analyze a repo, returning a generator of closed issues labeled with 'bug'.
+
+        :repo: a repository 'author/repository' (e.g. 'PyGithub/PyGithub')
+        :label: the label for the issues to search for
+        """
+        repo = self.__github.get_repo(repo)
+
+        labels = set()
+
+        try:
+            issue = repo.get_issue(num)
+
+            if issue.state == 'closed':
+                for l in issue.labels:
+                    labels.add(str(l))
+        except Exception as e:
+            print(str(e))
+
+        return labels

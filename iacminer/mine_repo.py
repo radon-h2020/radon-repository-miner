@@ -4,6 +4,7 @@ import shutil
 from os import makedirs, walk
 from os.path import isfile, isdir, join
 
+from datetime import timedelta
 from datetime import datetime
 from iacminer import filters
 from iacminer.entities.file import LabeledFile
@@ -139,7 +140,7 @@ class MineRepo():
             
             # PROCESS metrics
             try:
-                process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo, release_starts_at, commit.hash)
+                process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo, from_commit=release_starts_at, to_commit=commit.hash)
             except Exception as e:
                 print(f'Problem with process metrics: {str(e)}')
                 continue
@@ -159,13 +160,15 @@ class MineRepo():
                     continue
                 
                 # IAC-oriented metrics
+                iac_metrics = dict()
                 try:
                     iac_metrics = metrics_miner.mine_product_metrics(content)
                 except YAMLError:
                     print(f'>>> Commit: {commit.hash}. Cannot properly read the yaml file!')
-                    continue
-                except ValueError:
-                    print(f'>>> Commit: {commit.hash}. Value error in yaml!')
+                    iac_metrics = dict()
+                    #continue
+                except ValueError as ve: # Content is empty
+                    print(f'>>> Commit: {commit.hash}. Value error in {filepath}! -> {str(ve)} ')
                     continue
 
                 # TOKENS
@@ -179,7 +182,7 @@ class MineRepo():
                     last = last_iac_metrics[labeled_file.fixing_filepath]
                     for k, v in iac_metrics.items():
                         k_delta = f'delta_{k}'
-                        v_delta = v - last[k]
+                        v_delta = v - last.get(k, 0)
                         delta_metrics[k_delta] = round(v_delta, 3)
 
                 last_iac_metrics[labeled_file.fixing_filepath] = iac_metrics
@@ -225,7 +228,6 @@ class MineRepo():
 
 
     def mine_per_commit(self):
-        git_repo = GitRepository(self.path_to_repo)
         metrics_miner = MetricsMiner()
         repo_miner = RepositoryMiner(self.path_to_repo, self.default_branch)
         labeled_files = repo_miner.mine(self.labeler)
@@ -233,18 +235,36 @@ class MineRepo():
         if not labeled_files:
             return
         
-        last_iac_metrics = dict() # Store the last iac metrics for each file
+        project_start_date = None
 
         # Extract metrics (per commit)
         for commit in RepositoryMining(self.path_to_repo).traverse_commits():         
 
+            """
+            if not project_start_date:
+                project_start_date = commit.committer_date
+
+            past_process_metrics = None
+            three_months_ago = commit.committer_date - timedelta(3*365/12)
+            
+            
+            if three_months_ago >= project_start_date:
+                try:
+                    past_process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo,
+                                                                              since = three_months_ago,
+                                                                              to = commit.committer_date)
+                except Exception as e:
+                    print(f'>>> Problem with process metrics: {str(e)}')
+                    continue
+            """
+
             try:
-                process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo, commit.hash, commit.hash)
+                process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo,
+                                                                     from_commit=commit.hash,
+                                                                     to_commit=commit.hash)
             except Exception as e:
                 print(f'>>> Problem with process metrics: {str(e)}')
                 continue
-
-            git_repo.checkout(commit.hash)
 
             for modified_file in commit.modifications:
                 
@@ -254,21 +274,34 @@ class MineRepo():
                     continue
 
                 # Compute product and text metrics
-                content = self.get_content(join(self.path_to_repo, filepath))
-                # No need to cehckout: Content = modified_file.src 
+                content = modified_file.source_code
+                content_before = modified_file.source_code_before
 
                 if not content:
-                    print(f'>>> Commit: {commit.hash}. File not found')
                     continue
                 
                 # IAC METRICS
+                iac_metrics = dict()
+                iac_metrics_before = dict()
+                delta_metrics = dict()
+                
                 try:
                     iac_metrics = metrics_miner.mine_product_metrics(content)
+
+                    if content_before:
+                        iac_metrics_before = metrics_miner.mine_product_metrics(content_before)
+
+                        # delta
+                        for k in iac_metrics.keys():
+                            if k in iac_metrics_before:
+                                k_delta = f'delta_{k}'
+                                v_delta = iac_metrics.get(k, 0) - iac_metrics_before.get(k, 0)
+                                delta_metrics[k_delta] = round(v_delta, 3)
+                
                 except YAMLError:
-                    print(f'>>> Commit: {commit.hash}. Cannot properly read the yaml file {filepath}!')
-                    iac_metrics = dict()
+                    print(f'>>> Commit: {commit.hash}. Cannot properly read the content of: {filepath}!')
                     #continue
-                except ValueError as ve: # Should be empty
+                except ValueError as ve: # Content is empty
                     print(f'>>> Commit: {commit.hash}. Value error in {filepath}! -> {str(ve)} ')
                     continue
                 
@@ -277,20 +310,6 @@ class MineRepo():
 
                 # DELTA metrics
                 delta_metrics = dict()
-
-                if modified_file.old_path in last_iac_metrics and iac_metrics:
-                    # Compute delta metrics
-                    last = last_iac_metrics[modified_file.old_path]
-                    for k, v in iac_metrics.items():
-                        k_delta = f'delta_{k}'
-                        v_delta = v - last.get(k, 0)
-                        delta_metrics[k_delta] = round(v_delta, 3)
-
-                    del last_iac_metrics[modified_file.old_path]
-                
-                if iac_metrics:
-                    last_iac_metrics[modified_file.new_path] = iac_metrics
-
                 metrics = iac_metrics
                 metrics.update(delta_metrics)
 
@@ -312,6 +331,27 @@ class MineRepo():
                 metrics['loc_removed_max'] = process_metrics[14].get(filepath, 0)
                 metrics['loc_removed_avg'] = process_metrics[15].get(filepath, 0)
 
+                """
+                # Three months process metrics
+                if past_process_metrics:
+                    metrics['3_months_change_set_max'] = past_process_metrics[0]
+                    metrics['3_months_change_set_avg'] = past_process_metrics[1]
+                    metrics['3_months_code_churn'] = past_process_metrics[2].get(filepath, 0)
+                    metrics['3_months_code_churn_max'] = past_process_metrics[3].get(filepath, 0)
+                    metrics['3_months_code_churn_avg'] = past_process_metrics[4].get(filepath, 0)
+                    metrics['3_months_commits_count'] = past_process_metrics[5].get(filepath, 0)
+                    metrics['3_months_contributors'] = past_process_metrics[6].get(filepath, 0)
+                    metrics['3_months_minor_contributors'] = past_process_metrics[7].get(filepath, 0)
+                    metrics['3_months_highest_experience'] = past_process_metrics[8].get(filepath, 0)
+                    metrics['3_months_median_hunks_count'] = past_process_metrics[9].get(filepath, 0)
+                    metrics['3_months_loc_added'] = past_process_metrics[10].get(filepath, 0)
+                    metrics['3_months_loc_added_max'] = past_process_metrics[11].get(filepath, 0)
+                    metrics['3_months_loc_added_avg'] = past_process_metrics[12].get(filepath, 0)
+                    metrics['3_months_loc_removed'] = past_process_metrics[13].get(filepath, 0)
+                    metrics['3_months_loc_removed_max'] = past_process_metrics[14].get(filepath, 0)
+                    metrics['3_months_loc_removed_avg'] = past_process_metrics[15].get(filepath, 0)
+                """
+
                 metrics.update(
                     dict(commit=commit.hash,
                          committed_at=datetime.timestamp(commit.committer_date),
@@ -322,8 +362,6 @@ class MineRepo():
                 )
 
                 yield metrics
-
-            git_repo.reset()    # Reset repository's status
 
     def start(self):
         

@@ -52,7 +52,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
         
         for commit in RepositoryMining(self.path_to_repo,
                                        to_commit=file.fix_commit,
-                                       reversed_order=True).traverse_commits():
+                                       order='reverse').traverse_commits():
 
             if not bics:
                 defect_prone = False
@@ -98,7 +98,7 @@ class LabelDefectiveAtBic(AbstractLabeler):
 
         for commit in RepositoryMining(self.path_to_repo,
                                        to_commit=file.fix_commit,
-                                       reversed_order=True).traverse_commits():
+                                       order='reverse').traverse_commits():
 
             if not filepath:
                 break
