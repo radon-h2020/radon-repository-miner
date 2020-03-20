@@ -104,7 +104,6 @@ class MineRepo():
         with open(path, 'r') as f:
             return f.read()
 
-
     def mine_per_release(self):
         git_repo = GitRepository(self.path_to_repo)
         metrics_miner = MetricsMiner()
@@ -148,7 +147,9 @@ class MineRepo():
                 continue
             
             # PROCESS metrics
-            process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo, since=last_release_date + timedelta(minutes=1), to_commit=commit.committer_date)
+            process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo, since=last_release_date + timedelta(minutes=1), to=commit.committer_date)
+
+            last_release_date = commit.committer_date
 
             # Checkout to commit to extract product metrics from each file
             git_repo.checkout(commit.hash)
@@ -157,26 +158,24 @@ class MineRepo():
             all_filepaths = self.all_files()
             labeled_this_commit = commit_file_map.get(commit.hash, [])
 
-            defect_free = all_filepaths.intersection([file.filepath for file in labeled_this_commit if file.label == LabeledFile.Label.DEFECT_FREE])
             defect_prone = all_filepaths.intersection([file.filepath for file in labeled_this_commit if file.label == LabeledFile.Label.DEFECT_PRONE])
+            defect_free = all_filepaths - defect_prone
 
             for filepath in defect_free.union(defect_prone):
                 
+                if not filters.is_ansible_file(filepath):
+                    continue
+
                 # Compute product and text metrics
                 content = self.get_content(join(self.path_to_repo, filepath))
 
-                #if not content:
-                #    print(f'>>> Commit: {commit.hash}. File {filepath} not found')
-                #    continue
-                
                 try:
                     iac_metrics = metrics_miner.mine_product_metrics(content)
                 except YAMLError:
                     label = "defect-prone" if filepath in defect_prone else "defect-free"
-                    print(f'>>> Commit: {commit.hash}. Cannot properly read the yaml file! The file label is {label}.')
+                    print(f'>>> Commit: {commit.hash} - Cannot properly {filepath} - The file label is {label}.')
                     continue
                 except ValueError as ve: # Content is empty
-                    print(f'>>> Commit: {commit.hash}. Value error in {filepath}! -> {str(ve)} ')
                     continue
 
                 # TOKENS
@@ -190,7 +189,7 @@ class MineRepo():
                     v_delta = iac_metrics.get(k, 0) - v
                     delta_metrics[f'delta_{k}'] = round(v_delta, 3)
 
-                iac_metrics_before[filepath] = iac_metrics
+                iac_metrics_before[filepath] = iac_metrics.copy()
 
                 metrics = iac_metrics
                 metrics.update(delta_metrics)
@@ -225,7 +224,6 @@ class MineRepo():
                 yield metrics
 
             git_repo.reset()    # Reset repository's status
-
 
     def mine_per_commit(self):
         metrics_miner = MetricsMiner()
@@ -282,7 +280,6 @@ class MineRepo():
                     print(f'>>> Commit: {commit.hash}. Cannot properly read the content of: {filepath}!')
                     #continue
                 except ValueError as ve: # Content is empty
-                    print(f'>>> Commit: {commit.hash}. Value error in {filepath}! -> {str(ve)} ')
                     continue
                 
                 # TOKENS

@@ -23,7 +23,7 @@ def main(labeler:int=1):
 
         i += 1
 
-        if i <= -1:
+        if i <= 47:
             bar.next()
             continue
 
