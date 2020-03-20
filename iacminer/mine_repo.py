@@ -125,67 +125,72 @@ class MineRepo():
         # Extract metrics
         releases = [c.hash for c in RepositoryMining(self.path_to_repo, only_releases=True).traverse_commits()]
 
-        release_starts_at = None
-        
+        last_release_date = None
+
         metrics_miner = MetricsMiner()
-        last_iac_metrics = dict() # Store the last iac metrics for each file
+        iac_metrics_before = dict() # Values for iac metrics in the last release
 
         for commit in RepositoryMining(self.path_to_repo).traverse_commits():
 
-            if not release_starts_at:
-                release_starts_at = commit.hash
+            # To handle renaming in iac_metrics_before
+            for modified_file in commit.modifications:
+                old_path = modified_file.old_path
+                new_path = modified_file.new_path
+
+                if old_path != new_path and old_path in iac_metrics_before:
+                    # Rename key old_path wit new_path
+                    iac_metrics_before[new_path] = iac_metrics_before.pop(old_path)
+                    
+            if not last_release_date:
+                last_release_date = commit.committer_date
 
             if commit.hash not in releases:
                 continue
             
             # PROCESS metrics
-            try:
-                process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo, from_commit=release_starts_at, to_commit=commit.hash)
-            except Exception as e:
-                print(f'Problem with process metrics: {str(e)}')
-                continue
+            process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo, since=last_release_date + timedelta(minutes=1), to_commit=commit.committer_date)
 
             # Checkout to commit to extract product metrics from each file
             git_repo.checkout(commit.hash)
             
-            for labeled_file in commit_file_map.get(commit.hash, []):
-                
-                filepath = labeled_file.filepath
+            # IAC metrics
+            all_filepaths = self.all_files()
+            labeled_this_commit = commit_file_map.get(commit.hash, [])
 
+            defect_free = all_filepaths.intersection([file.filepath for file in labeled_this_commit if file.label == LabeledFile.Label.DEFECT_FREE])
+            defect_prone = all_filepaths.intersection([file.filepath for file in labeled_this_commit if file.label == LabeledFile.Label.DEFECT_PRONE])
+
+            for filepath in defect_free.union(defect_prone):
+                
                 # Compute product and text metrics
                 content = self.get_content(join(self.path_to_repo, filepath))
 
-                if not content:
-                    print(f'>>> Commit: {commit.hash}. File {filepath} not found')
-                    continue
+                #if not content:
+                #    print(f'>>> Commit: {commit.hash}. File {filepath} not found')
+                #    continue
                 
-                # IAC-oriented metrics
-                iac_metrics = dict()
                 try:
                     iac_metrics = metrics_miner.mine_product_metrics(content)
                 except YAMLError:
-                    print(f'>>> Commit: {commit.hash}. Cannot properly read the yaml file!')
-                    iac_metrics = dict()
-                    #continue
+                    label = "defect-prone" if filepath in defect_prone else "defect-free"
+                    print(f'>>> Commit: {commit.hash}. Cannot properly read the yaml file! The file label is {label}.')
+                    continue
                 except ValueError as ve: # Content is empty
                     print(f'>>> Commit: {commit.hash}. Value error in {filepath}! -> {str(ve)} ')
                     continue
 
                 # TOKENS
                 tokens = metrics_miner.mine_text(content)
-                
+
                 # DELTA metrics
                 delta_metrics = dict()
 
-                if labeled_file.fixing_filepath in last_iac_metrics:
-                    # Compute delta metrics
-                    last = last_iac_metrics[labeled_file.fixing_filepath]
-                    for k, v in iac_metrics.items():
-                        k_delta = f'delta_{k}'
-                        v_delta = v - last.get(k, 0)
-                        delta_metrics[k_delta] = round(v_delta, 3)
+                previous = iac_metrics_before.get(filepath, dict())
+                for k, v in previous.items():
+                    v_delta = iac_metrics.get(k, 0) - v
+                    delta_metrics[f'delta_{k}'] = round(v_delta, 3)
 
-                last_iac_metrics[labeled_file.fixing_filepath] = iac_metrics
+                iac_metrics_before[filepath] = iac_metrics
 
                 metrics = iac_metrics
                 metrics.update(delta_metrics)
@@ -209,21 +214,16 @@ class MineRepo():
                 metrics['loc_removed_avg'] = process_metrics[15].get(filepath, 0)
 
                 metrics.update(
-                    dict(commit=commit.hash,
-                         committed_at=datetime.timestamp(commit.committer_date),
-                         defective='yes' if labeled_file.label == LabeledFile.Label.DEFECT_PRONE else 'no',
+                    dict(commit=commit.hash,    # release commit
+                         committed_at=datetime.timestamp(commit.committer_date), # release date
+                         defective='yes' if filepath in defect_prone else 'no',
                          filepath=filepath,
-                         fixing_filepath=labeled_file.fixing_filepath,
-                         fixing_commit=labeled_file.fixing_commit,
                          repo=self.name,
-                         release_end=commit.hash,
-                         release_start=release_starts_at,
                          tokens=' '.join(tokens))
                 )
 
                 yield metrics
 
-            release_starts_at = None # So the next commit will be the start for the successive release
             git_repo.reset()    # Reset repository's status
 
 
@@ -235,28 +235,8 @@ class MineRepo():
         if not labeled_files:
             return
         
-        project_start_date = None
-
         # Extract metrics (per commit)
         for commit in RepositoryMining(self.path_to_repo).traverse_commits():         
-
-            """
-            if not project_start_date:
-                project_start_date = commit.committer_date
-
-            past_process_metrics = None
-            three_months_ago = commit.committer_date - timedelta(3*365/12)
-            
-            
-            if three_months_ago >= project_start_date:
-                try:
-                    past_process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo,
-                                                                              since = three_months_ago,
-                                                                              to = commit.committer_date)
-                except Exception as e:
-                    print(f'>>> Problem with process metrics: {str(e)}')
-                    continue
-            """
 
             try:
                 process_metrics = metrics_miner.mine_process_metrics(self.path_to_repo,
@@ -330,27 +310,6 @@ class MineRepo():
                 metrics['loc_removed'] = process_metrics[13].get(filepath, 0)
                 metrics['loc_removed_max'] = process_metrics[14].get(filepath, 0)
                 metrics['loc_removed_avg'] = process_metrics[15].get(filepath, 0)
-
-                """
-                # Three months process metrics
-                if past_process_metrics:
-                    metrics['3_months_change_set_max'] = past_process_metrics[0]
-                    metrics['3_months_change_set_avg'] = past_process_metrics[1]
-                    metrics['3_months_code_churn'] = past_process_metrics[2].get(filepath, 0)
-                    metrics['3_months_code_churn_max'] = past_process_metrics[3].get(filepath, 0)
-                    metrics['3_months_code_churn_avg'] = past_process_metrics[4].get(filepath, 0)
-                    metrics['3_months_commits_count'] = past_process_metrics[5].get(filepath, 0)
-                    metrics['3_months_contributors'] = past_process_metrics[6].get(filepath, 0)
-                    metrics['3_months_minor_contributors'] = past_process_metrics[7].get(filepath, 0)
-                    metrics['3_months_highest_experience'] = past_process_metrics[8].get(filepath, 0)
-                    metrics['3_months_median_hunks_count'] = past_process_metrics[9].get(filepath, 0)
-                    metrics['3_months_loc_added'] = past_process_metrics[10].get(filepath, 0)
-                    metrics['3_months_loc_added_max'] = past_process_metrics[11].get(filepath, 0)
-                    metrics['3_months_loc_added_avg'] = past_process_metrics[12].get(filepath, 0)
-                    metrics['3_months_loc_removed'] = past_process_metrics[13].get(filepath, 0)
-                    metrics['3_months_loc_removed_max'] = past_process_metrics[14].get(filepath, 0)
-                    metrics['3_months_loc_removed_avg'] = past_process_metrics[15].get(filepath, 0)
-                """
 
                 metrics.update(
                     dict(commit=commit.hash,

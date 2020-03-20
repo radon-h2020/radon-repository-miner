@@ -154,8 +154,8 @@ class RepositoryMiner():
 
                 continue
             
-            if len(commit.modifications) > 1:
-                continue
+            #if len(commit.modifications) > 1:
+            #    continue
 
             # Find buggy inducing commits
             for modified_file in commit.modifications:
