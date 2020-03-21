@@ -12,6 +12,7 @@ from iacminer.miners.labeling import LabelingTechnique
 from iacminer.miners.metrics import MetricsMiner
 from iacminer.miners.repository import RepositoryMiner
 from pydriller import GitRepository, RepositoryMining
+from pydriller.domain.commit import ModificationType
 from yaml.error import YAMLError
 
 class MineRepo():
@@ -129,17 +130,25 @@ class MineRepo():
         metrics_miner = MetricsMiner()
         iac_metrics_before = dict() # Values for iac metrics in the last release
 
+        path_when_added = dict()
+
         for commit in RepositoryMining(self.path_to_repo).traverse_commits():
 
             # To handle renaming in iac_metrics_before
             for modified_file in commit.modifications:
+                
                 old_path = modified_file.old_path
                 new_path = modified_file.new_path
+               
+                if old_path in path_when_added:
+                    path_when_added[new_path] = path_when_added.pop(old_path)
+                else:
+                    path_when_added[new_path] = new_path
 
                 if old_path != new_path and old_path in iac_metrics_before:
                     # Rename key old_path wit new_path
                     iac_metrics_before[new_path] = iac_metrics_before.pop(old_path)
-                    
+                
             if not last_release_date:
                 last_release_date = commit.committer_date
 
@@ -175,7 +184,7 @@ class MineRepo():
                     label = "defect-prone" if filepath in defect_prone else "defect-free"
                     print(f'>>> Commit: {commit.hash} - Cannot properly {filepath} - The file label is {label}.')
                     continue
-                except ValueError as ve: # Content is empty
+                except ValueError: # Content is empty
                     continue
 
                 # TOKENS
@@ -218,6 +227,7 @@ class MineRepo():
                          defective='yes' if filepath in defect_prone else 'no',
                          filepath=filepath,
                          repo=self.name,
+                         path_when_added = path_when_added.get(filepath, 'NA'),
                          tokens=' '.join(tokens))
                 )
 

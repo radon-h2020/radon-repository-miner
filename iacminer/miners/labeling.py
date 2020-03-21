@@ -55,8 +55,9 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                                        order='reverse').traverse_commits():
 
             if not bics:
-                defect_prone = False
-            elif commit.hash in bics:
+                break
+            
+            if commit.hash in bics:
                 bics.remove(commit.hash)
 
             # Label current filepath

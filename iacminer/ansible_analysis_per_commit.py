@@ -22,7 +22,7 @@ def main():
 
         i += 1
 
-        if i <= 780:
+        if i <= -1:
             bar.next()
             continue
 
