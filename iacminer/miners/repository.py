@@ -44,26 +44,6 @@ class RepositoryMiner():
 
         self.commits_hash = [c.hash for c in RepositoryMining(self.path_to_repo, only_in_branch=self.branch).traverse_commits()]
         self.fixing_commits = set()
-
-    def linked_issue_num(self, msg: str):
-        """
-        Analyze a message and return the linked issue identifier, if any; None otherwise.
-        """
-        if not msg:
-            return None
-
-        fixes = re.match(r'fix(e(d|s))?\s+.*\(?#(\b\d+\b)\)?', msg.lower())
-        closes = re.match(r'closes\s+.*\(?#(\b\d+\b)\)?', msg.lower())
-        resolves = re.match(r'resolves\s+.*\(?#(\b\d+\b)\)?', msg.lower())
-
-        if fixes and len(fixes.groups()) > 2:
-            return int(fixes.groups()[2])
-        elif closes and len(closes.groups()) > 0:
-            return int(closes.groups()[0])
-        elif resolves and len(resolves.groups()) > 0:
-            return int(resolves.groups()[0])
-        
-        return None
         
     def set_fixing_commits(self):
         """
@@ -107,17 +87,14 @@ class RepositoryMiner():
             if commit.hash in self.fixing_commits:
                 continue
 
-            issue_num = self.linked_issue_num(commit.msg)
-            if not issue_num:
-                continue
-            
-            issue_labels = g.get_issue_labels(remote_repo, issue_num)
+            p = re.compile(r'(\w+(bug|fix)\w)*', re.IGNORECASE)
+            msg = commit.msg
+            match = p.match(msg)
+            if match:
+                msg = re.sub(match.group(), '', msg) 
 
-            if any(l in labels for l in issue_labels):
+            if re.match(r'(bug|fix|error|issue|crash|problem|fail|defect|patch)', msg):
                 self.fixing_commits.add(commit.hash)
-                #print(issue_labels)
-                #print(commit.msg)
-
 
     def get_fixing_files(self):
         """

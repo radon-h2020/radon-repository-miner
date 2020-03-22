@@ -7,6 +7,7 @@ from os.path import isfile, isdir, join
 from datetime import timedelta
 from datetime import datetime
 from iacminer import filters
+from iacminer import utils
 from iacminer.entities.file import LabeledFile
 from iacminer.miners.labeling import LabelingTechnique
 from iacminer.miners.metrics import MetricsMiner
@@ -110,10 +111,12 @@ class MineRepo():
         metrics_miner = MetricsMiner()
         repo_miner = RepositoryMiner(self.path_to_repo, self.default_branch)
         labeled_files = repo_miner.mine(self.labeler)
-        
+
         if not labeled_files:
             return
-        
+
+        utils.save_fixing_commits(self.name, repo_miner.fixing_commits)
+
         # Group labeled files per release
         commit_file_map = dict()
         for file in labeled_files:

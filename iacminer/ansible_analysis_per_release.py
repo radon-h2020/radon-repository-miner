@@ -23,14 +23,14 @@ def main(labeler:int=1):
 
         i += 1
 
-        if i <= 2:
+        if i <= -1:
             bar.next()
             continue
 
         dst = os.path.join('data', 'release', f'{repo["owner"]}_{repo["name"]}.csv')
         
         dataset = pandas.DataFrame()
-
+    
         for metrics in MineRepo(f'{repo["owner"]}/{repo["name"]}', labeler=1, language='ansible', branch=repo['default_branch']).start():
 
             dataset = dataset.append(metrics, ignore_index=True)
