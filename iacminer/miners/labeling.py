@@ -51,7 +51,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
         bics = file.bics.copy()
         
         for commit in RepositoryMining(self.path_to_repo,
-                                       to_commit=file.fix_commit,
+                                       to_commit=file.fic,
                                        order='reverse').traverse_commits():
 
             if not bics:
@@ -61,7 +61,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                 bics.remove(commit.hash)
 
             # Label current filepath
-            if filepath and commit.hash != file.fix_commit:
+            if filepath and commit.hash != file.fic:
 
                 if defect_prone:
                     label = LabeledFile.Label.DEFECT_PRONE
@@ -73,7 +73,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                                 commit=commit.hash,
                                 label=label,
                                 fixing_filepath=file.filepath,
-                                fixing_commit=file.fix_commit))
+                                fixing_commit=file.fic))
 
             # Handle file renaming
             for modified_file in commit.modifications:
@@ -98,13 +98,13 @@ class LabelDefectiveAtBic(AbstractLabeler):
         filepath = file.filepath
 
         for commit in RepositoryMining(self.path_to_repo,
-                                       to_commit=file.fix_commit,
+                                       to_commit=file.fic,
                                        order='reverse').traverse_commits():
 
             if not filepath:
                 break
 
-            elif filepath and commit.hash != file.fix_commit:
+            elif filepath and commit.hash != file.fic:
                 # Label current filepath
 
                 if commit.hash in file.bics:
@@ -117,7 +117,7 @@ class LabelDefectiveAtBic(AbstractLabeler):
                                 commit=commit.hash,
                                 label=label,
                                 fixing_filepath=file.filepath,
-                                fixing_commit=file.fix_commit))
+                                fixing_commit=file.fic))
                 
             # Handle file renaming
             for modified_file in commit.modifications:

@@ -2,19 +2,6 @@ from iacminer.entities.file import FixingFile
 
 class TestClass():
 
-    def setup_class(self):
-       pass
-
-    def teardown_class(self):
-        pass
-
-    def setup_method(self):
-        pass
-
-    def teardown_method(self):
-        pass
-
-
     def test_eq(self):
         f1 = FixingFile('filenameA', 'fix1', {'bic1', 'bic2'})
         f2 = FixingFile('filenameA', 'fix2', {'bic3', 'bic4'})

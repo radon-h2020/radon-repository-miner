@@ -157,17 +157,22 @@ class RepositoryMiner():
                 if not buggy_inducing_commits:
                     continue
 
-                fixing_file = FixingFile(
-                                   renamed_files.get(modified_file.new_path, modified_file.new_path),
-                                   bics=buggy_inducing_commits[modified_file.new_path],
-                                   fix_commit=commit.hash)
+                fix = FixingFile(
+                        filepath = renamed_files.get(modified_file.new_path, modified_file.new_path),
+                        bics=buggy_inducing_commits[modified_file.new_path],
+                        fic=commit.hash)
 
-                if fixing_file in fixing_files:
+                if fix in fixing_files:
                     # Update existinig fixing file
-                    idx = fixing_files.index(fixing_file)
-                    fixing_files[idx].bics.update(buggy_inducing_commits[modified_file.new_path])
+                    idx = fixing_files.index(fix)
+                    
+                    # if one of the bic of current fix is before the previous fixing commit
+                    if any(self.commits_hash.index(bic) <= self.commits_hash.index(fixing_files[idx].fic) for bic in fix.bics):
+                        fixing_files[idx].bics.update(buggy_inducing_commits[modified_file.new_path])
+                    else:
+                        fixing_files.append(fix)
                 else:
-                    fixing_files.append(fixing_file)
+                    fixing_files.append(fix)
 
         return fixing_files
 
@@ -193,8 +198,10 @@ class RepositoryMiner():
             
             if labeling == LabelingTechnique.DEFECTIVE_FROM_OLDEST_BIC:
                 labeler = LabelDefectiveFromOldestBic(self.path_to_repo)
+
             elif labeling == LabelingTechnique.DEFECTIVE_AT_EVERY_BIC:
                 labeler = LabelDefectiveAtBic(self.path_to_repo)
+            
             else:
                 labeler = AbstractLabeler(self.path_to_repo)
 

@@ -2,10 +2,10 @@ from enum import Enum
 
 class FixingFile():
 
-    def __init__(self, filepath: str, bics: set, fix_commit: str):
+    def __init__(self, filepath: str, bics: set, fic: str):
         self.filepath = filepath  # Name at FIXING COMMIT
         self.bics = bics
-        self.fix_commit = fix_commit
+        self.fic = fic
 
     def __eq__(self, other):
         """Overrides the default implementation"""
