@@ -34,7 +34,6 @@ class LabeledFile():
                  filepath: str,
                  commit: str,
                  label: Label,
-                 fixing_filepath: str,
                  fixing_commit: str):
         """
         Initialize a new labeled file
@@ -47,16 +46,12 @@ class LabeledFile():
 
         label : str : the label for the file (i.e., 'defect-prone', 'defect-free')
 
-        fixing_filepath : str : the name of the file at fixing commit (to group different versions \
-            of files with different names, but being the same file)
-        
         fixing_commit : str : the commit fixing this file 
         """
 
         self.filepath = filepath
         self.commit = commit
         self.label = label
-        self.fixing_filepath = fixing_filepath
         self.fixing_commit = fixing_commit
 
     def __eq__(self, other):

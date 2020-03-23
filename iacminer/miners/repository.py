@@ -124,16 +124,13 @@ class RepositoryMiner():
                                        order='reverse',
                                        only_in_branch=self.branch).traverse_commits():
 
-            # If no Ansible file modified, go to next iteration - TODO: gestire linguaggio
+            # If no Ansible file modified, go to next iteration
             if not any(filters.is_ansible_file(modified_file.new_path) for modified_file in commit.modifications):
                 if commit.hash in self.fixing_commits:
                     self.fixing_commits.remove(commit.hash)
 
                 continue
             
-            #if len(commit.modifications) > 1:
-            #    continue
-
             # Find buggy inducing commits
             for modified_file in commit.modifications:
 
@@ -150,6 +147,9 @@ class RepositoryMiner():
                         renamed_files[modified_file.old_path] = modified_file.new_path
 
                 if commit.hash not in self.fixing_commits:
+                    continue
+                
+                if not filters.is_ansible_file(modified_file.new_path):
                     continue
 
                 buggy_inducing_commits = git_repo.get_commits_last_modified_lines(commit, modified_file)
@@ -205,7 +205,10 @@ class RepositoryMiner():
             else:
                 labeler = AbstractLabeler(self.path_to_repo)
 
-            for file in self.get_fixing_files():
-                labeled_files.extend(labeler.label(file))
+            #for file in self.get_fixing_files():
+            #    labeled_files.extend(labeler.label(file))
+
+            fixing_files = self.get_fixing_files()
+            labeled_files = labeler.label(fixing_files)
 
         return labeled_files

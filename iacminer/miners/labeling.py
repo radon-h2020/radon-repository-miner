@@ -42,6 +42,60 @@ class AbstractLabeler():
 
 class LabelDefectiveFromOldestBic(AbstractLabeler):
 
+    def label(self, files: list):
+        
+        files = files.copy()
+        under_labeling = dict()
+        labeled_files = list()
+
+        for commit in RepositoryMining(self.path_to_repo, order='reverse').traverse_commits():
+
+            for i in range(len(list(files)) - 1, -1, -1):
+                fix = files[i]
+
+                if fix.fic == commit.hash:
+                    under_labeling[fix.fic] = fix
+                    del files[i]
+
+            finished = set()
+
+            for fic_hash, fix in under_labeling.items():
+
+                if not fix.bics:
+                    finished.add(fic_hash)
+                    continue
+
+                if commit.hash in fix.bics:
+                    fix.bics.remove(commit.hash)    
+
+                if fix.filepath and commit.hash != fic_hash:
+
+                    labeled_files.append(
+                        LabeledFile(filepath=fix.filepath,
+                                    commit=commit.hash,
+                                    label=LabeledFile.Label.DEFECT_PRONE,
+                                    fixing_commit=fix.fic))
+
+
+                # Handle file renaming
+                for modified_file in commit.modifications:
+
+                    if not fix.filepath:
+                        continue
+                    
+                    if fix.filepath not in (modified_file.old_path, modified_file.new_path):
+                        continue
+                    
+                    fix.filepath = modified_file.old_path
+
+            for hash in finished:
+                del under_labeling[hash]
+
+        return labeled_files
+
+
+
+    """
     def label(self, file: FixingFile):
         
         labeled_files = list()
@@ -72,7 +126,6 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                     LabeledFile(filepath=filepath,
                                 commit=commit.hash,
                                 label=label,
-                                fixing_filepath=file.filepath,
                                 fixing_commit=file.fic))
 
             # Handle file renaming
@@ -87,7 +140,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                 filepath = modified_file.old_path
         
         return labeled_files
-
+    """
 
 class LabelDefectiveAtBic(AbstractLabeler):
 
@@ -116,7 +169,6 @@ class LabelDefectiveAtBic(AbstractLabeler):
                     LabeledFile(filepath=filepath,
                                 commit=commit.hash,
                                 label=label,
-                                fixing_filepath=file.filepath,
                                 fixing_commit=file.fic))
                 
             # Handle file renaming
