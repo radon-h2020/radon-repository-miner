@@ -1,6 +1,24 @@
+import csv
 import json
 import os
+import re
+
 from iacminer.entities.file import LabeledFile
+
+def load_filtered_ansible_repositories():
+    repos = []
+    
+    path = os.path.join('data', 'filtered_ansible_repositories.csv')
+    if os.path.isfile(path):
+        with open(path, 'r') as in_file:
+            reader = csv.reader(in_file)
+            next(reader)
+            
+            for row in reader:
+                repo = re.match(r'https://github.com/(.+/.+)', row[0]).group(1)
+                repos.append(repo)
+            
+    return repos
 
 def load_ansible_repositories():
     path = os.path.join('data', 'ansible_repositories.json')
