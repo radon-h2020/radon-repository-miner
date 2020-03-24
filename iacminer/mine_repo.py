@@ -173,6 +173,10 @@ class MineRepo():
             defect_prone = all_filepaths.intersection([file.filepath for file in labeled_this_commit if file.label == LabeledFile.Label.DEFECT_PRONE])
             defect_free = all_filepaths - defect_prone
 
+            # Consider only releases having at least one defect files
+            if not defect_prone:
+                continue
+
             for filepath in defect_free.union(defect_prone):
                 
                 if not filters.is_ansible_file(filepath):

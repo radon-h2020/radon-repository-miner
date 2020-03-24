@@ -192,8 +192,6 @@ class RepositoryMiner():
 
         self.set_fixing_commits()
         
-        labeled_files = list()
-
         if self.fixing_commits:
             
             if labeling == LabelingTechnique.DEFECTIVE_FROM_OLDEST_BIC:
@@ -205,10 +203,4 @@ class RepositoryMiner():
             else:
                 labeler = AbstractLabeler(self.path_to_repo)
 
-            #for file in self.get_fixing_files():
-            #    labeled_files.extend(labeler.label(file))
-
-            fixing_files = self.get_fixing_files()
-            labeled_files = labeler.label(fixing_files)
-
-        return labeled_files
+        return labeler.label(self.get_fixing_files())
