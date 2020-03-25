@@ -190,6 +190,8 @@ class RepositoryMiner():
         labeled_files : list : the list of labeled files (i.e., defect-prone or defect-free), if any.
         """
 
+        labeled_files = list()
+
         self.set_fixing_commits()
         
         if self.fixing_commits:
@@ -203,4 +205,6 @@ class RepositoryMiner():
             else:
                 labeler = AbstractLabeler(self.path_to_repo)
 
-        return labeler.label(self.get_fixing_files())
+            labeled_files = labeler.label(self.get_fixing_files())
+
+        return labeled_files

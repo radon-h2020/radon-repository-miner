@@ -16,7 +16,8 @@ def load_filtered_ansible_repositories():
             
             for row in reader:
                 repo = re.match(r'https://github.com/(.+/.+)', row[0]).group(1)
-                repos.append(repo)
+                branch = row[1]
+                repos.append((repo, branch))
             
     return repos
 

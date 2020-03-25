@@ -15,17 +15,16 @@ from progress.bar import Bar
 def main(labeler:int=1):
     
     repositories = load_filtered_ansible_repositories()
-    print(repositories)
     
     bar = Bar('Processing', max=len(repositories), fill='=')
-    exit()
+
     i = 0
-    for repo in repositories:
+    for repo, default_branch in repositories:
         print(f'\n{repo}')
 
         i += 1
 
-        if i <= 4:
+        if i <= -1:
             bar.next()
             continue
 
@@ -33,7 +32,7 @@ def main(labeler:int=1):
         
         dataset = pandas.DataFrame()
     
-        for metrics in MineRepo(repo, labeler=1, language='ansible', branch=repo['default_branch']).start():
+        for metrics in MineRepo(repo, labeler=1, language='ansible', branch=default_branch).start():
 
             dataset = dataset.append(metrics, ignore_index=True)
 

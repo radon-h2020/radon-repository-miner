@@ -60,7 +60,7 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
             finished = set()
 
             for fic_hash, fix in under_labeling.items():
-
+                
                 if not fix.bics:
                     finished.add(fic_hash)
                     continue
@@ -85,6 +85,9 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                     
                     if fix.filepath not in (modified_file.old_path, modified_file.new_path):
                         continue
+
+                    if modified_file.change_type == ModificationType.ADD:
+                        fix.filepath = None
                     
                     fix.filepath = modified_file.old_path
 
@@ -92,8 +95,6 @@ class LabelDefectiveFromOldestBic(AbstractLabeler):
                 del under_labeling[hash]
 
         return labeled_files
-
-
 
     """
     def label(self, file: FixingFile):

@@ -173,7 +173,7 @@ class MineRepo():
             defect_prone = all_filepaths.intersection([file.filepath for file in labeled_this_commit if file.label == LabeledFile.Label.DEFECT_PRONE])
             defect_free = all_filepaths - defect_prone
 
-            # Consider only releases having at least one defect files
+            # Consider only releases having at least one defect files. Comment to consider all the releases
             if not defect_prone:
                 continue
 
