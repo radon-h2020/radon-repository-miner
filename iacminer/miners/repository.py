@@ -166,11 +166,12 @@ class RepositoryMiner():
                     # Update existinig fixing file
                     idx = fixing_files.index(fix)
                     
-                    # if one of the bic of current fix is before the previous fixing commit
-                    if any(self.commits_hash.index(bic) <= self.commits_hash.index(fixing_files[idx].fic) for bic in fix.bics):
-                        fixing_files[idx].bics.update(buggy_inducing_commits[modified_file.new_path])
-                    else:
+                    # if all the BICs of the existing fixing commit (latest in time) are after the current fixing commit (in time)
+                    # the the current fix makes the file 'clean' and then is added as a separate file  
+                    if all(self.commits_hash.index(bic) > self.commits_hash.index(fix.fic) for bic in fixing_files[idx].bics):
                         fixing_files.append(fix)
+                    else:
+                        fixing_files[idx].bics.update(buggy_inducing_commits[modified_file.new_path])
                 else:
                     fixing_files.append(fix)
 
