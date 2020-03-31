@@ -68,6 +68,7 @@ class GithubMiner():
                  min_stars: int=0,
                  min_releases: int=0,
                  min_watchers: int=0,
+                 min_issues: int=0,
                  primary_language: str=None,
                  include_fork: bool=False
                 ):
@@ -78,6 +79,7 @@ class GithubMiner():
         self.min_stars = min_stars
         self.min_releases = min_releases
         self.min_watchers = min_watchers
+        self.min_issues = min_issues
         self.primary_language = primary_language
         self.include_fork = include_fork
         
@@ -131,10 +133,10 @@ class GithubMiner():
             is_template = node.get('isTemplate', False)
             primary_language = node['primaryLanguage']['name'] if node['primaryLanguage'] else ''
             
-            if not has_issues_enabled:
+            if self.min_issues and not has_issues_enabled:
                 continue
             
-            if issues == 0:
+            if issues < self.min_issues:
                 continue
 
             if releases < self.min_releases:

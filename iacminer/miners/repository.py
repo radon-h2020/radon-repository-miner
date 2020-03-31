@@ -93,7 +93,7 @@ class RepositoryMiner():
             if match:
                 msg = re.sub(match.group(), '', msg) 
 
-            if re.match(r'(bug|fix|error|issue|crash|problem|fail|defect|patch)', msg):
+            if re.match(r'(bug|fix|error|issue|crash|problem|fail|defect|patch)', msg.lower()):
                 self.fixing_commits.add(commit.hash)
 
     def get_fixing_files(self):

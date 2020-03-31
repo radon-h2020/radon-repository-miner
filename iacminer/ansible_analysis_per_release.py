@@ -5,7 +5,6 @@ import os, sys
 path = os.path.join(os.path.dirname(__file__), os.pardir)
 sys.path.append(path)
 
-import argparse
 import pandas
 
 from iacminer.mine_repo import MineRepo 
@@ -24,7 +23,7 @@ def main(labeler:int=1):
 
         i += 1
 
-        if i <= 5:
+        if i <= 7:
             bar.next()
             continue
 
@@ -42,17 +41,6 @@ def main(labeler:int=1):
         bar.next()
 
     bar.finish()
-
-
-def getParser():
-    
-    parser = argparse.ArgumentParser(prog='iac-miner')
-    parser.add_argument(action='store',
-                        dest='labeler',
-                        choices=['1','2'],
-                        default='2')
-
-    return parser
 
 if __name__=='__main__':
 

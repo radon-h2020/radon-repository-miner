@@ -232,7 +232,7 @@ class MineRepo():
                 metrics.update(
                     dict(commit=commit.hash,    # release commit
                          committed_at=datetime.timestamp(commit.committer_date), # release date
-                         defective='yes' if filepath in defect_prone else 'no',
+                         defective = 1 if filepath in defect_prone else 0,
                          filepath=filepath,
                          repo=self.name,
                          path_when_added = path_when_added.get(filepath, 'NA'),
