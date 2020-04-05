@@ -35,7 +35,10 @@ def main(date_from, date_to, push_after):
         
         i += 1
 
-        if any(existing.id == repo.id for existing in ansible_repositories):
+        if repo['issues'] > 0:  # ONLY TEMPORARY
+            continue
+
+        if any(existing['id'] == repo['id'] for existing in ansible_repositories):
             continue # already mined
 
         if not ('ansible' in repo['description'].lower() or 'ansible' in repo['owner'].lower() or 'ansible' in repo['name'].lower()):
@@ -51,8 +54,8 @@ def main(date_from, date_to, push_after):
     print(f'Quota will reset at: {github_miner.quota_reset_at}')
 
 if __name__=='__main__':
-    date_from = datetime.strptime('2014-01-01 00:00:00', '%Y-%m-%d %H:%M:%S')
-    date_to = datetime.strptime('2014-01-01 12:00:00', '%Y-%m-%d %H:%M:%S')
+    date_from = datetime.strptime('2018-03-31 00:00:00', '%Y-%m-%d %H:%M:%S')
+    date_to = datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S')
     push_after=datetime.strptime('2019-09-08 00:00:00', '%Y-%m-%d %H:%M:%S')
     now = datetime.strptime('2020-03-09 00:00:00', '%Y-%m-%d %H:%M:%S')
 
@@ -60,4 +63,4 @@ if __name__=='__main__':
         print(f'Searching for: {date_from}..{date_to}. Analysis started at {str(datetime.now())}')
         main(date_from, date_to, push_after)
         date_from = date_to
-        date_to += timedelta(hours=12)
+        date_to += timedelta(hours=24)

@@ -107,6 +107,7 @@ class GithubMiner():
         Run a graphql query 
         """
         request = requests.post('https://api.github.com/graphql', json={'query': query}, headers={'Authorization': f'token {self.__token}'})
+        
         if request.status_code == 200:
             return request.json()
         else:

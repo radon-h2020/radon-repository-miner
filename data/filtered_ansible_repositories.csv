@@ -10,12 +10,12 @@ https://github.com/netbootxyz/netboot.xyz,development,1577,30,187,52,1900,79
 https://github.com/splunk/splunk-ansible,develop,1187,20,80,33,147,39
 https://github.com/wazuh/wazuh-ansible,master,1139,25,167,33,75,28
 https://github.com/openstack/openstack-ansible-os_nova,master,1119,126,0,87,18,6
-https://github.com/openstack/openstack-ansible-os_neutron,master,1114,126,80,18,5
+https://github.com/openstack/openstack-ansible-os_neutron,master,1114,126,0,80,18,5
 https://github.com/openstack/tripleo-validations,master,831,70,0,72,20,7
 https://github.com/openstack/tripleo-quickstart,master,2736,6,0,118,111,28
 https://github.com/openstack/tripleo-quickstart-extras,master,3014,5,0,96,20,9
 https://github.com/openstack/openstack-ansible-rabbitmq_server,master,416,126,0,40,18,5
-https://github.com/dj-wasabi/ansible-telegraf,master,262,24,34,74,8
+https://github.com/dj-wasabi/ansible-telegraf,master,262,15,24,34,74,8
 https://github.com/redhat-openstack/infrared,master,6055.0,145,154,119.0,73,35
 https://github.com/ansible-community/molecule,master,2052.0,156,1174,191.0,2638,122
 https://github.com/ComplianceAsCode/content,master,15133.0,44,1874,132.0,869,130
