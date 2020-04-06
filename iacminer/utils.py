@@ -8,7 +8,8 @@ from iacminer.entities.file import LabeledFile
 def load_filtered_ansible_repositories():
     repos = []
     
-    path = os.path.join('data', 'filtered_ansible_repositories.csv')
+    #path = os.path.join('data', 'filtered_ansible_repositories.csv')
+    path = os.path.join('data', 'todo.csv')
     if os.path.isfile(path):
         with open(path, 'r') as in_file:
             reader = csv.reader(in_file)

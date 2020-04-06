@@ -13365,7 +13365,7 @@
     },
     {
         "id": "MDEwOlJlcG9zaXRvcnkxMjE4MDQzMzA=",
-        "default_branch": "master",
+        "default_branch": "devel",
         "owner": "ansible",
         "name": "workshops",
         "url": "https://github.com/ansible/workshops",
@@ -23562,6 +23562,7 @@
         "default_branch": "master",
         "owner": "ansible",
         "name": "vcenter-test-container",
+        "url": "https://github.com/ansible/vcenter-test-container",
         "description": "vCenter simulator container for testing.",
         "releases": 9,
         "commits": 14,
@@ -28078,8 +28079,8 @@
     {
         "id": "",
         "default_branch": "master",
-        "owner": "openstack",
-        "name": "dj-wasabi",
+        "owner": "dj-wasabi",
+        "name": "ansible-telegraf",
         "url": "https://github.com/dj-wasabi/ansible-telegraf",
         "description": "",
         "commits": 262,
