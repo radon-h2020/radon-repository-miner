@@ -1,83 +1,42 @@
-import csv
-import json
+import git
 import os
 import re
+import shutil
 
-from iacminer.entities.file import LabeledFile
+def clone_repository(path_to_folder: str, url_to_repo: str) -> str:
+    """
+    Clone a repository in the specified folder
+    :param path_to_folder: the folder where to clone the repository
+    :param url_to_repo: the url to the repository,
+    :return: the path to the local repository
+    """
+    match = re.match(r'(https:\/\/)?github\.com\/(.+)\/(.+)(\.git)?', url_to_repo)
+    if not match:
+        raise ValueError('Not a valid Github url')
 
-def load_filtered_ansible_repositories():
-    repos = []
-    
-    #path = os.path.join('data', 'filtered_ansible_repositories.csv')
-    path = os.path.join('data', 'todo.csv')
-    if os.path.isfile(path):
-        with open(path, 'r') as in_file:
-            reader = csv.reader(in_file)
-            next(reader)
-            
-            for row in reader:
-                repo = re.match(r'https://github.com/(.+/.+)', row[0]).group(1)
-                branch = row[1]
-                repos.append((repo, branch))
-            
-    return repos
+    owner, name = match.groups()[1], match.groups()[2]
 
-def load_ansible_repositories():
-    path = os.path.join('data', 'ansible_repositories.json')
-    if os.path.isfile(path):
-        with open(path, 'r') as in_file:
-            return json.load(in_file) 
-    
-    return []
+    path_to_owner = os.path.join(path_to_folder, owner)
+    if not os.path.isdir(path_to_owner):
+        os.makedirs(path_to_owner)
 
-def save_ansible_repository(repo: dict):
-
-    repos = load_ansible_repositories()
-    repos.append(repo)
-
-    path = os.path.join('data', 'ansible_repositories.json')
-    with open(path, 'w') as outfile:
-        return json.dump(repos, outfile)
-
-def load_fixging_commits():
-    path = os.path.join('data', 'fixing_commits.json')
-    if os.path.isfile(path):
-        with open(path, 'r') as in_file:
-            return json.load(in_file) 
-    
-    return []
-
-def save_fixing_commits(repo: str, fixing_commits: set):
-
-    commits = load_fixging_commits()
-    commits.append({
-        'repo': repo,
-        'fixing_commits': list(fixing_commits)
-    })
-
-    path = os.path.join('data', 'fixing_commits.json')
-    with open(path, 'w') as outfile:
-        return json.dump(commits, outfile)
+    git.Git(path_to_owner).clone(url_to_repo)
+    return os.path.join(path_to_owner, name)
 
 
-def load_labeled_files():
-    path = os.path.join('data', 'labeled_files.json')
-    if os.path.isfile(path):
-        with open(path, 'r') as in_file:
-            return json.load(in_file) 
-    
-    return []
+def delete_repo(path_to_repo: str) -> None:
+    """
+    Delete a local repository.
+    :param path_to_repo: path to the repository to delete
+    :return: None
+    """
+    try:
+        path_to_owner = '/'.join(path_to_repo.split('/')[:-1])
+        if len(os.listdir(path_to_owner)) == 1:
+            shutil.rmtree(path_to_owner)
+        else:
+            shutil.rmtree(path_to_repo)
 
-def save_labeled_file(repo: str, labeled_file: LabeledFile):
-    file = dict(repo=str(repo),
-                filepath=str(labeled_file.filepath),
-                commit=str(labeled_file.commit),
-                label=str(labeled_file.label.value),
-                ref=str(labeled_file.ref))
+    except Exception as e:
+        print(f'>>> Error while deleting directory: {str(e)}')
 
-    files = load_labeled_files()
-    files.append(file)
-
-    path = os.path.join('data', 'labeled_files.json')
-    with open(path, 'w') as outfile:
-        return json.dump(files, outfile)

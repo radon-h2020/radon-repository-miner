@@ -1,148 +1,304 @@
-import os, sys
-path = os.path.join(os.path.dirname(__file__), os.pardir)
-sys.path.append(path)
-
 import argparse
+import json
+import os
+import yaml
+
+import copy
 from datetime import datetime
-from iacminer.mine_repo import MineRepo
+from dotenv import load_dotenv
+from iacminer import filters
+from iacminer import utils
+from iacminer.miners.github import GithubMiner
+from repositoryscorer import scorer
 
-import pandas as pd
+with open('config.yml', 'r') as in_stream:
+    configuration = yaml.safe_load(in_stream)
 
-def unsigned_int(x):
+
+def date(x: str) -> datetime:
+    """
+    Check the passed date is well-formatted
+    :param x: a datetime
+    :return: datetime(x); raise an ArgumentTypeError otherwise
+    """
+    try:
+        # String to datetime
+        x = datetime.strptime(x, '%Y-%m-%d')
+    except Exception:
+        raise argparse.ArgumentTypeError('Date format must be: YYYY-MM-DD')
+
+    return x
+
+
+def unsigned_int(x: str) -> int:
+    """
+    Check the number is greater than or equal to zero
+    :param x: a number
+    :return: int(x); raise an ArgumentTypeError otherwise
+    """
     x = int(x)
     if x < 0:
         raise argparse.ArgumentTypeError('Minimum bound is 0')
     return x
 
-def date(x):
-    
-    try:
-        # String to datetime
-        x = datetime.strptime(x, '%Y-%m-%d')
-    except Exception:
-        raise argparse.ArgumentTypeError('Date format must be: yyyy-mm-dd')
-    
+
+def valid_path(x: str) -> str:
+    """
+    Check the path exists
+    :param x: a path
+    :return: the path if exists; raise an ArgumentTypeError otherwise
+    """
+    if not os.path.isdir(x):
+        raise argparse.ArgumentTypeError('Insert a valid path')
+
     return x
 
-def repo_name(x):
-    
-    if len(x.split('/')) != 2:
-        raise argparse.ArgumentTypeError('The name of the repository must be: owner/name')
-    
-    return x
 
-def getParser():
-    description='IaC-Miner allows for ...'
-    
+def get_parser():
+    description = 'IaC-Miner allows for ...'
+
     parser = argparse.ArgumentParser(prog='iac-miner', description=description)
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
-    
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + configuration.get('version', '0.0'))
+
     subparsers = parser.add_subparsers(dest='command')
-    
-    # Github subparser
-    github_parser = subparsers.add_parser('mine-github', help='To extract repositories from Github')
+
+    # Github parser
+    github_parser = subparsers.add_parser('mine-github', help='Mine repositories from Github')
+
+    github_parser.add_argument(action='store',
+                               dest='dest',
+                               type=valid_path,
+                               help='destination folder to save results')
+
+    github_parser.add_argument(action='store',
+                               dest='tmp_clones_folder',
+                               type=valid_path,
+                               help='path to temporary clone the repositories for the analysis')
+
     github_parser.add_argument('--from',
-                        action='store',
-                        dest='date_from',
-                        type=date,
-                        default=datetime.strptime('2014-01-01', '%Y-%m-%d'),
-                        help='Start searching from this date (default 2014-01-01).')
+                               action='store',
+                               dest='date_from',
+                               type=date,
+                               default=datetime.strptime('2014-01-01', '%Y-%m-%d'),
+                               help='start searching from this date (default: %(default)s)')
 
     github_parser.add_argument('--to',
-                        action='store',
-                        dest='date_to',
-                        type=date,
-                        default=datetime.strptime('2020-01-01', '%Y-%m-%d'),
-                        help='Search up to this date (default 2020-01-01).')
+                               action='store',
+                               dest='date_to',
+                               type=date,
+                               default=datetime.strptime('2020-01-01', '%Y-%m-%d'),
+                               help='search up to this date (default: %(default)s)')
 
     github_parser.add_argument('--pushed-after',
-                        action='store',
-                        dest='date_push',
-                        type=date,
-                        default=datetime.strptime('2019-01-01', '%Y-%m-%d'),
-                        help='Search up to this date (default 2019-01-01).')
+                               action='store',
+                               dest='date_push',
+                               type=date,
+                               default=datetime.strptime('2019-01-01', '%Y-%m-%d'),
+                               help='search up to this date (default: %(default)s)')
 
-    github_parser.add_argument('--releases',
-                        action='store',
-                        dest='releases',
-                        type=unsigned_int,
-                        default=0,
-                        help='Minimum number of releases.')
-    
-    github_parser.add_argument('--stars',
-                        action='store',
-                        dest='stars',
-                        type=unsigned_int,
-                        default=0,
-                        help='Minimum number of stars.')
-
-    github_parser.add_argument('--include-archived',
-                        action='store_true',
-                        dest='include_archived',
-                        default=False,
-                        help='To include archived repositories.')
+    github_parser.add_argument('--iac-languages',
+                               default='all',
+                               dest='iac_languages',
+                               choices=['ansible', 'chef', 'puppet', 'all'],
+                               help='only repositories with this language(s) will be analyzed (default: %(default)s)')
 
     github_parser.add_argument('--include-fork',
-                        action='store_true',
-                        dest='include_fork',
-                        default=False,
-                        help='To include archived repositories.')
+                               action='store_true',
+                               dest='include_fork',
+                               default=False,
+                               help='whether to include archived repositories (default: %(default)s)')
 
-    github_parser.add_argument('--include-mirrors',
-                        action='store_true',
-                        dest='include_mirror',
-                        default=False,
-                        help='To include mirror repositories.')
-    
-    # MINE-REPOs
-    repos_parser = subparsers.add_parser('mine-repo', help='To extract scripts from a repository')
+    github_parser.add_argument('--min-issues',
+                               action='store',
+                               dest='min_issues',
+                               type=unsigned_int,
+                               default=0,
+                               help='minimum number of issues (default: %(default)s)')
+
+    github_parser.add_argument('--min-releases',
+                               action='store',
+                               dest='min_releases',
+                               type=unsigned_int,
+                               default=0,
+                               help='minimum number of releases (default: %(default)s)')
+
+    github_parser.add_argument('--min-stars',
+                               action='store',
+                               dest='min_stars',
+                               type=unsigned_int,
+                               default=0,
+                               help='minimum number of stars (default: %(default)s)')
+
+    github_parser.add_argument('--min-watchers',
+                               action='store',
+                               dest='min_watchers',
+                               type=unsigned_int,
+                               default=0,
+                               help='minimum number of watchers (default: %(default)s)')
+
+    github_parser.add_argument('--primary-language',
+                               action='store',
+                               dest='primary_language',
+                               type=str,
+                               default=None,
+                               help='the primary language of the repository (default: %(default)s)')
+
+    github_parser.add_argument('--verbose',
+                               action='store_true',
+                               dest='verbose',
+                               default=False,
+                               help='whether to output results (default: %(default)s)')
+
+    # Repository parser
+    repos_parser = subparsers.add_parser('mine-repository', help='Mine a single repository')
     repos_parser.add_argument(action='store',
-                              dest='repository',
-                              type=repo_name,
+                              dest='path-to-repo',
+                              type=valid_path,
                               help='Name of the repository (owner/name).')
-    
+
     repos_parser.add_argument(action='store',
-                              dest='destination',
-                              type=repo_name,
-                              help='Filepath to save results.')
-
-    repos_parser.add_argument('--labeler',
-                        action='store',
-                        dest='labeler',
-                        choices=['1','2'],
-                        default='2',
-                        help='The labeling technique. Can be\n \
-                              (1) to label scripts as "clean" from start to first buggy inducing commit (exlucsive), and "defective" from the fisrt buggy inducing commit (inclusive) to the fixing commit (exclusive); \
-                              or (2) to label scripts as "defective" only at each buggy inducing commit, and "clean" on all other commits.')
-
-    repos_parser.add_argument('--language',
-                        action='store',
-                        dest='language',
-                        choices=['ansible'],
-                        default='ansible',
-                        help='Mine only files of this language.')
+                              dest='dest',
+                              type=valid_path,
+                              help='Destination folder to save results.')
 
     return parser
 
-if __name__=='__main__':
 
-    parser = getParser()
-    args = parser.parse_args()
-    
+def is_ansible(repository: dict) -> bool:
+    """
+    Check if the repository has Ansible files
+    :param repository: a json object containing "owner", "name", "description" and "dirs" for the repository
+    :return: True if the repository has Ansible files; False otherwise
+    """
+    return 'ansible' in repository['description'].lower() \
+           or 'ansible' in repository['owner'].lower() \
+           or 'ansible' in repository['name'].lower() \
+           or sum([1 for path in repository['dirs'] if filters.is_ansible_dir(path)]) >= 2
+
+
+def is_chef(repository: dict) -> bool:
+    """
+    Check if the repository has Chef files
+    :param repository: a json object containing "owner", "name", "description" and "dirs" for the repository
+    :return: True if the repository has Chef files; False otherwise
+    """
+    return 'chef' in repository['description'].lower() \
+           or 'chef' in repository['owner'].lower() \
+           or 'chef' in repository['name'].lower() \
+           or False  # TODO: other ways to check chef files
+
+
+def is_puppet(repository: dict) -> bool:
+    """
+    Check if the repository has Puppet files
+    :param repository: a json object containing "owner", "name", "description" and "dirs" for the repository
+    :return: True if the repository has Puppet files; False otherwise
+    """
+    return 'puppet' in repository['description'].lower() \
+           or 'puppet' in repository['owner'].lower() \
+           or 'puppet' in repository['name'].lower() \
+           or False  # TODO: other ways to check chef files
+
+
+def mine_github(args):
+    print(args)
+
+    load_dotenv()
+
+    github_miner = GithubMiner(
+        access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
+        date_from=args.date_from,
+        date_to=args.date_to,
+        pushed_after=args.date_push,
+        min_stars=args.min_stars,
+        min_releases=args.min_releases,
+        min_watchers=args.min_watchers,
+        min_issues=args.min_issues,
+        primary_language=args.primary_language,
+        include_fork=args.include_fork
+    )
+
+    for repository in github_miner.mine():
+
+        # Filter out non-Ansible/Chef/Puppet repositories
+        if args.iac_languages == 'ansible' and not is_ansible(repository):
+            continue
+        elif args.iac_languages == 'chef' and not is_chef(repository):
+            continue
+        elif args.iac_languages == 'puppet' and not is_puppet(repository):
+            continue
+        elif not (is_ansible(repository) or is_chef(repository) or is_puppet(repository)):
+            continue
+
+        # Clone repository
+        if args.verbose:
+            print(f'Cloning {repository["url"]}')
+
+        path_to_repository = utils.clone_repository(os.path.join(args.tmp_clones_folder), repository['url'])
+
+        if args.verbose:
+            print(f'Cloned to {path_to_repository}')
+
+        # Compute repository scores. TODO: set parameters in command line (or configuration file)
+        if args.verbose:
+            print('Computing repository scores')
+
+        try:
+            report = scorer.score_repository(path_to_repo=path_to_repository,
+                                             threshold_community=2,
+                                             threshold_comments_ratio=0.002,
+                                             threshold_commit_frequency=2,
+                                             threshold_issue_events=0.023,
+                                             threshold_sloc=190)
+        except Exception as e:
+            print(str(e))
+            utils.delete_repo(path_to_repository)
+            continue
+
+        # Delete cloned repository
+        if args.verbose:
+            print(f'Deleting {path_to_repository}')
+
+        utils.delete_repo(path_to_repository)
+
+        # Print (if required) and save the report
+        destination = os.path.join(args.dest, 'report.json')
+
+        if os.path.isfile(destination):
+            with open(destination, 'r') as in_stream:
+                repositories = json.load(in_stream)
+        else:
+            repositories = list()
+
+        repository = copy.deepcopy(repository)
+        repository.update(report)
+        repository.update({'timestamp': datetime.now().timestamp()})
+        repositories.append(repository)
+
+        if args.verbose:
+            print(f'Report for {repository["name"]}:')
+            print(json.dumps(repository, indent=4, sort_keys=True))
+            print(f'Saving repository metadata to {destination}')
+
+        with open(destination, 'w') as out:
+            json.dump(repositories, out)
+
+
+def mine_repository(args):
+    print('MINING REPOSITORY')
+    print(args)
+
+    # save_output(metrics, args.dest)
+
+    if args.verbose:
+        print('Output here')
+
+
+def cli():
+    args = get_parser().parse_args()
+
     if args.command == 'mine-github':
-        print('MINING GITHUB')
-        print(args)
-        # TODO: mine_github.main()
-    elif args.command == 'mine-repo':
-        print(args)
-        print('MINING REPOS')
+        mine_github(args)
 
-        dataset = pd.DataFrame()
-    
-        for metrics in MineRepo(args.repository, int(args.labeler), args.language).start():
-            # Update dataframe
-            dataset = dataset.append(metrics, ignore_index=True)
-
-            # Save to csv
-            with open(args.destination, 'w') as out:
-                dataset.to_csv(out, mode='w', index=False)
+    elif args.command == 'mine-repository':
+        mine_repository(args)

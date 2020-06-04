@@ -1,66 +1,126 @@
-import os
-import sys
-path = os.path.join(os.path.dirname(__file__), os.pardir)
-sys.path.append(path)
-
 import copy
-import git
 import json
-import pandas as pd
+import os
+import re
 import shutil
-import yaml
 
-from datetime import datetime, timedelta
+import git
+import pandas as pd
 
-from iacminer import filters, utils
+from datetime import datetime
+from dotenv import load_dotenv
+from repositoryscorer import scorer
+
+from iacminer import filters
 from iacminer.miners.github import GithubMiner
+from iacminer.miners.repository import RepositoryMiner
+
+ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
+PATH_TO_REPO = ROOT + '/test_data/adriagalin/ansible.motd'
+
+load_dotenv()
 
 
-def main(date_from, date_to, push_after):
-    
+def clone_repository(path_to_folder: str, url_to_repo: str) -> str:
+    """
+    Clone a repository in the specified folder
+    :param path_to_folder: the folder where to clone the repository
+    :param url_to_repo: the url to the repository,
+    :return: the path to the local repository
+    """
+    match = re.match(r'(https:\/\/)?github\.com\/(\w+)\/(\w+)(\.git)?', url_to_repo)
+    if not match:
+        raise ValueError('Not a valid Github url')
+
+    owner, name = match.groups()[1], match.groups()[2]
+
+    path_to_owner = os.path.join(path_to_folder, owner)
+    if not os.path.isdir(path_to_owner):
+        os.makedirs(path_to_owner)
+
+    git.Git(path_to_owner).clone(url_to_repo)
+    return os.path.join(path_to_owner, name)
+
+
+def delete_repo(path_to_repo: str) -> None:
+    """
+    Delete a local repository.
+    :param path_to_repo: path to the repository to delete  
+    :return: None
+    """
+    try:
+        path_to_owner = '/'.join(path_to_repo.split('/')[:-1])
+        if len(os.listdir(path_to_owner)) == 1:
+            shutil.rmtree(path_to_owner)
+        else:
+            shutil.rmtree(path_to_repo)
+
+    except Exception as e:
+        print(f'>>> Error while deleting directory: {str(e)}')
+
+
+if __name__ == '__main__':
+
+    result_folder = ''#?
+
     github_miner = GithubMiner(
-        date_from=date_from,
-        date_to=date_to,
-        pushed_after=push_after,
+        access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
+        date_from=datetime.strptime('2018-01-01', '%Y-%m-%d'),
+        date_to=datetime.strptime('2018-01-03', '%Y-%m-%d'),
+        pushed_after=datetime.strptime('2019-01-01', '%Y-%m-%d'),
         min_stars=1,
         min_releases=2
     )
-    
-    github_miner.set_token(os.getenv('GITHUB_ACCESS_TOKEN'))
-    
-    i = 0 
-    
-    ansible_repositories = utils.load_ansible_repositories()
-    for repo in github_miner.mine():
-        
-        i += 1
 
-        if repo['issues'] > 0:  # ONLY TEMPORARY
-            continue
+    for repository in github_miner.mine():
+        if not ('ansible' in repository['description'].lower() or 'ansible' in repository['owner'].lower() or
+                'ansible' in repository['name'].lower()):
 
-        if any(existing['id'] == repo['id'] for existing in ansible_repositories):
-            continue # already mined
-
-        if not ('ansible' in repo['description'].lower() or 'ansible' in repo['owner'].lower() or 'ansible' in repo['name'].lower()):
-            if sum([1 for path in repo['dirs'] if filters.is_ansible_dir(path)]) < 2:
+            if sum([1 for path in repository['dirs'] if filters.is_ansible_dir(path)]) < 2:
                 # If the repo does not contain at least two among 'playbooks', 'roles', 'handlers', 'tasks', 'meta'
-                # the discard it. Otherwise it means it has Ansible code, but not 'ansible' in the name or description
+                # then discard it. Otherwise it means it has Ansible code
                 continue
 
-        utils.save_ansible_repository(copy.deepcopy(repo))
+        # It is an Ansible repository
 
-    print(f'{i} repositories mined')
-    print(f'Quota: {github_miner.quota}')
-    print(f'Quota will reset at: {github_miner.quota_reset_at}')
+        # 1) Clone
+        print(f'Cloning {repository["url"]}')
+        path_to_repository = clone_repository(os.path.join(ROOT, 'test_data'), repository['url'])
+        print(path_to_repository)
 
-if __name__=='__main__':
-    date_from = datetime.strptime('2018-03-31 00:00:00', '%Y-%m-%d %H:%M:%S')
-    date_to = datetime.strptime('2018-06-01 00:00:00', '%Y-%m-%d %H:%M:%S')
-    push_after=datetime.strptime('2019-09-08 00:00:00', '%Y-%m-%d %H:%M:%S')
-    now = datetime.strptime('2020-03-09 00:00:00', '%Y-%m-%d %H:%M:%S')
+        # 2) Get repository scores
+        report = scorer.score_repository(path_to_repo=path_to_repository,
+                                         threshold_community=2,
+                                         threshold_comments_ratio=0.002,
+                                         threshold_commit_frequency=2,
+                                         threshold_issue_events=0.023,
+                                         threshold_sloc=190)
 
-    while date_to <= now:
-        print(f'Searching for: {date_from}..{date_to}. Analysis started at {str(datetime.now())}')
-        main(date_from, date_to, push_after)
-        date_from = date_to
-        date_to += timedelta(hours=24)
+        if report['score'] < 90 or (report['score'] >= 65 and report['issue_frequency'] != 0):
+            print(f'Deleting {path_to_repository}')
+            delete_repo(path_to_repository)
+            continue
+
+        # 3) Start analysis
+        repo_miner = RepositoryMiner(os.getenv('GITHUB_ACCESS_TOKEN'), PATH_TO_REPO)
+
+        dataset = pd.DataFrame()
+
+        for metrics in repo_miner.mine():
+            print(metrics)
+            dataset = dataset.append(metrics, ignore_index=True)
+
+            # Update csv containing metrics for the repository
+            with open(result_folder + '/repository_name.csv', 'w') as out:
+                dataset.to_csv(out, mode='w', index=False)
+
+        # Save repository metadata
+        with open('repository_name.metadata.json', 'w') as out:
+            repository = copy.deepcopy(repository)
+            repository.update(report)
+            json.dump(out, repository)
+
+        print(f'Deleting {path_to_repository}')
+        delete_repo(path_to_repository)
+
+        # Use dataset to train model
