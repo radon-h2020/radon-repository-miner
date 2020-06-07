@@ -77,13 +77,13 @@ gh_miner = GithubMiner(access_token = os.get_env('GITHUB_ACCESS_TOKEN'),
                        min_issues=<int>,   # Optional (default 0)
                     )
 
-for repository in miner.mine():
+for repository in gh_miner.mine():
     print(repository)
     repo_miner = RepositoryMiner(access_token = os.get_env('GITHUB_ACCESS_TOKEN'),
                                  path_to_repo='path/to/cloned/repository',
                                  branch='development') # Optional (default 'master')
                                  
-    # Mine repository ...
+    # Mine repository as previous example ...
 ```
 
 
