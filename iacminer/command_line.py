@@ -55,7 +55,9 @@ def valid_path(x: str) -> str:
 
 
 def get_parser():
-    description = 'IaC-Miner allows for ...'
+    description = 'A Python library to crawl GitHub for Infrastructure-as-Code based repositories and mine' \
+                  'those repositories to identify fixing commits and label defect-prone files.'
+
 
     parser = argparse.ArgumentParser(prog='iac-miner', description=description)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + configuration.get('version', '0.0'))
@@ -97,10 +99,12 @@ def get_parser():
                                help='search up to this date (default: %(default)s)')
 
     github_parser.add_argument('--iac-languages',
+                               nargs='*',
                                default='all',
+                               type=str,
                                dest='iac_languages',
                                choices=['ansible', 'chef', 'puppet', 'all'],
-                               help='only repositories with this language(s) will be analyzed (default: %(default)s)')
+                               help='only repositories with this language(s) will be analyzed (default: all)')
 
     github_parser.add_argument('--include-fork',
                                action='store_true',
@@ -221,11 +225,11 @@ def mine_github(args):
     for repository in github_miner.mine():
 
         # Filter out non-Ansible/Chef/Puppet repositories
-        if args.iac_languages == 'ansible' and not is_ansible(repository):
+        if 'ansible' in args.iac_languages and not is_ansible(repository):
             continue
-        elif args.iac_languages == 'chef' and not is_chef(repository):
+        elif 'chef' in args.iac_languages and not is_chef(repository):
             continue
-        elif args.iac_languages == 'puppet' and not is_puppet(repository):
+        elif 'puppet' in args.iac_languages and not is_puppet(repository):
             continue
         elif not (is_ansible(repository) or is_chef(repository) or is_puppet(repository)):
             continue

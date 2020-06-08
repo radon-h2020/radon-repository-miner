@@ -6,6 +6,8 @@ Available on [PyPI](https://pypi.org/project/iacminer/): ```pip install iacimine
 
 ## APIs usage
 
+<br>
+
 ### Mine Github
 
 ```python
@@ -30,6 +32,8 @@ for repository in miner.mine():
     print(repository)
 
 ```
+
+<br>
 
 ### Mine repository
 
@@ -63,7 +67,7 @@ for metrics in miner.mine():
 
 ```
 
-
+<br>
 
 ### Combine GithubMiner and RepositoryMiner
 
@@ -88,4 +92,87 @@ for repository in gh_miner.mine():
 
 
 
+<br>
+
 ## Command-line usage
+
+```
+usage: iac-miner [-h] [-v] {mine-github,mine-repository} ...
+
+A Python library to crawl GitHub for Infrastructure-as-Code based repositories
+and minethose repositories to identify fixing commits and label defect-prone
+files.
+
+positional arguments:
+  {mine-github,mine-repository}
+    mine-github         Mine repositories from Github
+    mine-repository     Mine a single repository
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+ ```
+
+<br>
+
+#### iac-miner mine-github
+
+```
+usage: iac-miner mine-github [-h] [--from DATE_FROM] [--to DATE_TO]
+                             [--pushed-after DATE_PUSH]
+                             [--iac-languages [{ansible,chef,puppet,all} [{ansible,chef,puppet,all} ...]]]
+                             [--include-fork] [--min-issues MIN_ISSUES]
+                             [--min-releases MIN_RELEASES]
+                             [--min-stars MIN_STARS]
+                             [--min-watchers MIN_WATCHERS]
+                             [--primary-language PRIMARY_LANGUAGE] [--verbose]
+                             dest tmp_clones_folder
+
+positional arguments:
+  dest                  destination folder to save results
+  tmp_clones_folder     path to temporary clone the repositories for the
+                        analysis
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --from DATE_FROM      start searching from this date (default: 2014-01-01
+                        00:00:00)
+  --to DATE_TO          search up to this date (default: 2020-01-01 00:00:00)
+  --pushed-after DATE_PUSH
+                        search up to this date (default: 2019-01-01 00:00:00)
+  --iac-languages [{ansible,chef,puppet,all} [{ansible,chef,puppet,all} ...]]
+                        only repositories with this language(s) will be
+                        analyzed (default: all)
+  --include-fork        whether to include archived repositories (default:
+                        False)
+  --min-issues MIN_ISSUES
+                        minimum number of issues (default: 0)
+  --min-releases MIN_RELEASES
+                        minimum number of releases (default: 0)
+  --min-stars MIN_STARS
+                        minimum number of stars (default: 0)
+  --min-watchers MIN_WATCHERS
+                        minimum number of watchers (default: 0)
+  --primary-language PRIMARY_LANGUAGE
+                        the primary language of the repository (default: None)
+  --verbose             whether to output results (default: False)
+```
+
+<br>
+
+#### iac-miner mine-repository
+
+```
+usage: iac-miner mine-repository [-h] path-to-repo dest
+
+positional arguments:
+  path-to-repo  Name of the repository (owner/name).
+  dest          Destination folder to save results.
+
+optional arguments:
+  -h, --help    show this help message and exit
+```
+
+## Current release
+### [0.1]
+- Added command-line interface

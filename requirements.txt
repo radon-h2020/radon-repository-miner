@@ -6,11 +6,11 @@ matplotlib==3.2.1
 nltk==3.5
 numpy==1.18.5
 pandas==1.0.4
-pydriller==1.13
+pydriller==1.15.2
 pygithub==1.51
 python-dotenv==0.13.0
 scikit-learn==0.23.1
-repository-scorer==1.0.3
+repository-scorer==1.1.0
 requests==2.23.0
 treeinterpreter==0.2.2
 pyyaml==5.3.1
