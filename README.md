@@ -1,12 +1,19 @@
 # iac-miner
 A mining tool written in Python to mine software repositories for Infrastructure-as-Code
 
-Available on [PyPI](https://pypi.org/project/iacminer/): ```pip install iaciminer```.
+Available on [PyPI](https://pypi.org/project/iacminer/): ```pip install iacminer```.
 
 
 ## APIs usage
 
 <br>
+
+First, export your Github's access token in an environment variable called ```GITHUB_ACCESS_TOKEN```, with:
+
+```export GITHUB_ACCESS_TOKEN='yourtokenhere'``` (on Linux)
+
+This variable will contain the token to access the GitHub APIs and avoid to be hard-coded in the code.
+
 
 ### Mine Github
 
@@ -17,7 +24,7 @@ from iacminer.miners.github import GithubMiner
 
     
     
-miner = GithubMiner(access_token = os.get_env('GITHUB_ACCESS_TOKEN'),
+miner = GithubMiner(access_token = os.getenv('GITHUB_ACCESS_TOKEN'),
                     date_from = datetime.strptime('2020-01-01 00:00:00', '%Y-%m-%d %H:%M:%S'),
                     date_to = datetime.strptime('2020-01-02 00:00:00', '%Y-%m-%d %H:%M:%S'),
                     push_after=datetime.strptime('2020-06-07 00:00:00', '%Y-%m-%d %H:%M:%S'),
@@ -40,7 +47,7 @@ for repository in miner.mine():
 ```python
 from iacminer.miners.repository import RepositoryMiner
 
-miner = RepositoryMiner(access_token = os.get_env('GITHUB_ACCESS_TOKEN'),
+miner = RepositoryMiner(token = os.getenv('GITHUB_ACCESS_TOKEN'),
                         path_to_repo='path/to/cloned/repository',
                         branch='development') # Optional (default 'master')
 
@@ -76,14 +83,14 @@ import os
 from iacminer.miners.github import GithubMiner
 from iacminer.miners.repository import RepositoryMiner
 
-gh_miner = GithubMiner(access_token = os.get_env('GITHUB_ACCESS_TOKEN'),
+gh_miner = GithubMiner(access_token = os.getenv('GITHUB_ACCESS_TOKEN'),
                        min_stars=<int>,   # Optional (default 0)
                        min_issues=<int>,   # Optional (default 0)
                     )
 
 for repository in gh_miner.mine():
     print(repository)
-    repo_miner = RepositoryMiner(access_token = os.get_env('GITHUB_ACCESS_TOKEN'),
+    repo_miner = RepositoryMiner(token = os.getenv('GITHUB_ACCESS_TOKEN'),
                                  path_to_repo='path/to/cloned/repository',
                                  branch='development') # Optional (default 'master')
                                  
@@ -143,7 +150,7 @@ optional arguments:
   --iac-languages [{ansible,chef,puppet,all} [{ansible,chef,puppet,all} ...]]
                         only repositories with this language(s) will be
                         analyzed (default: all)
-  --include-fork        whether to include archived repositories (default:
+  --include-fork        whether to include forked repositories (default:
                         False)
   --min-issues MIN_ISSUES
                         minimum number of issues (default: 0)
