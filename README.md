@@ -68,7 +68,17 @@ fixing_files = miner.get_fixing_files()
 # Get files labeled as 'defect-prone' or 'defect-free'
 labeled_files = miner.label(fixing_files)
 
-# Execute the previous methods at once and extract metrics from labeled files on a per-release basis
+```
+
+Alternatively, execute the previous methods at once and extract metrics from labeled files on a per-release basis with:
+
+```python
+from iacminer.miners.repository import RepositoryMiner
+
+miner = RepositoryMiner(token = os.getenv('GITHUB_ACCESS_TOKEN'),
+                        path_to_repo='path/to/cloned/repository',
+                        branch='development') # Optional (default 'master')
+
 for metrics in miner.mine():
     print(metrics)
 
