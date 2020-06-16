@@ -28,17 +28,24 @@ class RepositoryMiner:
     This class is responsible for mining the history of a repository to collect defect-prone and defect-free blueprints.
     """
 
-    def __init__(self, token, path_to_repo: str, branch: str = 'master'):
+    def __init__(self, token, path_to_repo: str, branch: str = 'master', owner: str=None, repo: str=None):
         """
         Initialize a new miner for a software repository.
 
         :param path_to_repo: the path to the repository to analyze;
-        :param branch: the branch to analyze. Default 'master'.
+        :param branch: the branch to analyze. Default 'master';
+        :param owner: the repository's owner;
+        :param repo: the name of the repository; 
         """
 
         self.__github = github.Github(token)
         self.path_to_repo = path_to_repo
         self.branch = branch
+
+        self.owner_repo = '/'.join(self.path_to_repo.split('/')[-2:])
+
+        if owner and repo:
+            self.owner_repo = '/'.join([owner, repo])
 
         self.fixing_commits = set()
         self.commit_hashes = [c.hash for c in
@@ -87,8 +94,7 @@ class RepositoryMiner:
         :return: a set of distinct labels
         """
 
-        owner_repo = '/'.join(self.path_to_repo.split('/')[-2:])  # e.g., 'tmp/owner/repo -> owner/repo
-        repo = self.__github.get_repo(owner_repo)
+        repo = self.__github.get_repo(self.owner_repo)
         labels = set()
         for label in repo.get_labels():
             if type(label) == github.Label.Label:
@@ -103,9 +109,8 @@ class RepositoryMiner:
         :param label: the label of the issue (e.g., 'bug')
         :return: yield the closed issues with that label
         """
-
-        owner_repo = '/'.join(self.path_to_repo.split('/')[-2:])  # e.g., 'tmp/owner/repo -> owner/repo
-        repo = self.__github.get_repo(owner_repo)
+        
+        repo = self.__github.get_repo(self.owner_repo)
         label = repo.get_label(label)
         issues = list()
         for issue in repo.get_issues(state='closed', labels=[label], sort='created', direction='desc'):
@@ -121,8 +126,7 @@ class RepositoryMiner:
         :return: the issue labels
         """
 
-        owner_repo = '/'.join(self.path_to_repo.split('/')[-2:])  # e.g., 'tmp/owner/repo -> owner/repo
-        repo = self.__github.get_repo(owner_repo)
+        repo = self.__github.get_repo(self.owner_repo)
         labels = set()
 
         try:
