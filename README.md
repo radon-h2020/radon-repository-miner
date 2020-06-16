@@ -191,5 +191,5 @@ optional arguments:
 ```
 
 ## Current release
-### [0.1]
-- Added command-line interface
+## [0.1.1]
+- Fixed excepton catching

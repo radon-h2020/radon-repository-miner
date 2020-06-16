@@ -1,4 +1,4 @@
-ansiblemetrics==0.3.2
+ansiblemetrics==0.3.3
 gitpython==3.1.3
 imbalanced-learn==0.6.2
 joblib==0.15.1

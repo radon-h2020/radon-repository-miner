@@ -402,7 +402,7 @@ class RepositoryMiner:
 
                 try:
                     iac_metrics = metrics_collector.product_metrics(content)
-                except ValueError:
+                except (TypeError, ValueError):
                     # Not a valid YAML or empty content
                     label = "defect-prone" if filepath in defect_prone else "defect-free"
                     print(f'>>> Commit: {commit.hash} - Cannot properly {filepath} - The file label is {label}.')
