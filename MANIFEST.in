@@ -1,2 +1,2 @@
 include requirements.txt
-include config.yml
+include config.json

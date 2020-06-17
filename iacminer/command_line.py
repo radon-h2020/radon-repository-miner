@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-import yaml
+import json
 
 import copy
 from datetime import datetime
@@ -11,8 +11,8 @@ from iacminer import utils
 from iacminer.miners.github import GithubMiner
 from repositoryscorer import scorer
 
-with open('config.yml', 'r') as in_stream:
-    configuration = yaml.safe_load(in_stream)
+with open('config.json', 'r') as in_stream:
+    configuration = json.load(in_stream)
 
 
 def date(x: str) -> datetime:

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import yaml
+import json
 from setuptools import setup, find_packages
 
-with open("config.yml", "r") as fh:
-    config = yaml.safe_load(fh)
+with open("config.json", "r") as fh:
+    config = json.load(fh)
 
 with open("requirements.txt", "r") as reqs_file:
     requirements = reqs_file.read().splitlines()
