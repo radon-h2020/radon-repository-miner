@@ -77,7 +77,9 @@ from iacminer.miners.repository import RepositoryMiner
 
 miner = RepositoryMiner(token = os.getenv('GITHUB_ACCESS_TOKEN'),
                         path_to_repo='path/to/cloned/repository',
-                        branch='development') # Optional (default 'master')
+                        branch='development', # Optional (default='master')
+                        owner='radon-h2020',  # Optional (default=None)
+                        repo='radon-iac-miner')  # Optional (default=None)
 
 for metrics in miner.mine():
     print(metrics)
@@ -102,7 +104,9 @@ for repository in gh_miner.mine():
     print(repository)
     repo_miner = RepositoryMiner(token = os.getenv('GITHUB_ACCESS_TOKEN'),
                                  path_to_repo='path/to/cloned/repository',
-                                 branch='development') # Optional (default 'master')
+                                 branch='development', # Optional (default='master')
+                                 owner='radon-h2020',  # Optional (default=None)
+                                 repo='radon-iac-miner')  # Optional (default=None)
                                  
     # Mine repository as previous example ...
 ```
@@ -180,16 +184,23 @@ optional arguments:
 #### iac-miner mine-repository
 
 ```
-usage: iac-miner mine-repository [-h] path-to-repo dest
+usage: iac-miner mine-repository [-h] [--branch REPO_OWNER]
+                                 [--owner REPO_OWNER] [--name REPO_NAME]
+                                 [--verbose]
+                                 path_to_repo dest
 
 positional arguments:
-  path-to-repo  Name of the repository (owner/name).
-  dest          Destination folder to save results.
+  path_to_repo         Name of the repository (owner/name).
+  dest                 Destination folder to save results.
 
 optional arguments:
-  -h, --help    show this help message and exit
+  -h, --help           show this help message and exit
+  --branch REPO_OWNER  the repository's default branch (default: master)
+  --owner REPO_OWNER   the repository's owner (default: None)
+  --name REPO_NAME     the repository's name (default: None)
+  --verbose            whether to output results (default: False)
 ```
 
 ## Current release
-## [0.1.1]
-- Fixed excepton catching
+## [0.1.3]
+- The mine-repository option is now supported

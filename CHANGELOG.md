@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.1.3]
+- The mine-repository option is now supported
+
+## [0.1.2]
+- Removed unused dependencies
+
 ## [0.1.1]
 - Fixed excepton catching
 
