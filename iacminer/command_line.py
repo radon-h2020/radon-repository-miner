@@ -86,10 +86,12 @@ def get_parser():
                                type=valid_path,
                                help='destination folder to save results')
 
+    """ Not needed anymore here (move to mine-repository ?)
     github_parser.add_argument(action='store',
                                dest='clone_to',
                                type=valid_path,
                                help='path to temporary clone the repositories for the analysis')
+    """
 
     github_parser.add_argument('--from',
                                action='store',
@@ -280,38 +282,3 @@ def cli():
 
     elif args.command == 'mine-repository':
         mine_repository(args)
-
-""" REPOSITORY SCORER
- try:
-     # Clone repository
-     if args.verbose:
-         print(f'Cloning {repository["url"]}')
-
-     path_to_repository = utils.clone_repository(os.path.join(args.clone_to), repository['url'])
-
-     if args.verbose:
-         print(f'Cloned to {path_to_repository}')
-
-     if args.verbose:
-         print('Computing repository scores')
-
-     scores = scorer.score_repository(path_to_repo=path_to_repository,
-                                      threshold_community=2,
-                                      threshold_comments_ratio=0.002,
-                                      threshold_commit_frequency=2,
-                                      threshold_issue_events=0.023,
-                                      threshold_sloc=190)
-     repository.update(scores)
-     repository.update({'timestamp': datetime.now().timestamp()})
-
-     # Delete cloned repository
-     if args.verbose:
-         print(f'Deleting {path_to_repository}')
-
-     utils.delete_repo(path_to_repository)
-
- except Exception as e:
-     print(str(e))
-     utils.delete_repo(path_to_repository)
-     continue
- """

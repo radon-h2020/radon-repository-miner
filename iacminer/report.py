@@ -2,12 +2,15 @@
 This module is responsible to generate html reports for the mining
 """
 import statistics
-from datetime import datetime
+import datetime
+
 
 def generate_mining_report(repositories: list) -> str:
     """
     Generate an HTML report for the crawled repositories
     """
+    now = datetime.datetime.now()
+    generation_date = datetime.date(now.year, now.month, now.day)
     avg_repos = len(repositories)
     avg_issues = statistics.mean([d['issues'] for d in repositories])
     avg_releases = statistics.mean([d['releases'] for d in repositories])
@@ -86,13 +89,13 @@ def generate_mining_report(repositories: list) -> str:
             </body>
         </html> 
         """.format(
-            datetime.today(),
-            avg_repos,
-            avg_issues,
-            avg_releases,
-            avg_stars,
-            avg_watchers,
-            accordion)
+        generation_date,
+        avg_repos,
+        avg_issues,
+        avg_releases,
+        avg_stars,
+        avg_watchers,
+        accordion)
 
 
 def __generate_card(metadata: dict) -> str:
@@ -132,43 +135,3 @@ def __generate_card(metadata: dict) -> str:
                    metadata.get('stars'),
                    metadata.get('watchers'),
                    metadata.get('primary_language'))
-
-"""
-mined_repos = [{
-    'id': 'Test',
-    'default_branch': 'master',
-    'owner': 'stefano',
-    'name': 'my-repo',
-    'url': 'none',
-    'description': 'this is a description',
-    'issues': 4,
-    'releases': 10,
-    'stars': 1,
-    'watchers': 2,
-    'primary_language': 'python',
-    'continuous_integration': True,
-    'percent_comment': 12.00,
-    'commit_frequency': 9.00,
-    'core_contributors': 3,
-    'iac_ratio': 67.00,
-    'issue_frequency': 0.023,
-    'license': True,
-    'repository_size': 190'
-}, {
-    'id': 'Test2',
-    'default_branch': 'master',
-    'owner': 'stefano',
-    'name': 'my-second-repo',
-    'url': 'none',
-    'description': 'this is another description',
-    'issues': 47,
-    'releases': 160,
-    'stars': 19,
-    'watchers': 29,
-    'primary_language': 'python',
-    'created_at': '2010-10-23',
-    'pushed_at': '2020-08-31',
-}]
-
-print(generate_mining_report(mined_repos))
-"""
