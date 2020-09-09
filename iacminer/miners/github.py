@@ -34,9 +34,7 @@ class GithubMiner:
                  min_stars: int = 0,
                  min_releases: int = 0,
                  min_watchers: int = 0,
-                 min_issues: int = 0,
-                 primary_language: str = None,
-                 include_fork: bool = False
+                 min_issues: int = 0
                  ):
         """
         Crawl GitHub to extract repositories
@@ -49,8 +47,6 @@ class GithubMiner:
         :param min_releases: the minimum number of releases the repositories must have
         :param min_watchers: the minimum number of watchers the repositories must have
         :param min_issues: the minimum number of issues the repositories must have
-        :param primary_language: the primary language of the repository (e.g., python, java, etc.)
-        :param include_fork: whether to include forks
         """
 
         self._token = access_token
@@ -64,8 +60,6 @@ class GithubMiner:
         self.min_releases = min_releases
         self.min_watchers = min_watchers
         self.min_issues = min_issues
-        self.primary_language = primary_language.lower() if primary_language else None
-        self.include_fork = include_fork
 
         self.query = re.sub('MIN_STARS', str(self.min_stars), QUERY)
         self.query = re.sub('DATE_FROM', str(self.date_from), self.query)
@@ -128,10 +122,7 @@ class GithubMiner:
             if is_disabled or is_locked or is_template:
                 continue
 
-            if self.primary_language and self.primary_language != primary_language:
-                continue
-
-            if not self.include_fork and is_fork:
+            if is_fork:
                 continue
 
             object = node.get('object')
@@ -141,7 +132,7 @@ class GithubMiner:
             dirs = [entry.get('name') for entry in object.get('entries', []) if entry.get('type') == 'tree']
 
             yield dict(
-                id=node.get('id'),
+                _id=node.get('id'),
                 default_branch=node.get('defaultBranchRef', {}).get('name'),
                 owner=node.get('owner', {}).get('login', ''),
                 name=node.get('name', ''),

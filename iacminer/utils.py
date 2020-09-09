@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 
+
 def clone_repository(path_to_folder: str, url_to_repo: str) -> str:
     """
     Clone a repository in the specified folder
@@ -38,5 +39,5 @@ def delete_repo(path_to_repo: str) -> None:
             shutil.rmtree(path_to_repo)
 
     except Exception as e:
-        print(f'>>> Error while deleting directory: {str(e)}')
-
+        # print(f'>>> Error while deleting directory: {str(e)}')
+        pass

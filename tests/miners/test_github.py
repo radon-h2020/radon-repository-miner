@@ -35,9 +35,7 @@ def test(date_from, date_to, pushed_after, min_releases, min_stars, min_watchers
         pushed_after=pushed_after,
         min_stars=min_stars,
         min_releases=min_releases,
-        min_watchers=min_watchers,
-        primary_language=primary_language,
-        include_fork=include_fork
+        min_watchers=min_watchers
     )
 
     date_from = date_from.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -57,6 +55,5 @@ def test(date_from, date_to, pushed_after, min_releases, min_stars, min_watchers
         assert repo['releases'] >= min_releases
         assert repo['stars'] >= min_stars
         assert repo['watchers'] >= min_watchers
-        assert repo['primary_language'].lower() == primary_language.lower() if primary_language else True
         assert date_from <= repo['created_at'] <= date_to
         assert repo['pushed_at'] >= pushed_after

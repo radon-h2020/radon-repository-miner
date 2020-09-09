@@ -1,5 +1,6 @@
 """
 A module for mining repositories.
+It requires that the repository to mine is cloned on the local machine.
 """
 import github
 import os

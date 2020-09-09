@@ -10,6 +10,8 @@ from iacminer import filters
 from iacminer import utils
 from iacminer.miners.github import GithubMiner
 from iacminer.miners.repository import RepositoryMiner
+from iacminer.mongo import MongoDBManager
+from iacminer.report import generate_mining_report
 from repositoryscorer import scorer
 
 with open('config.json', 'r') as in_stream:
@@ -59,7 +61,6 @@ def get_parser():
     description = 'A Python library to crawl GitHub for Infrastructure-as-Code based repositories and mine' \
                   'those repositories to identify fixing commits and label defect-prone files.'
 
-
     parser = argparse.ArgumentParser(prog='iac-miner', description=description)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + configuration.get('version', '0.0'))
 
@@ -69,12 +70,24 @@ def get_parser():
     github_parser = subparsers.add_parser('mine-github', help='Mine repositories from Github')
 
     github_parser.add_argument(action='store',
+                               dest='mongodb_host',
+                               type=str,
+                               help='the MongoDB host (e.g., "127.0.0.1")',
+                               default='localhost')
+
+    github_parser.add_argument(action='store',
+                               dest='mongodb_port',
+                               type=unsigned_int,
+                               help='the MongoDB port (e.g., 27017)',
+                               default=27017)
+
+    github_parser.add_argument(action='store',
                                dest='dest',
                                type=valid_path,
                                help='destination folder to save results')
 
     github_parser.add_argument(action='store',
-                               dest='tmp_clones_folder',
+                               dest='clone_to',
                                type=valid_path,
                                help='path to temporary clone the repositories for the analysis')
 
@@ -98,20 +111,6 @@ def get_parser():
                                type=date,
                                default=datetime.strptime('2019-01-01', '%Y-%m-%d'),
                                help='search up to this date (default: %(default)s)')
-
-    github_parser.add_argument('--iac-languages',
-                               nargs='*',
-                               default='all',
-                               type=str,
-                               dest='iac_languages',
-                               choices=['ansible', 'chef', 'puppet', 'all'],
-                               help='only repositories with this language(s) will be analyzed (default: all)')
-
-    github_parser.add_argument('--include-fork',
-                               action='store_true',
-                               dest='include_fork',
-                               default=False,
-                               help='whether to include archived repositories (default: %(default)s)')
 
     github_parser.add_argument('--min-issues',
                                action='store',
@@ -141,13 +140,6 @@ def get_parser():
                                default=0,
                                help='minimum number of watchers (default: %(default)s)')
 
-    github_parser.add_argument('--primary-language',
-                               action='store',
-                               dest='primary_language',
-                               type=str,
-                               default=None,
-                               help='the primary language of the repository (default: %(default)s)')
-
     github_parser.add_argument('--verbose',
                                action='store_true',
                                dest='verbose',
@@ -157,41 +149,41 @@ def get_parser():
     # Repository parser
     repo_parser = subparsers.add_parser('mine-repository', help='Mine a single repository')
     repo_parser.add_argument(action='store',
-                              dest='path_to_repo',
-                              type=valid_path,
-                              help='Name of the repository (owner/name).')
+                             dest='path_to_repo',
+                             type=valid_path,
+                             help='Name of the repository (owner/name).')
 
     repo_parser.add_argument(action='store',
-                              dest='dest',
-                              type=valid_path,
-                              help='Destination folder to save results.')
+                             dest='dest',
+                             type=valid_path,
+                             help='Destination folder to save results.')
 
     repo_parser.add_argument('--branch',
-                               action='store',
-                               dest='repo_branch',
-                               type=str,
-                               default='master',
-                               help='the repository\'s default branch (default: %(default)s)')
+                             action='store',
+                             dest='repo_branch',
+                             type=str,
+                             default='master',
+                             help='the repository\'s default branch (default: %(default)s)')
 
     repo_parser.add_argument('--name',
-                               action='store',
-                               dest='repo_name',
-                               type=str,
-                               default=None,
-                               help='the repository\'s name (default: %(default)s)')
+                             action='store',
+                             dest='repo_name',
+                             type=str,
+                             default=None,
+                             help='the repository\'s name (default: %(default)s)')
 
     repo_parser.add_argument('--owner',
-                               action='store',
-                               dest='repo_owner',
-                               type=str,
-                               default=None,
-                               help='the repository\'s owner (default: %(default)s)')
+                             action='store',
+                             dest='repo_owner',
+                             type=str,
+                             default=None,
+                             help='the repository\'s owner (default: %(default)s)')
 
     repo_parser.add_argument('--verbose',
-                               action='store_true',
-                               dest='verbose',
-                               default=False,
-                               help='whether to output results (default: %(default)s)')
+                             action='store_true',
+                             dest='verbose',
+                             default=False,
+                             help='whether to output results (default: %(default)s)')
 
     return parser
 
@@ -208,34 +200,10 @@ def is_ansible(repository: dict) -> bool:
            or sum([1 for path in repository['dirs'] if filters.is_ansible_dir(path)]) >= 2
 
 
-def is_chef(repository: dict) -> bool:
-    """
-    Check if the repository has Chef files
-    :param repository: a json object containing "owner", "name", "description" and "dirs" for the repository
-    :return: True if the repository has Chef files; False otherwise
-    """
-    return 'chef' in repository['description'].lower() \
-           or 'chef' in repository['owner'].lower() \
-           or 'chef' in repository['name'].lower() \
-           or False  # TODO: other ways to check chef files
-
-
-def is_puppet(repository: dict) -> bool:
-    """
-    Check if the repository has Puppet files
-    :param repository: a json object containing "owner", "name", "description" and "dirs" for the repository
-    :return: True if the repository has Puppet files; False otherwise
-    """
-    return 'puppet' in repository['description'].lower() \
-           or 'puppet' in repository['owner'].lower() \
-           or 'puppet' in repository['name'].lower() \
-           or False  # TODO: other ways to check chef files
-
-
 def mine_github(args):
-    print(args)
-
     load_dotenv()
+
+    db_manager = MongoDBManager(args.mongodb_host, args.mongodb_port)
 
     github_miner = GithubMiner(
         access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
@@ -245,75 +213,37 @@ def mine_github(args):
         min_stars=args.min_stars,
         min_releases=args.min_releases,
         min_watchers=args.min_watchers,
-        min_issues=args.min_issues,
-        primary_language=args.primary_language,
-        include_fork=args.include_fork
+        min_issues=args.min_issues
     )
 
     for repository in github_miner.mine():
 
-        # Filter out non-Ansible/Chef/Puppet repositories
-        if 'ansible' in args.iac_languages and not is_ansible(repository):
+        # Filter out non-Ansible repositories
+        if not is_ansible(repository):
             continue
-        elif 'chef' in args.iac_languages and not is_chef(repository):
-            continue
-        elif 'puppet' in args.iac_languages and not is_puppet(repository):
-            continue
-        elif not (is_ansible(repository) or is_chef(repository) or is_puppet(repository)):
-            continue
-
-        # Clone repository
-        if args.verbose:
-            print(f'Cloning {repository["url"]}')
-
-        path_to_repository = utils.clone_repository(os.path.join(args.tmp_clones_folder), repository['url'])
 
         if args.verbose:
-            print(f'Cloned to {path_to_repository}')
+            print(f'Collecting {repository["url"]} ... ', end='', flush=True)
 
-        # Compute repository scores. TODO: set parameters in command line (or configuration file)
-        if args.verbose:
-            print('Computing repository scores')
-
-        try:
-            report = scorer.score_repository(path_to_repo=path_to_repository,
-                                             threshold_community=2,
-                                             threshold_comments_ratio=0.002,
-                                             threshold_commit_frequency=2,
-                                             threshold_issue_events=0.023,
-                                             threshold_sloc=190)
-        except Exception as e:
-            print(str(e))
-            utils.delete_repo(path_to_repository)
-            continue
-
-        # Delete cloned repository
-        if args.verbose:
-            print(f'Deleting {path_to_repository}')
-
-        utils.delete_repo(path_to_repository)
-
-        # Print (if required) and save the report
-        destination = os.path.join(args.dest, 'report.json')
-
-        if os.path.isfile(destination):
-            with open(destination, 'r') as in_stream:
-                repositories = json.load(in_stream)
+        # Save repository to MongoDB
+        if db_manager.get_single_repo(repository['_id']):
+            db_manager.replace_repo(repository)
         else:
-            repositories = list()
-
-        repository = copy.deepcopy(repository)
-        repository.update(report)
-        repository.update({'timestamp': datetime.now().timestamp()})
-        repositories.append(repository)
+            db_manager.add_repo(repository)
 
         if args.verbose:
-            print(f'Report for {repository["name"]}:')
-            print(json.dumps(repository, indent=4, sort_keys=True))
-            print(f'Saving repository metadata to {destination}')
+            print('DONE')
 
-        with open(destination, 'w') as out:
-            json.dump(repositories, out)
+    # Generate html report
+    report = generate_mining_report(db_manager.get_all_repos())
+    destination = os.path.join(args.dest, 'report.html')
+    with open(destination, 'w') as out:
+        out.write(report)
+
+    if args.verbose:
+        print(f'Report created at {destination}')
+
+    exit(0)
 
 
 def mine_repository(args):
@@ -341,6 +271,7 @@ def mine_repository(args):
     if args.verbose:
         print(f'Mining ended at: {datetime.now().hour}:{datetime.now().minute}')
 
+
 def cli():
     args = get_parser().parse_args()
 
@@ -349,3 +280,38 @@ def cli():
 
     elif args.command == 'mine-repository':
         mine_repository(args)
+
+""" REPOSITORY SCORER
+ try:
+     # Clone repository
+     if args.verbose:
+         print(f'Cloning {repository["url"]}')
+
+     path_to_repository = utils.clone_repository(os.path.join(args.clone_to), repository['url'])
+
+     if args.verbose:
+         print(f'Cloned to {path_to_repository}')
+
+     if args.verbose:
+         print('Computing repository scores')
+
+     scores = scorer.score_repository(path_to_repo=path_to_repository,
+                                      threshold_community=2,
+                                      threshold_comments_ratio=0.002,
+                                      threshold_commit_frequency=2,
+                                      threshold_issue_events=0.023,
+                                      threshold_sloc=190)
+     repository.update(scores)
+     repository.update({'timestamp': datetime.now().timestamp()})
+
+     # Delete cloned repository
+     if args.verbose:
+         print(f'Deleting {path_to_repository}')
+
+     utils.delete_repo(path_to_repository)
+
+ except Exception as e:
+     print(str(e))
+     utils.delete_repo(path_to_repository)
+     continue
+ """
