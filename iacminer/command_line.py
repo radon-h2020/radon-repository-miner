@@ -189,19 +189,6 @@ def get_parser():
 
     return parser
 
-
-def is_ansible(repository: dict) -> bool:
-    """
-    Check if the repository has Ansible files
-    :param repository: a json object containing "owner", "name", "description" and "dirs" for the repository
-    :return: True if the repository has Ansible files; False otherwise
-    """
-    return 'ansible' in repository['description'].lower() \
-           or 'ansible' in repository['owner'].lower() \
-           or 'ansible' in repository['name'].lower() \
-           or sum([1 for path in repository['dirs'] if filters.is_ansible_dir(path)]) >= 2
-
-
 def mine_github(args):
     load_dotenv()
 
@@ -221,7 +208,7 @@ def mine_github(args):
     for repository in github_miner.mine():
 
         # Filter out non-Ansible repositories
-        if not is_ansible(repository):
+        if not filters.is_ansible_repository(repository['owner'], repository['name'], repository['description'], repository['dirs']):
             continue
 
         if args.verbose:
