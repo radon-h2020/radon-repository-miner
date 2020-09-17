@@ -215,7 +215,7 @@ def mine_github(args):
             print(f'Collecting {repository["url"]} ... ', end='', flush=True)
 
         # Save repository to MongoDB
-        if db_manager.get_single_repo(repository['_id']):
+        if db_manager.get_single_repo(repository['id']):
             db_manager.replace_repo(repository)
         else:
             db_manager.add_repo(repository)

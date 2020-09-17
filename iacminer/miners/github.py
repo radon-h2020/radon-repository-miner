@@ -132,7 +132,7 @@ class GithubMiner:
             dirs = [entry.get('name') for entry in object.get('entries', []) if entry.get('type') == 'tree']
 
             yield dict(
-                _id=node.get('id'),
+                id=node.get('id'),
                 default_branch=node.get('defaultBranchRef', {}).get('name'),
                 owner=node.get('owner', {}).get('login', ''),
                 name=node.get('name', ''),
