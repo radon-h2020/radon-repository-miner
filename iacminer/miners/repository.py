@@ -29,7 +29,12 @@ class RepositoryMiner:
     This class is responsible for mining the history of a repository to collect defect-prone and defect-free blueprints.
     """
 
-    def __init__(self, token, path_to_repo: str, branch: str = 'master', owner: str=None, repo: str=None):
+    def __init__(self,
+                 token: str,
+                 path_to_repo: str,
+                 branch: str = 'master',
+                 owner: str=None,
+                 repo: str=None):
         """
         Initialize a new miner for a software repository.
 
@@ -91,8 +96,8 @@ class RepositoryMiner:
 
     def get_labels(self) -> Set[str]:
         """
-        Returns all the issue labels in a repositories
-        :return: a set of distinct labels
+        Collect all the repository labels
+        :return: a set of labels
         """
 
         repo = self.__github.get_repo(self.owner_repo)
@@ -103,51 +108,31 @@ class RepositoryMiner:
 
         return labels
 
-    def get_closed_issues(self, label: str) -> List[Issue]:
+    def get_closed_issues(self, label: str) -> Set[Issue]:
         """
         Get all the closed issues with a given label
 
-        :param label: the label of the issue (e.g., 'bug')
-        :return: yield the closed issues with that label
+        :param label: the issue label (e.g., 'bug')
+        :return: the set of closed issues with that label
         """
         
         repo = self.__github.get_repo(self.owner_repo)
         label = repo.get_label(label)
-        issues = list()
+        issues = set()
         for issue in repo.get_issues(state='closed', labels=[label], sort='created', direction='desc'):
-            issues.append(issue)
+            issues.add(issue)
 
         return issues
 
-    def get_issue_labels(self, num: int) -> Set[str]:
+    def get_fixing_commits_from_closed_issues(self, labels: Set[str]) -> Set[str]:
         """
-        Return the labels of the issue number 'num'
-
-        :param num: the issue number
-        :return: the issue labels
-        """
-
-        repo = self.__github.get_repo(self.owner_repo)
-        labels = set()
-
-        try:
-            issue = repo.get_issue(num)
-
-            if issue.state == 'closed':
-                for label in issue.labels:
-                    labels.add(str(label))
-        except Exception as e:
-            print(str(e))
-
-        return labels
-
-    def get_fixing_commits_from_closed_issues(self) -> Set[str]:
-        """
-        Collect fixing-commit hashes by analyzing the closed issues
+        Collect fixing-commit hashes by analyzing closed issues related to bugs.
+        :param labels: bug-related labels (e.g., bug, bugfix, type: bug)
         :return: the set of fixing-commit hashes
         """
-        labels = self.get_labels()  # Collect all the labels from the repository
-        labels = BUG_RELATED_LABELS.intersection(labels)  # Keep only labels related to defects
+
+        # Get the repository labels (self.get_labels()) and keep only those matching the input labels, if any
+        labels = labels.intersection(self.get_labels())
 
         fixing_commit_hashes = set()
 
@@ -162,9 +147,10 @@ class RepositoryMiner:
 
         return fixing_commit_hashes
 
-    def get_fixing_commits_from_commit_messages(self) -> Set[str]:
+    def get_fixing_commits_from_commit_messages(self, regex: str) -> Set[str]:
         """
-        Collect fixing-commit hashes by analyzing the commit messages
+        Collect fixing-commit hashes by analyzing commit messages.
+        :param regex: a regular expression to identify fixing-commit (e.g., '(bug|fix|error|crash|problem|fail)')
         :return: the set of fixing-commit hashes
         """
 
@@ -180,7 +166,7 @@ class RepositoryMiner:
                 msg = re.sub(match.group(), '', msg)
 
             # Match the regular expression to the messge
-            if re.match(r'(bug|fix|error|issue|crash|problem|fail|defect|patch)', msg.lower()):
+            if re.match(regex, msg.lower()):
                 fixing_commit_hashes.add(commit.hash)
 
         return fixing_commit_hashes
@@ -190,8 +176,8 @@ class RepositoryMiner:
         Set commits that have fixed closed bug-related issues
         :return: None
         """
-        from_issues = self.get_fixing_commits_from_closed_issues()
-        from_commit = self.get_fixing_commits_from_commit_messages()
+        from_issues = self.get_fixing_commits_from_closed_issues(BUG_RELATED_LABELS)
+        from_commit = self.get_fixing_commits_from_commit_messages(r'(bug|fix|error|crash|problem|fail|defect|patch)')
         self.fixing_commits = from_issues.union(from_commit)
 
     def get_fixing_files(self) -> List:

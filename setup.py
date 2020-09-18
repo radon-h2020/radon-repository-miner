@@ -26,7 +26,7 @@ setup(name='iacminer',
       download_url=f'https://github.com/stefanodallapalma/iac-miner/archive/{VERSION}.tar.gz',
       packages=find_packages(exclude=('tests',)),
       entry_points = {
-        'console_scripts': ['iac-miner=iacminer.command_line:cli'],
+        'console_scripts': ['iac-miner=iacminer.command_line:main'],
       },
       classifiers=[
          "Development Status :: 3 - Alpha",

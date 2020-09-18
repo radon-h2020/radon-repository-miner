@@ -18,33 +18,6 @@ with open('config.json', 'r') as in_stream:
     configuration = json.load(in_stream)
 
 
-def date(x: str) -> datetime:
-    """
-    Check the passed date is well-formatted
-    :param x: a datetime
-    :return: datetime(x); raise an ArgumentTypeError otherwise
-    """
-    try:
-        # String to datetime
-        x = datetime.strptime(x, '%Y-%m-%d')
-    except Exception:
-        raise argparse.ArgumentTypeError('Date format must be: YYYY-MM-DD')
-
-    return x
-
-
-def unsigned_int(x: str) -> int:
-    """
-    Check the number is greater than or equal to zero
-    :param x: a number
-    :return: int(x); raise an ArgumentTypeError otherwise
-    """
-    x = int(x)
-    if x < 0:
-        raise argparse.ArgumentTypeError('Minimum bound is 0')
-    return x
-
-
 def valid_path(x: str) -> str:
     """
     Check the path exists
@@ -58,194 +31,67 @@ def valid_path(x: str) -> str:
 
 
 def get_parser():
-    description = 'A Python library to crawl GitHub for Infrastructure-as-Code based repositories and mine' \
-                  'those repositories to identify fixing commits and label defect-prone files.'
+    description = 'A Python library to mine Infrastructure-as-Code based software repositories.'
 
-    parser = argparse.ArgumentParser(prog='iac-miner', description=description)
+    parser = argparse.ArgumentParser(prog='iac-repository-miner', description=description)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + configuration.get('version', '0.0'))
 
-    subparsers = parser.add_subparsers(dest='command')
-
-    # Github parser
-    github_parser = subparsers.add_parser('mine-github', help='Mine repositories from Github')
-
-    github_parser.add_argument(action='store',
-                               dest='mongodb_host',
-                               type=str,
-                               help='the MongoDB host (e.g., "127.0.0.1")',
-                               default='localhost')
-
-    github_parser.add_argument(action='store',
-                               dest='mongodb_port',
-                               type=unsigned_int,
-                               help='the MongoDB port (e.g., 27017)',
-                               default=27017)
-
-    github_parser.add_argument(action='store',
-                               dest='dest',
-                               type=valid_path,
-                               help='destination folder to save results')
-
-    """ Not needed anymore here (move to mine-repository ?)
-    github_parser.add_argument(action='store',
-                               dest='clone_to',
-                               type=valid_path,
-                               help='path to temporary clone the repositories for the analysis')
-    """
-
-    github_parser.add_argument('--from',
-                               action='store',
-                               dest='date_from',
-                               type=date,
-                               default=datetime.strptime('2014-01-01', '%Y-%m-%d'),
-                               help='start searching from this date (default: %(default)s)')
-
-    github_parser.add_argument('--to',
-                               action='store',
-                               dest='date_to',
-                               type=date,
-                               default=datetime.strptime('2020-01-01', '%Y-%m-%d'),
-                               help='search up to this date (default: %(default)s)')
-
-    github_parser.add_argument('--pushed-after',
-                               action='store',
-                               dest='date_push',
-                               type=date,
-                               default=datetime.strptime('2019-01-01', '%Y-%m-%d'),
-                               help='search up to this date (default: %(default)s)')
-
-    github_parser.add_argument('--min-issues',
-                               action='store',
-                               dest='min_issues',
-                               type=unsigned_int,
-                               default=0,
-                               help='minimum number of issues (default: %(default)s)')
-
-    github_parser.add_argument('--min-releases',
-                               action='store',
-                               dest='min_releases',
-                               type=unsigned_int,
-                               default=0,
-                               help='minimum number of releases (default: %(default)s)')
-
-    github_parser.add_argument('--min-stars',
-                               action='store',
-                               dest='min_stars',
-                               type=unsigned_int,
-                               default=0,
-                               help='minimum number of stars (default: %(default)s)')
-
-    github_parser.add_argument('--min-watchers',
-                               action='store',
-                               dest='min_watchers',
-                               type=unsigned_int,
-                               default=0,
-                               help='minimum number of watchers (default: %(default)s)')
-
-    github_parser.add_argument('--verbose',
-                               action='store_true',
-                               dest='verbose',
-                               default=False,
-                               help='whether to output results (default: %(default)s)')
-
     # Repository parser
-    repo_parser = subparsers.add_parser('mine-repository', help='Mine a single repository')
-    repo_parser.add_argument(action='store',
-                             dest='path_to_repo',
-                             type=valid_path,
-                             help='Name of the repository (owner/name).')
+    parser = subparsers.add_parser('mine-repository', help='Mine a single repository')
+    parser.add_argument(action='store',
+                        dest='path_to_repo',
+                        type=valid_path,
+                        help='the local path to the git repository')
 
-    repo_parser.add_argument(action='store',
-                             dest='dest',
-                             type=valid_path,
-                             help='Destination folder to save results.')
+    parser.add_argument(action='store',
+                        dest='owner',
+                        type=str,
+                        help='the repository owner')
 
-    repo_parser.add_argument('--branch',
-                             action='store',
-                             dest='repo_branch',
-                             type=str,
-                             default='master',
-                             help='the repository\'s default branch (default: %(default)s)')
+    parser.add_argument(action='store',
+                        dest='repo_name',
+                        type=str,
+                        help='the repository name')
 
-    repo_parser.add_argument('--name',
-                             action='store',
-                             dest='repo_name',
-                             type=str,
-                             default=None,
-                             help='the repository\'s name (default: %(default)s)')
+    parser.add_argument(action='store',
+                        dest='dest',
+                        type=valid_path,
+                        help='destination folder for the report')
 
-    repo_parser.add_argument('--owner',
-                             action='store',
-                             dest='repo_owner',
-                             type=str,
-                             default=None,
-                             help='the repository\'s owner (default: %(default)s)')
+    parser.add_argument('--branch',
+                         action='store',
+                         dest='branch',
+                         type=str,
+                         default='master',
+                         help='the repository branch to mine (default: %(default)s)')
 
-    repo_parser.add_argument('--verbose',
-                             action='store_true',
-                             dest='verbose',
-                             default=False,
-                             help='whether to output results (default: %(default)s)')
+    parser.add_argument('--verbose',
+                         action='store_true',
+                         dest='verbose',
+                         default=False,
+                         help='show log')
 
     return parser
 
-def mine_github(args):
+
+def main():
+
+    args = get_parser().parse_args()
+
     load_dotenv()
 
-    db_manager = MongoDBManager(args.mongodb_host, args.mongodb_port)
-
-    github_miner = GithubMiner(
-        access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
-        date_from=args.date_from,
-        date_to=args.date_to,
-        pushed_after=args.date_push,
-        min_stars=args.min_stars,
-        min_releases=args.min_releases,
-        min_watchers=args.min_watchers,
-        min_issues=args.min_issues
-    )
-
-    for repository in github_miner.mine():
-
-        # Filter out non-Ansible repositories
-        if not filters.is_ansible_repository(repository['owner'], repository['name'], repository['description'], repository['dirs']):
-            continue
-
-        if args.verbose:
-            print(f'Collecting {repository["url"]} ... ', end='', flush=True)
-
-        # Save repository to MongoDB
-        if db_manager.get_single_repo(repository['id']):
-            db_manager.replace_repo(repository)
-        else:
-            db_manager.add_repo(repository)
-
-        if args.verbose:
-            print('DONE')
-
-    # Generate html report
-    report = generate_mining_report(db_manager.get_all_repos())
-    destination = os.path.join(args.dest, 'report.html')
-    with open(destination, 'w') as out:
-        out.write(report)
+    token = os.getenv('GITHUB_ACCESS_TOKEN')
+    if not token:
+        token = getpass('Github access token:')
 
     if args.verbose:
-        print(f'Report created at {destination}')
+        print(f'Mining: {args.path_to_repo} [{datetime.now().hour}:{datetime.now().minute}]')
 
-    exit(0)
-
-
-def mine_repository(args):
-    if args.verbose:
-        print(f'Mining started at: {datetime.now().hour}:{datetime.now().minute}')
-
-    path_to_repo = args.path_to_repo
-
-    miner = RepositoryMiner(token=os.getenv('GITHUB_ACCESS_TOKEN'),
-                            path_to_repo=path_to_repo,
-                            branch=args.repo_branch,
-                            owner=args.repo_owner,
-                            repo=args.repo_name)
+    miner = RepositoryMiner(token=token,
+                            path_to_repo=args.path_to_repo,
+                            branch=args.branch,
+                            owner=args.owner,
+                            repo=args.name)
 
     metrics_df = pd.DataFrame()
 
@@ -260,12 +106,6 @@ def mine_repository(args):
     if args.verbose:
         print(f'Mining ended at: {datetime.now().hour}:{datetime.now().minute}')
 
+    exit(0)
 
-def cli():
-    args = get_parser().parse_args()
 
-    if args.command == 'mine-github':
-        mine_github(args)
-
-    elif args.command == 'mine-repository':
-        mine_repository(args)
