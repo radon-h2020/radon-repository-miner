@@ -109,6 +109,9 @@ class RepositoryMiner:
         :return: the set of fixing-commit hashes
         """
 
+        if not labels:
+            labels = BUG_RELATED_LABELS
+
         # Get the repository labels (self.get_labels()) and keep only those matching the input labels, if any
         labels = labels.intersection(self.get_labels())
 
@@ -141,6 +144,9 @@ class RepositoryMiner:
         :param regex: a regular expression to identify fixing-commit (e.g., '(bug|fix|error|crash|problem|fail)')
         :return: the set of fixing-commit hashes
         """
+
+        if not regex:
+            regex = r'(bug|fix|error|crash|problem|fail|defect|patch)'
 
         fixes_from_message = list()
 
@@ -255,7 +261,6 @@ class RepositoryMiner:
         if not self.fixing_files:
             yield None
 
-        labeled = list()
         labeling = dict()
         for file in self.fixing_files:
             labeling.setdefault(file.filepath, list()).append(file)
@@ -314,10 +319,18 @@ class RepositoryMiner:
         :return: yields LabeledFile objects
         """
 
+        if not labels:
+            labels = BUG_RELATED_LABELS
+
+        if not regex:
+            regex = r'(bug|fix|error|crash|problem|fail|defect|patch)'
+
         self.get_fixing_commits_from_closed_issues(labels)
         self.get_fixing_commits_from_commit_messages(regex)
         self.get_fixing_files()
-        yield self.label()
+
+        for labeled_file in self.label():
+            yield labeled_file
 
     def sort_commits(self, commits: List[str]):
         """

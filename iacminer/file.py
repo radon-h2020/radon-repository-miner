@@ -42,7 +42,6 @@ class LabeledFile:
                  label: Label,
                  fixing_commit: str):
         """
-
         :param filepath: the filepath from the root of the repository
         :param commit: the commit hash
         :param label: the file label (i.e., 'failure-prone' or 'clean'). Currently, only failure-prone files are returned

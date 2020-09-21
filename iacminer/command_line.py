@@ -33,7 +33,6 @@ def get_parser():
     parser = argparse.ArgumentParser(prog='iac-repository-miner', description=description)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + configuration.get('version', '0.0'))
 
-    # Repository parser
     parser.add_argument(action='store',
                         dest='path_to_repo',
                         type=valid_path,
@@ -45,14 +44,14 @@ def get_parser():
                         help='the repository owner')
 
     parser.add_argument(action='store',
-                        dest='repo_name',
+                        dest='name',
                         type=str,
                         help='the repository name')
 
     parser.add_argument(action='store',
                         dest='dest',
                         type=valid_path,
-                        help='destination folder for the report')
+                        help='destination folder for the reports')
 
     parser.add_argument('--branch',
                          action='store',
@@ -96,23 +95,25 @@ def main():
     for labeled_file in repository_miner.mine(labels=None, regex=None):
 
         if args.verbose:
-            print(f'[{labeled_file.commit}] {labeled_file.filepath}\tfixed at: {labeled_file.fixing_commit}')
+            print(f'[{labeled_file.commit}] {labeled_file.filepath}\tfixing-commit: {labeled_file.fixing_commit}')
 
         # Save repository to collection
-        labeled_files.append(copy.deepcopy(labeled_files))
-
-        if args.verbose:
-            print('DONE')
+        labeled_files.append(copy.deepcopy(labeled_file))
 
     # Generate html report
-    html = create_report(labeled_files)
-    filename = os.path.join(args.dest, 'report.html')
+    html = create_report(repo_owner=args.owner, repo_name=args.name, labeled_files=labeled_files)
+    filename_html = os.path.join(args.dest, 'report.html')
+    filename_json = os.path.join(args.dest, 'report.json')
 
-    with io.open(filename, "w", encoding="utf-8") as f:
+    with io.open(filename_html, "w", encoding="utf-8") as f:
         f.write(html)
 
+    #with open(filename_json, "w") as f:
+    #    json.dump(labeled_files, f)
+
     if args.verbose:
-        print(f'Report created at {filename}')
+        print(f'HTML report created at {filename_html}')
+        #print(f'JSON report created at {filename_json}')
 
     exit(0)
 

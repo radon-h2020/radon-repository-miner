@@ -95,8 +95,8 @@ class RepositoryMinerTestCase(unittest.TestCase):
         assert fixing_files[2].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
 
     def test_mine(self):
-        self.repo_miner.mine(labels={'bug'}, regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
-        labeled_files = list(self.repo_miner.label())
+        labeled_files = [labeled_file for labeled_file in
+                         self.repo_miner.mine(labels={'bug'}, regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')]
 
         assert labeled_files
         assert len(labeled_files) == 37
