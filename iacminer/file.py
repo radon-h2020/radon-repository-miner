@@ -7,16 +7,15 @@ class FixingFile:
     to fixing commits)
     """
 
-    def __init__(self, filepath: str, bics: set, fic: str):
+    def __init__(self, filepath: str, fic: str, bic: str):
         """
-
         :param filepath: the file of the path at the fixing-commit
-        :param bics: a list of sha of the bug-inducing commits
-        :param fic: the sha of the fixing-commit
+        :param fic: the fixing-commit sha
+        :param bic: the bug-inducing-commit sha
         """
-        self.filepath = filepath  # Name at FIXING COMMIT
-        self.bics = bics
+        self.filepath = filepath  # Name at FIXING-COMMIT
         self.fic = fic
+        self.bic = bic
 
     def __eq__(self, other):
         if isinstance(other, FixingFile):
@@ -32,10 +31,10 @@ class LabeledFile:
 
     class Label(Enum):
         """
-        Type of Label. Can be DEFECT_FREE or DEFECT_PRONE.
+        Type of Label. Can be CLEAN or FAILURE_PRONE.
         """
-        DEFECT_FREE = 'defect-free'
-        DEFECT_PRONE = 'defect-prone'
+        CLEAN = 'clean'
+        FAILURE_PRONE = 'failure-prone'
 
     def __init__(self,
                  filepath: str,
@@ -44,9 +43,9 @@ class LabeledFile:
                  fixing_commit: str):
         """
 
-        :param filepath: the path of the file
-        :param commit: the sha of the commit the file belongs to
-        :param label: the label for the file (i.e., 'defect-prone', 'defect-free')
+        :param filepath: the filepath from the root of the repository
+        :param commit: the commit hash
+        :param label: the file label (i.e., 'failure-prone' or 'clean'). Currently, only failure-prone files are returned
         :param fixing_commit: the commit fixing this file
         """
 

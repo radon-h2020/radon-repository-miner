@@ -1,18 +1,15 @@
 import argparse
+import copy
+import io
 import json
 import os
-import pandas as pd
 
-import copy
 from datetime import datetime
+from getpass import getpass
+
 from dotenv import load_dotenv
-from iacminer import filters
-from iacminer import utils
-from iacminer.miners.github import GithubMiner
-from iacminer.miners.repository import RepositoryMiner
-from iacminer.mongo import MongoDBManager
-from iacminer.report import generate_mining_report
-from repositoryscorer import scorer
+from iacminer.repository import RepositoryMiner
+from iacminer.report import create_report
 
 with open('config.json', 'r') as in_stream:
     configuration = json.load(in_stream)
@@ -37,7 +34,6 @@ def get_parser():
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + configuration.get('version', '0.0'))
 
     # Repository parser
-    parser = subparsers.add_parser('mine-repository', help='Mine a single repository')
     parser.add_argument(action='store',
                         dest='path_to_repo',
                         type=valid_path,
@@ -87,24 +83,36 @@ def main():
     if args.verbose:
         print(f'Mining: {args.path_to_repo} [{datetime.now().hour}:{datetime.now().minute}]')
 
-    miner = RepositoryMiner(token=token,
-                            path_to_repo=args.path_to_repo,
-                            branch=args.branch,
-                            owner=args.owner,
-                            repo=args.name)
-
-    metrics_df = pd.DataFrame()
-
-    for metrics in miner.mine():
-        metrics_df = metrics_df.append(metrics, ignore_index=True)
+    repository_miner = RepositoryMiner(access_token=token,
+                                       path_to_repo=args.path_to_repo,
+                                       branch=args.branch,
+                                       repo_owner=args.owner,
+                                       repo_name=args.name)
 
     if args.verbose:
-        print(f'Saving results in {args.dest}/metrics.csv')
+        print(f'Collecting failure-prone scripts')
 
-    metrics_df.to_csv(os.path.join(args.dest, 'metrics.csv'), mode='w', index=False)
+    labeled_files = list()
+    for labeled_file in repository_miner.mine(labels=None, regex=None):
+
+        if args.verbose:
+            print(f'[{labeled_file.commit}] {labeled_file.filepath}\tfixed at: {labeled_file.fixing_commit}')
+
+        # Save repository to collection
+        labeled_files.append(copy.deepcopy(labeled_files))
+
+        if args.verbose:
+            print('DONE')
+
+    # Generate html report
+    html = create_report(labeled_files)
+    filename = os.path.join(args.dest, 'report.html')
+
+    with io.open(filename, "w", encoding="utf-8") as f:
+        f.write(html)
 
     if args.verbose:
-        print(f'Mining ended at: {datetime.now().hour}:{datetime.now().minute}')
+        print(f'Report created at {filename}')
 
     exit(0)
 

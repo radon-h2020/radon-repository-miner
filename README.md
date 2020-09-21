@@ -45,9 +45,9 @@ for repository in miner.mine():
 ### Mine repository
 
 ```python
-from iacminer.miners.repository import RepositoryMiner
+from iacminer.repository import RepositoryMiner
 
-miner = RepositoryMiner(token = os.getenv('GITHUB_ACCESS_TOKEN'),
+miner = RepositoryMiner(access_token = os.getenv('GITHUB_ACCESS_TOKEN'),
                         path_to_repo='path/to/cloned/repository',
                         branch='development') # Optional (default 'master')
 
@@ -73,13 +73,13 @@ labeled_files = miner.label(fixing_files)
 Alternatively, execute the previous methods at once and extract metrics from labeled files on a per-release basis with:
 
 ```python
-from iacminer.miners.repository import RepositoryMiner
+from iacminer.repository import RepositoryMiner
 
-miner = RepositoryMiner(token = os.getenv('GITHUB_ACCESS_TOKEN'),
+miner = RepositoryMiner(access_token = os.getenv('GITHUB_ACCESS_TOKEN'),
                         path_to_repo='path/to/cloned/repository',
                         branch='development', # Optional (default='master')
-                        owner='radon-h2020',  # Optional (default=None)
-                        repo='radon-iac-miner')  # Optional (default=None)
+                        repo_owner='radon-h2020',  # Optional (default=None)
+                        repo_name='radon-iac-miner')  # Optional (default=None)
 
 for metrics in miner.mine():
     print(metrics)
@@ -93,7 +93,7 @@ for metrics in miner.mine():
 ```python
 import os
 from iacminer.miners.github import GithubMiner
-from iacminer.miners.repository import RepositoryMiner
+from iacminer.repository import RepositoryMiner
 
 gh_miner = GithubMiner(access_token = os.getenv('GITHUB_ACCESS_TOKEN'),
                        min_stars=<int>,   # Optional (default 0)
@@ -102,11 +102,11 @@ gh_miner = GithubMiner(access_token = os.getenv('GITHUB_ACCESS_TOKEN'),
 
 for repository in gh_miner.mine():
     print(repository)
-    repo_miner = RepositoryMiner(token = os.getenv('GITHUB_ACCESS_TOKEN'),
+    repo_miner = RepositoryMiner(access_token = os.getenv('GITHUB_ACCESS_TOKEN'),
                                  path_to_repo='path/to/cloned/repository',
                                  branch='development', # Optional (default='master')
-                                 owner='radon-h2020',  # Optional (default=None)
-                                 repo='radon-iac-miner')  # Optional (default=None)
+                                 repo_owner='radon-h2020',  # Optional (default=None)
+                                 repo_name='radon-iac-miner')  # Optional (default=None)
                                  
     # Mine repository as previous example ...
 ```
