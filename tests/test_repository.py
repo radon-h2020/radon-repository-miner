@@ -7,7 +7,7 @@ from pydriller import GitRepository
 from iacminer.file import LabeledFile
 from iacminer.repository import RepositoryMiner
 
-ROOT = os.path.realpath(__file__).rsplit(os.sep, 3)[0]
+ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
 PATH_TO_REPO = os.path.join(ROOT, 'test_data', 'adriagalin', 'ansible.motd')
 
 BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'ansible_bug', 'Type: Bug', 'Type: bug', 'type: bug 🐛', 'type:bug',
