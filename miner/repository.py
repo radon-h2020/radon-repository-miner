@@ -6,8 +6,8 @@ import github
 import re
 
 from typing import Generator, NewType, List, Set
-from iacminer import filters
-from iacminer.file import FixingFile, LabeledFile
+from miner import filters
+from miner.file import FixingFile, LabeledFile
 from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
 

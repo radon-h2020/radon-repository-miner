@@ -8,8 +8,8 @@ from datetime import datetime
 from getpass import getpass
 
 from dotenv import load_dotenv
-from iacminer.repository import RepositoryMiner
-from iacminer.report import create_report
+from miner.repository import RepositoryMiner
+from miner.report import create_report
 
 with open('config.json', 'r') as in_stream:
     configuration = json.load(in_stream)

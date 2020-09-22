@@ -4,7 +4,7 @@ This module is responsible to generate the HTML report for the mining
 import datetime
 
 from typing import List
-from iacminer.file import LabeledFile
+from miner.file import LabeledFile
 
 
 def create_report(repo_owner:str, repo_name: str, labeled_files: List[LabeledFile]) -> str:
