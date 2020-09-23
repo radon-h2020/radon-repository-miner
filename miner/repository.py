@@ -86,7 +86,7 @@ class RepositoryMiner:
 
         return labels
 
-    def get_closed_issues(self, label: str) -> Set[Issue]:
+    def get_closed_issues(self, label: str) -> List[Issue]:
         """
         Get all the closed issues with a given label
 
@@ -96,9 +96,9 @@ class RepositoryMiner:
 
         repo = self.__github.get_repo('/'.join([self.repo_owner, self.repo_name]))  # repo_owner/repo_name
         label = repo.get_label(label)
-        issues = set()
+        issues = list()
         for issue in repo.get_issues(state='closed', labels=[label], sort='created', direction='desc'):
-            issues.add(issue)
+            issues.append(issue)
 
         return issues
 
