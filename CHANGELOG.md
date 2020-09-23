@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.2.1]
+- Replaced issues in get_closed_issues from set to list to fix error 'Unashable type: Issue'
+
+## [0.2.0]
+- Released new standalone version. GithubMiner is not supported anymore and has been moved to its own repository.
+
 ## [0.1.3]
 - The mine-repository option is now supported
 

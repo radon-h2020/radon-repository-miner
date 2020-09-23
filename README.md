@@ -61,4 +61,5 @@ Running the tool from command-line generates an HTML report accessible at *\<des
 
 
 ## Current release
-## [0.2.0]
+## [0.2.1]
+- Replaced issues in get_closed_issues from set to list to fix error 'Unashable type: Issue'
