@@ -289,7 +289,7 @@ class RepositoryMiner:
                                       label=label,
                                       fixing_commit=file.fic)
 
-                    if idx_commit == idx_bic:
+                    if idx_commit == idx_bic and file in labeling[file.filepath]:
                         labeling[file.filepath].remove(file)
 
             # Handle file renaming

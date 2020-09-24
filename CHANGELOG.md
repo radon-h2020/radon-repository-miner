@@ -1,4 +1,6 @@
 # CHANGELOG
+## [0.2.2]
+- Fixed minor bugs
 
 ## [0.2.1]
 - Replaced issues in get_closed_issues from set to list to fix error 'Unashable type: Issue'
