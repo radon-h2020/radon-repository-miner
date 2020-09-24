@@ -272,25 +272,20 @@ class RepositoryMiner:
 
             for files in labeling.values():
                 for file in files:
+
                     idx_fic = self.commit_hashes.index(file.fic)
                     idx_bic = self.commit_hashes.index(file.bic)
                     idx_commit = self.commit_hashes.index(commit.hash)
 
                     if idx_fic > idx_commit >= idx_bic:
-                        label = LabeledFile.Label.FAILURE_PRONE
-                    else:
-                        # label = LabeledFile.Label.CLEAN
-                        # uncomment and remove continue if want to support labeling for 'clean' files.
-                        # If the case, update test_mine
-                        continue
+                        yield LabeledFile(filepath=file.filepath,
+                                          commit=commit.hash,
+                                          label=LabeledFile.Label.FAILURE_PRONE,
+                                          fixing_commit=file.fic)
 
-                    yield LabeledFile(filepath=file.filepath,
-                                      commit=commit.hash,
-                                      label=label,
-                                      fixing_commit=file.fic)
-
-                    if idx_commit == idx_bic and file in labeling[file.filepath]:
-                        labeling[file.filepath].remove(file)
+                    if idx_commit == idx_bic and file.filepath in labeling:
+                        if file in labeling[file.filepath]:
+                            labeling[file.filepath].remove(file)
 
             # Handle file renaming
             for modified_file in commit.modifications:

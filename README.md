@@ -61,5 +61,5 @@ Running the tool from command-line generates an HTML report accessible at *\<des
 
 
 ## Current release
-## [0.2.2]
-- Fixed minor bugs
+## [0.2.3]
+- Bug-fixing
