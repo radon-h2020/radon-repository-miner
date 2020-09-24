@@ -60,6 +60,5 @@ You may want to avoid the previous step. If so, add ```GITHUB_ACCESS_TOKEN=<past
 Running the tool from command-line generates an HTML report accessible at *\<dest\>/report.html*.
 
 
-## Current release
-## [0.2.3]
-- Bug-fixing
+## CHANGELOG
+See the [CHANGELOG](CHANGELOG.md) for information about the release history.

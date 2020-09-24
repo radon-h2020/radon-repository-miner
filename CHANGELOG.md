@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.2.4]
+- Bug-fixing
+
 ## [0.2.3]
 - Bug-fixing
 

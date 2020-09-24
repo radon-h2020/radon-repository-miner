@@ -296,7 +296,8 @@ class RepositoryMiner:
                             commit.hash) >= self.commit_hashes.index(file.bic):
 
                         if modified_file.change_type == ModificationType.ADD:
-                            labeling[filepath].remove(file)
+                            if filepath in labeling and file in labeling[filepath]:
+                                labeling[filepath].remove(file)
                         elif modified_file.change_type == ModificationType.RENAME:
                             file.filepath = modified_file.old_path
                         break
