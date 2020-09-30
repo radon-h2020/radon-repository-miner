@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.2.6]
+- Bugfix.
+  
 ## [0.2.5]
 - The module miner has been renamed to repositoryminer, to avoid misleading imports in third-party applications.
   

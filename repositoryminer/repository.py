@@ -260,7 +260,7 @@ class RepositoryMiner:
         :return: yields labeled files
         """
 
-        if not self.fixing_files:
+        if not (self.fixing_commits or self.fixing_files):
             yield None
 
         labeling = dict()
