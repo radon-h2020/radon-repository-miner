@@ -1,6 +1,6 @@
 site_name: RepositoryMiner
 repo_name: GitHub
-repo_url: https://github.com/radon-h2020/radon-repository-miner/
+repo_url: https://github.com/radon-h2020/radon-repository-repositoryminer/
 nav:
     - Getting Started:
         - Quick Start: index.md

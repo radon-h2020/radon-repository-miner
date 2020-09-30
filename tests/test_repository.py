@@ -7,8 +7,8 @@ import unittest
 from dotenv import load_dotenv
 
 from pydriller import GitRepository
-from miner.file import LabeledFile
-from miner.repository import RepositoryMiner
+from repositoryminer.file import LabeledFile
+from repositoryminer.repository import RepositoryMiner
 
 ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
 PATH_TO_REPO = os.path.join(ROOT, 'test_data', 'adriagalin', 'ansible.motd')

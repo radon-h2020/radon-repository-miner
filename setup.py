@@ -14,7 +14,7 @@ with open("README.md", "r") as fh:
 
 VERSION = config.get("version", "0.0")
 
-setup(name='repository_miner',
+setup(name='repository-miner',
       version=VERSION,
       description='A tool to mine IaC-based repositories.',
       long_description=long_description,
@@ -25,16 +25,16 @@ setup(name='repository_miner',
       url='https://github.com/radon-h2020/radon-repository-miner',
       download_url=f'https://github.com/radon-h2020/radon-reposiotry-miner/archive/{VERSION}.tar.gz',
       packages=find_packages(exclude=('tests',)),
-      entry_points = {
-        'console_scripts': ['repository-miner=miner.command_line:main'],
+      entry_points={
+          'console_scripts': ['repository-miner=repositoryminer.command_line:main'],
       },
       classifiers=[
-         "Development Status :: 3 - Alpha",
-         "Intended Audience :: Developers",
-         "Programming Language :: Python :: 3.7",
-         "License :: OSI Approved :: Apache Software License",
-         "Topic :: Software Development :: Libraries :: Python Modules",
-         "Operating System :: OS Independent"
+          "Development Status :: 3 - Alpha",
+          "Intended Audience :: Developers",
+          "Programming Language :: Python :: 3.7",
+          "License :: OSI Approved :: Apache Software License",
+          "Topic :: Software Development :: Libraries :: Python Modules",
+          "Operating System :: OS Independent"
       ],
       insall_requires=requirements
-)
+      )

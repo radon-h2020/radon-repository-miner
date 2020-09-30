@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.2.5]
+- The module miner has been renamed to repositoryminer, to avoid misleading imports in third-party applications.
+  
+  **Important:** be sure to rename *import miner* into *import repositoryminer* in your code.
+
 ## [0.2.4]
 - Bug-fixing
 

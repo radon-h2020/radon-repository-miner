@@ -6,8 +6,8 @@ import github
 import re
 
 from typing import Generator, NewType, List, Set
-from miner import filters
-from miner.file import FixingFile, LabeledFile
+from repositoryminer import filters
+from repositoryminer.file import FixingFile, LabeledFile
 from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
 
@@ -19,6 +19,8 @@ BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'B
                       'kind/bug', 'kind/bugs', 'bug/bugfix', 'bugfix', 'critical-bug', '01 type: bug', 'bug_report',
                       'minor-bug'}
 
+
+FIXING_COMMITS_REGEX = r'(bug|fix|error|crash|problem|fail|defect|patch)'
 
 class RepositoryMiner:
     """
@@ -32,7 +34,7 @@ class RepositoryMiner:
                  repo_name: str,
                  branch: str = 'master'):
         """
-        Initialize a new miner for a software repository.
+        Initialize a new RepositoryMiner for a software repository.
 
         :param path_to_repo: the path to the repository to analyze;
         :param repo_owner: the repository's owner;
@@ -102,7 +104,7 @@ class RepositoryMiner:
 
         return issues
 
-    def get_fixing_commits_from_closed_issues(self, labels: Set[str]) -> List[str]:
+    def get_fixing_commits_from_closed_issues(self, labels: Set[str] = None) -> List[str]:
         """
         Collect fixing-commit hashes by analyzing closed issues related to bugs.
         :param labels: bug-related labels (e.g., bug, bugfix, type: bug)
@@ -138,7 +140,7 @@ class RepositoryMiner:
 
         return fixes_from_issues
 
-    def get_fixing_commits_from_commit_messages(self, regex: str) -> List[str]:
+    def get_fixing_commits_from_commit_messages(self, regex: str = None) -> List[str]:
         """
         Collect fixing-commit hashes by analyzing commit messages.
         :param regex: a regular expression to identify fixing-commit (e.g., '(bug|fix|error|crash|problem|fail)')
@@ -146,7 +148,7 @@ class RepositoryMiner:
         """
 
         if not regex:
-            regex = r'(bug|fix|error|crash|problem|fail|defect|patch)'
+            regex = FIXING_COMMITS_REGEX
 
         fixes_from_message = list()
 
@@ -314,13 +316,6 @@ class RepositoryMiner:
         regex is used, that is: r'(bug|fix|error|crash|problem|fail|defect|patch)'
         :return: yields LabeledFile objects
         """
-
-        if not labels:
-            labels = BUG_RELATED_LABELS
-
-        if not regex:
-            regex = r'(bug|fix|error|crash|problem|fail|defect|patch)'
-
         self.get_fixing_commits_from_closed_issues(labels)
         self.get_fixing_commits_from_commit_messages(regex)
         self.get_fixing_files()

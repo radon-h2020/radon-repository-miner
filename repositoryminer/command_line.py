@@ -8,8 +8,8 @@ from datetime import datetime
 from getpass import getpass
 
 from dotenv import load_dotenv
-from miner.repository import RepositoryMiner
-from miner.report import create_report
+from repositoryminer.repository import RepositoryMiner
+from repositoryminer.report import create_report
 
 with open('config.json', 'r') as in_stream:
     configuration = json.load(in_stream)
@@ -30,7 +30,7 @@ def valid_path(x: str) -> str:
 def get_parser():
     description = 'A Python library to mine Infrastructure-as-Code based software repositories.'
 
-    parser = argparse.ArgumentParser(prog='iac-repository-miner', description=description)
+    parser = argparse.ArgumentParser(prog='iac-repository-repositoryminer', description=description)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + configuration.get('version', '0.0'))
 
     parser.add_argument(action='store',
