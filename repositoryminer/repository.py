@@ -261,7 +261,7 @@ class RepositoryMiner:
         """
 
         if not (self.fixing_commits or self.fixing_files):
-            yield None
+            return
 
         labeling = dict()
         for file in self.fixing_files:

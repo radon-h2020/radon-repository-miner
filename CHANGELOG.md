@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.2.7]
+- Bugfix.
+
 ## [0.2.6]
 - Bugfix.
   
