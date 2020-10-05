@@ -5,7 +5,7 @@
 ![python-version](https://img.shields.io/pypi/pyversions/repository-miner)
 ![release-date](https://img.shields.io/github/release-date/radon-h2020/radon-repository-miner)
 ![license](https://img.shields.io/pypi/l/repository-miner)
-
+![lgtm](https://img.shields.io/lgtm/grade/python/github/radon-h2020/radon-repository-miner)
 
 # radon-repository-miner
 A Python package for mining Infrastructure-as-Code software repositories.
