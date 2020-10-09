@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.2.8]
+- Added conditions in get_fixing_commits_from_* to speed up execution when fixing-commits are provided in advance. 
+In this way, the miner avoid parsing commit messages for those commits already known to be fixing-commits.
+
 ## [0.2.7]
 - Bugfix.
 
