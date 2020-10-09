@@ -19,8 +19,8 @@ BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'B
                       'kind/bug', 'kind/bugs', 'bug/bugfix', 'bugfix', 'critical-bug', '01 type: bug', 'bug_report',
                       'minor-bug'}
 
-
 FIXING_COMMITS_REGEX = r'(bug|fix|error|crash|problem|fail|defect|patch)'
+
 
 class RepositoryMiner:
     """
@@ -125,7 +125,7 @@ class RepositoryMiner:
                     is_merged = e.event.lower() == 'merged'
                     is_closed = e.event.lower() == 'closed'
 
-                    if (is_merged or is_closed) and e.commit_id:
+                    if (is_merged or is_closed) and e.commit_id and e.commit_id not in self.fixing_commits:
                         fixes_from_issues.append(e.commit_id)
 
         if fixes_from_issues:
@@ -153,6 +153,9 @@ class RepositoryMiner:
         fixes_from_message = list()
 
         for commit in RepositoryMining(self.path_to_repo, only_in_branch=self.branch).traverse_commits():
+
+            if commit.hash in self.fixing_commits:
+                continue
 
             # Remove words ending with 'bug' or 'fix' (e.g., 'debug' and 'prefix') from the commit message
             p = re.compile(r'(\w+(bug|fix)\w)*', re.IGNORECASE)

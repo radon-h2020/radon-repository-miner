@@ -8,6 +8,7 @@ from datetime import datetime
 from getpass import getpass
 
 from dotenv import load_dotenv
+from repositoryminer.file import LabeledFileEncoder
 from repositoryminer.repository import RepositoryMiner
 from repositoryminer.report import create_report
 
@@ -108,12 +109,16 @@ def main():
     with io.open(filename_html, "w", encoding="utf-8") as f:
         f.write(html)
 
-    #with open(filename_json, "w") as f:
-    #    json.dump(labeled_files, f)
+    json_files = []
+    for file in labeled_files:
+        json_files.append(json.dumps(file, cls=LabeledFileEncoder))
+
+    with open(filename_json, "w") as f:
+        json.dump(json_files, f)
 
     if args.verbose:
         print(f'HTML report created at {filename_html}')
-        #print(f'JSON report created at {filename_json}')
+        print(f'JSON report created at {filename_json}')
 
     exit(0)
 

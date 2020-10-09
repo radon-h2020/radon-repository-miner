@@ -1,4 +1,18 @@
 from enum import Enum
+import json
+
+
+class LabeledFileEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, LabeledFile):
+            return {
+                "filepath": o.filepath,
+                "commit": o.commit,
+                "label": 'clean' if o.label == LabeledFile.Label.CLEAN else 'failure-prone',
+                "fixing_commit": o.fixing_commit
+            }
+
+        return json.JSONEncoder.default(self, o)
 
 
 class FixingFile:
