@@ -1,3 +1,4 @@
+![lgtm](https://img.shields.io/lgtm/grade/python/github/radon-h2020/radon-repository-miner)
 ![Issues](https://img.shields.io/github/issues/radon-h2020/radon-repository-miner)
 ![pypi-version](https://img.shields.io/pypi/v/repository-miner)
 ![pypi-status](https://img.shields.io/pypi/status/repository-miner)
@@ -57,8 +58,7 @@ You may want to avoid the previous step. If so, add ```GITHUB_ACCESS_TOKEN=<past
 
 
 ### Output
-Running the tool from command-line generates an HTML report accessible at *\<dest\>/report.html*.
+Running the tool from command-line generates:
+* an HTML report accessible at *\<dest\>/report.html*;
+* a JSON report accessible at *\<dest\>/report.json*;
 
-
-## Current release
-## [0.2.0]

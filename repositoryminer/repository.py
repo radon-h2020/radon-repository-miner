@@ -48,6 +48,7 @@ class RepositoryMiner:
         self.repo_name = repo_name
         self.branch = branch
 
+        self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
         self.fixing_commits = list()
         self.fixing_files = list()
 
@@ -122,10 +123,14 @@ class RepositoryMiner:
         for label in labels:
             for issue in self.get_closed_issues(label):
                 for e in issue.get_events():
+
+                    if e.commit_id in self.exclude_commits or e.commit_id in self.fixing_commits:
+                        continue
+
                     is_merged = e.event.lower() == 'merged'
                     is_closed = e.event.lower() == 'closed'
 
-                    if (is_merged or is_closed) and e.commit_id and e.commit_id not in self.fixing_commits:
+                    if (is_merged or is_closed) and e.commit_id:
                         fixes_from_issues.append(e.commit_id)
 
         if fixes_from_issues:
@@ -154,7 +159,7 @@ class RepositoryMiner:
 
         for commit in RepositoryMining(self.path_to_repo, only_in_branch=self.branch).traverse_commits():
 
-            if commit.hash in self.fixing_commits:
+            if (commit.hash in self.exclude_commits) or (commit.hash in self.fixing_commits):
                 continue
 
             # Remove words ending with 'bug' or 'fix' (e.g., 'debug' and 'prefix') from the commit message

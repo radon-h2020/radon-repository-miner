@@ -1,4 +1,12 @@
 # API Reference
+   
+*  **```self.exclude_commits```**  - There may be several false-positives among the identified fixing-commits. 
+This variable is used to set up in advance the commits to exclude during the mining.
+
+*  **```self.fixing_commits: List[str]```**  - Contains the commits that are supposed to fix a bug according to the labels and regex passed by the user. 
+   These are set up during the mining, although it can be defined in advance to speed up the mining avoiding to analyze commits that are already present here.
+
+*  **```self.fixing_files: List[FixingFiles]```**  - Contains the files modified i fixing-commits.
 
 *  **```discard_non_iac_fixing_commits(commits: List[str])```**  - Given a list of commits, discard commits that do not modify IaC files (i.e., Ansible).
 *  **```get_labels() -> Set[str]```**  - Get al the issue labels in the repository.
