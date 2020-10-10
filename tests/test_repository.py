@@ -7,7 +7,7 @@ import unittest
 from dotenv import load_dotenv
 
 from pydriller import GitRepository
-from repositoryminer.file import LabeledFile
+from repositoryminer.file import FixingFile, LabeledFile
 from repositoryminer.repository import RepositoryMiner
 
 ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
@@ -38,7 +38,8 @@ class RepositoryMinerTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         self.repo_miner.fixing_commits = list()  # reset list of fixing-commits
-        self.repo_miner.exclude_commits = set()  # reset list of commits to ignore
+        self.repo_miner.exclude_commits = set()  # reset list of commits to exclude
+        self.repo_miner.exclude_fixing_files = list()  # reset list of fixing-files to exclude
 
     def test_get_labels(self):
         labels = self.repo_miner.get_labels()
@@ -93,7 +94,6 @@ class RepositoryMinerTestCase(unittest.TestCase):
                                        'be34c67e75c2788742f3e87313a0b646af1006db'}
 
     def test_get_fixing_files(self):
-        self.repo_miner.get_fixing_commits_from_closed_issues({'bug'})
         self.repo_miner.get_fixing_commits_from_commit_messages(
             regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
         fixing_files = self.repo_miner.get_fixing_files()
@@ -116,9 +116,30 @@ class RepositoryMinerTestCase(unittest.TestCase):
     def test_get_fixing_files_with_exclude_commits(self):
         self.repo_miner.exclude_commits = {'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703'}
 
-        self.repo_miner.get_fixing_commits_from_closed_issues({'bug'})
         self.repo_miner.get_fixing_commits_from_commit_messages(
             regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
+        fixing_files = self.repo_miner.get_fixing_files()
+
+        assert fixing_files
+        assert len(fixing_files) == 2
+
+        assert fixing_files[0].filepath == os.path.join('tasks', 'main.yml')
+        assert fixing_files[0].fic == 'be34c67e75c2788742f3e87313a0b646af1006db'  # Jun 20, 2019
+        assert fixing_files[0].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
+
+        assert fixing_files[1].filepath == os.path.join('meta', 'main.yml')
+        assert fixing_files[1].fic == '72377bb59a484ac7c6c6954ce6bf796eb6143f86'  # Aug 15, 2015
+        assert fixing_files[1].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
+
+    def test_get_fixing_files_with_exclude_files(self):
+
+        self.repo_miner.exclude_fixing_files = [
+            FixingFile(filepath=os.path.join('meta', 'main.yml'),
+                       fic='f9ac8bbc68dedb742e5825c5cf47bca8e6f71703',
+                       bic='e3a4420937cd9061a6525d541d525ac2167d7322')
+        ]
+
+        self.repo_miner.get_fixing_commits_from_commit_messages(r'(bug|fix|error|crash|problem|fail|defect|patch)')
         fixing_files = self.repo_miner.get_fixing_files()
 
         assert fixing_files

@@ -49,6 +49,7 @@ class RepositoryMiner:
         self.branch = branch
 
         self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
+        self.exclude_fixing_files = list()  # This is to set up files in fixing-commits known to be false-positive
         self.fixing_commits = list()
         self.fixing_files = list()
 
@@ -229,6 +230,9 @@ class RepositoryMiner:
 
                 # Not interested in files other than Ansible
                 if not filters.is_ansible_file(modified_file.new_path):
+                    continue
+
+                if any(file for file in self.exclude_fixing_files if file.filepath == modified_file.new_path and file.fic == commit.hash):
                     continue
 
                 # Identify bug-inducing commits. Dict[modified_file, Set[commit_hashes]]
