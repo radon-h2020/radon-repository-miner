@@ -8,6 +8,9 @@ GithubIssue = NewType('Issue', github.Issue)
 
 class SVCHost(ABC):
 
+    def __init__(self, access_token: str, namespace: str, project_name: str):
+        pass
+
     @abstractmethod
     def get_labels(self) -> Set[str]:
         """
@@ -29,25 +32,24 @@ class SVCHost(ABC):
 
 class GithubHost(SVCHost):
 
-    def __init__(self, access_token: str, owner: str, name: str):
-        self.__host = github.Github(access_token)
-        self.repo_owner = owner
-        self.repo_name = name
+    def __init__(self, access_token: str, namespace: str, project_name: str):
+        super().__init__(access_token, namespace, project_name)
+
+        self.__repository = github.Github(access_token).get_repo(f'{namespace}/{project_name}')
 
     def get_labels(self) -> Set[str]:
-        repo = self.__host.get_repo('/'.join([self.repo_owner, self.repo_name]))  # repo_owner/repo_name
+
         labels = set()
-        for label in repo.get_labels():
+        for label in self.__repository.get_labels():
             if type(label) == github.Label.Label:
                 labels.add(label.name)
 
         return labels
 
     def get_closed_issues(self, label: str) -> List[GithubIssue]:
-        repo = self.__host.get_repo('/'.join([self.repo_owner, self.repo_name]))  # repo_owner/repo_name
-        label = repo.get_label(label)
+        label = self.__repository.get_label(label)
         issues = list()
-        for issue in repo.get_issues(state='closed', labels=[label], sort='created', direction='desc'):
+        for issue in self.__repository.get_issues(state='closed', labels=[label], sort='created', direction='desc'):
             issues.append(issue)
 
         return issues
