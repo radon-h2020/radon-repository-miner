@@ -41,19 +41,6 @@ class RepositoryMinerTestCase(unittest.TestCase):
         self.repo_miner.exclude_commits = set()  # reset list of commits to exclude
         self.repo_miner.exclude_fixing_files = list()  # reset list of fixing-files to exclude
 
-    def test_get_labels(self):
-        labels = self.repo_miner.get_labels()
-        labels = BUG_RELATED_LABELS.intersection(labels)
-
-        assert labels
-        assert len(labels) == 1
-        assert labels == {'bug'}
-
-    def test_get_closed_issues(self):
-        issues = self.repo_miner.get_closed_issues('bug')
-        assert issues is not None
-        assert len(issues) == 0
-
     def test_get_fixing_commits_from_closed_issues(self):
         hashes = self.repo_miner.get_fixing_commits_from_closed_issues({'bug'})
         assert not hashes

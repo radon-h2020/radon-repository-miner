@@ -6,12 +6,12 @@ import github
 import re
 
 from typing import Generator, NewType, List, Set
-from repositoryminer import filters
-from repositoryminer.file import FixingFile, LabeledFile
 from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
 
-Issue = NewType('Issue', github.Issue)
+from repositoryminer import filters
+from repositoryminer.file import FixingFile, LabeledFile
+from repositoryminer.hosts import GithubHost
 
 # Constants
 BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical', 'ansible_bug',
@@ -42,10 +42,9 @@ class RepositoryMiner:
         :param branch: the branch to analyze. Default 'master';
         """
 
-        self.__github = github.Github(access_token)
+        self.__host = GithubHost(access_token, repo_owner, repo_name)  # TODO: if github, else Gitlab host
+
         self.path_to_repo = path_to_repo
-        self.repo_owner = repo_owner
-        self.repo_name = repo_name
         self.branch = branch
 
         self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
@@ -76,36 +75,6 @@ class RepositoryMiner:
                 if commit.hash in commits:
                     commits.remove(commit.hash)
 
-    def get_labels(self) -> Set[str]:
-        """
-        Collect all the repository labels
-        :return: a set of labels
-        """
-
-        repo = self.__github.get_repo('/'.join([self.repo_owner, self.repo_name]))  # repo_owner/repo_name
-        labels = set()
-        for label in repo.get_labels():
-            if type(label) == github.Label.Label:
-                labels.add(label.name)
-
-        return labels
-
-    def get_closed_issues(self, label: str) -> List[Issue]:
-        """
-        Get all the closed issues with a given label
-
-        :param label: the issue label (e.g., 'bug')
-        :return: the set of closed issues with that label
-        """
-
-        repo = self.__github.get_repo('/'.join([self.repo_owner, self.repo_name]))  # repo_owner/repo_name
-        label = repo.get_label(label)
-        issues = list()
-        for issue in repo.get_issues(state='closed', labels=[label], sort='created', direction='desc'):
-            issues.append(issue)
-
-        return issues
-
     def get_fixing_commits_from_closed_issues(self, labels: Set[str] = None) -> List[str]:
         """
         Collect fixing-commit hashes by analyzing closed issues related to bugs.
@@ -117,12 +86,12 @@ class RepositoryMiner:
             labels = BUG_RELATED_LABELS
 
         # Get the repository labels (self.get_labels()) and keep only those matching the input labels, if any
-        labels = labels.intersection(self.get_labels())
+        labels = labels.intersection(self.__host.get_labels())
 
         fixes_from_issues = list()
 
         for label in labels:
-            for issue in self.get_closed_issues(label):
+            for issue in self.__host.get_closed_issues(label):
                 for e in issue.get_events():
 
                     if e.commit_id in self.exclude_commits or e.commit_id in self.fixing_commits:
@@ -232,7 +201,8 @@ class RepositoryMiner:
                 if not filters.is_ansible_file(modified_file.new_path):
                     continue
 
-                if any(file for file in self.exclude_fixing_files if file.filepath == modified_file.new_path and file.fic == commit.hash):
+                if any(file for file in self.exclude_fixing_files if
+                       file.filepath == modified_file.new_path and file.fic == commit.hash):
                     continue
 
                 # Identify bug-inducing commits. Dict[modified_file, Set[commit_hashes]]
