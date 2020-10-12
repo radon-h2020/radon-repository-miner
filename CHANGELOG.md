@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.2.10]
+- It is now possible to set up a list of ixing-files to exclude from mining.
+
 ## [0.2.9]
 - It is now possible to set up a list of commits to ignore before mining.
 
