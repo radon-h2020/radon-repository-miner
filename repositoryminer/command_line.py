@@ -31,7 +31,7 @@ def valid_path(x: str) -> str:
 def get_parser():
     description = 'A Python library to mine Infrastructure-as-Code based software repositories.'
 
-    parser = argparse.ArgumentParser(prog='iac-repository-repositoryminer', description=description)
+    parser = argparse.ArgumentParser(prog='iac-repository-miner', description=description)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + configuration.get('version', '0.0'))
 
     parser.add_argument(action='store',
