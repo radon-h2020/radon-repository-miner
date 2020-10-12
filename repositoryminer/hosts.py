@@ -80,7 +80,6 @@ class GitlabHost(SVCHost):
         return set([label.name for label in self.__project.labels.list()])
 
     def get_closed_issues(self, label: str) -> List[GithubIssue]:
-        label = self.__project.get_label(label)
         return self.__project.issues.list(state='closed', labels=[label], all=True)
 
     def get_commit_closing_issue(self, issue) -> str:
