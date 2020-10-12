@@ -92,16 +92,11 @@ class RepositoryMiner:
 
         for label in labels:
             for issue in self.__host.get_closed_issues(label):
-                for e in issue.get_events():
-
-                    if e.commit_id in self.exclude_commits or e.commit_id in self.fixing_commits:
-                        continue
-
-                    is_merged = e.event.lower() == 'merged'
-                    is_closed = e.event.lower() == 'closed'
-
-                    if (is_merged or is_closed) and e.commit_id:
-                        fixes_from_issues.append(e.commit_id)
+                commit = self.__host.get_commit_closing_issue(issue)
+                if (commit in self.exclude_commits) or (commit in self.fixing_commits):
+                    continue
+                elif commit:
+                    fixes_from_issues.append(commit)
 
         if fixes_from_issues:
             # Discard commits that do not touch IaC files

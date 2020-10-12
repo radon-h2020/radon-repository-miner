@@ -1,4 +1,5 @@
-gitpython==3.1.8
+gitpython==3.1.9
 python-dotenv==0.14.0
 pydriller==1.15.2
 pygithub==1.53
+python-gitlab~=2.5.0
