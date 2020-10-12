@@ -23,7 +23,7 @@ setup(name='repository-miner',
       maintainer='Stefano Dalla Palma',
       author_email='stefano.dallapalma0@gmail.com',
       url='https://github.com/radon-h2020/radon-repository-miner',
-      download_url=f'https://github.com/radon-h2020/radon-reposiotry-miner/archive/{VERSION}.tar.gz',
+      download_url=f'https://github.com/radon-h2020/radon-repository-miner/archive/{VERSION}.tar.gz',
       packages=find_packages(exclude=('tests',)),
       entry_points={
           'console_scripts': ['iac-repository-miner=repositoryminer.command_line:main'],
