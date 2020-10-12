@@ -34,6 +34,7 @@ A Python library to mine Infrastructure-as-Code based software repositories.
 
 positional arguments:
   path_to_repo     the local path to the git repository
+  {github,gitlab}  the source code versioning host
   owner            the repository owner
   name             the repository name
   dest             destination folder for the reports
@@ -49,7 +50,7 @@ optional arguments:
 Once generated, paste the token in the input field when asked. For example:
 
 ```
-repository-miner path/to/the/cloned/repository radon-h2020 radon-repository-miner .
+repository-miner path/to/the/cloned/repository github radon-h2020 radon-repository-miner .
 
 Github access token: <paste your token here>
 ```  

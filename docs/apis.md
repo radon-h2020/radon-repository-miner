@@ -1,7 +1,10 @@
 # API Reference
    
-*  **```self.exclude_commits```**  - There may be several false-positives among the identified fixing-commits. 
+*  **```self.exclude_commits: List[str]```**  - There may be several false-positives among the identified fixing-commits. 
 This variable is used to set up in advance the commits to exclude during the mining.
+   
+*  **```self.exclude_fixing_files: Lists[FixingFile]```**  - There may be several false-positives among the identified fixing-files. 
+This variable is used to set up in advance the files to exclude during the mining for a given commit.
 
 *  **```self.fixing_commits: List[str]```**  - Contains the commits that are supposed to fix a bug according to the labels and regex passed by the user. 
    These are set up during the mining, although it can be defined in advance to speed up the mining avoiding to analyze commits that are already present here.

@@ -5,13 +5,13 @@ It requires that the repository to mine is cloned on the local machine.
 import github
 import re
 
-from typing import Generator, NewType, List, Set
+from typing import Generator, List, Set
 from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
 
 from repositoryminer import filters
 from repositoryminer.file import FixingFile, LabeledFile
-from repositoryminer.hosts import GithubHost
+from repositoryminer.hosts import GithubHost, GitlabHost
 
 # Constants
 BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical', 'ansible_bug',
@@ -30,6 +30,7 @@ class RepositoryMiner:
     def __init__(self,
                  access_token: str,
                  path_to_repo: str,
+                 host: str,
                  repo_owner: str,
                  repo_name: str,
                  branch: str = 'master'):
@@ -42,7 +43,12 @@ class RepositoryMiner:
         :param branch: the branch to analyze. Default 'master';
         """
 
-        self.__host = GithubHost(access_token, repo_owner, repo_name)  # TODO: if github, else Gitlab host
+        if host == 'github':
+            self.__host = GithubHost(access_token, repo_owner, repo_name)
+        elif host == 'gitlab':
+            self.__host = GitlabHost(access_token, repo_owner, repo_name)
+        else:
+            raise ValueError("Parameter host must be one among ('github', 'gitlab')")
 
         self.path_to_repo = path_to_repo
         self.branch = branch

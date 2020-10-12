@@ -40,6 +40,12 @@ def get_parser():
                         help='the local path to the git repository')
 
     parser.add_argument(action='store',
+                        dest='host',
+                        type=str,
+                        choices=['github', 'gitlab'],
+                        help='the source code versioning host')
+
+    parser.add_argument(action='store',
                         dest='owner',
                         type=str,
                         help='the repository owner')
@@ -86,6 +92,7 @@ def main():
     repository_miner = RepositoryMiner(access_token=token,
                                        path_to_repo=args.path_to_repo,
                                        branch=args.branch,
+                                       host=args.host,
                                        repo_owner=args.owner,
                                        repo_name=args.name)
 
