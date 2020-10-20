@@ -13,7 +13,7 @@ from radonminer.mining.ansible import AnsibleMiner
 from radonminer.mining.tosca import ToscaMiner
 from radonminer.report import create_report
 
-VERSION = '0.2.12'
+VERSION = '0.3.0'
 
 
 def valid_path(x: str) -> str:
