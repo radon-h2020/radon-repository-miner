@@ -13,12 +13,10 @@ from radonminer.mining.ansible import AnsibleMiner
 ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
 PATH_TO_REPO = os.path.join(ROOT, 'test_data', 'adriagalin', 'ansible.motd')
 
-BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'ansible_bug', 'Type: Bug', 'Type: bug', 'type: bug 🐛', 'type:bug',
-                      'type: bug', 'kind/bug', 'kind/bugs', 'bugfix', 'critical-bug', '01 type: bug', 'bug_report',
-                      'minor-bug'}
-
 
 class RepositoryMinerTestCase(unittest.TestCase):
+
+    git_repo = None
 
     @classmethod
     def setUpClass(cls):
@@ -34,7 +32,8 @@ class RepositoryMinerTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.git_repo.reset()
+        if cls.git_repo:
+            cls.git_repo.reset()
 
     def setUp(self) -> None:
         self.repo_miner.fixing_commits = list()  # reset list of fixing-commits

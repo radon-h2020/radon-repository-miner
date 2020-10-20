@@ -1,3 +1,4 @@
+![Build](https://github.com/radon-h2020/radon-repository-miner/workflows/Build/badge.svg)
 ![lgtm](https://img.shields.io/lgtm/grade/python/github/radon-h2020/radon-repository-miner)
 ![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/radon-h2020/radon-repository-miner)
 ![pypi-version](https://img.shields.io/pypi/v/repository-miner)

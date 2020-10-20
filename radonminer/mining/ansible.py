@@ -23,7 +23,7 @@ class AnsibleMiner(BaseMiner):
 
     def discard_undesired_fixing_commits(self, commits: List[str]):
         """
-        Discard commits that do not touch Ansible files
+        Discard commits that do not touch Ansible files.
         :commits: the original list of commits
         """
         # get a sorted list of commits in ascending order of date
