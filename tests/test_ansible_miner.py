@@ -74,7 +74,7 @@ class RepositoryMinerTestCase(unittest.TestCase):
                           'be34c67e75c2788742f3e87313a0b646af1006db',
                           'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703']
 
-        self.repo_miner.discard_non_iac_fixing_commits(fixing_commits)
+        self.repo_miner.discard_undesired_fixing_commits(fixing_commits)
 
         assert set(fixing_commits) == {'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703',
                                        '72377bb59a484ac7c6c6954ce6bf796eb6143f86',
