@@ -1,4 +1,4 @@
-## How to install
+# How to install
 
 From [PyPI](https://pypi.org/project/repository-miner/):
 
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 pip install .
 ```
 
-## How to test
+# How to test
 
 ```
 pip install pytest

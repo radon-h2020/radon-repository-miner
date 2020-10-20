@@ -1,7 +1,13 @@
 # CHANGELOG
 
+## [0.3.0]
+- Renamed modules (repository -> mining.ansible, mining.tosca).
+- RepositoryMiner is now BaseMiner in mining.base, and is extended by AnsibleMiner in mining.ansible and ToscaMiner in mining.tosca.
+- Command-line changes (see the updated docs for usage).
+- Refactoring.
+
 ## [0.2.10]
-- It is now possible to set up a list of ixing-files to exclude from mining.
+- It is now possible to set up a list of fixing-files to exclude from mining.
 
 ## [0.2.9]
 - It is now possible to set up a list of commits to ignore before mining.
