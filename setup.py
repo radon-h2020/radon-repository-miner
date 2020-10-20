@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
-import json
 from setuptools import setup, find_packages
-
-with open("config.json", "r") as fh:
-    config = json.load(fh)
 
 with open("requirements.txt", "r") as reqs_file:
     requirements = reqs_file.read().splitlines()
@@ -12,7 +8,7 @@ with open("requirements.txt", "r") as reqs_file:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-VERSION = config.get("version", "0.0")
+VERSION = '0.2.12'
 
 setup(name='repository-miner',
       version=VERSION,
