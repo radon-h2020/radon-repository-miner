@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import NewType, List, Set
+from typing import NewType, List, Set, Union
 
 import github
 import gitlab
@@ -10,7 +10,7 @@ GithubIssue = NewType('Issue', github.Issue)
 
 class SVCHost(ABC):
 
-    def __init__(self, access_token: str, namespace: str, project_name: str):
+    def __init__(self):
         pass
 
     @abstractmethod
@@ -44,9 +44,9 @@ class SVCHost(ABC):
 
 class GithubHost(SVCHost):
 
-    def __init__(self, access_token: str, namespace: str, project_name: str):
-        super().__init__(access_token, namespace, project_name)
-        self.__repository = github.Github(access_token).get_repo(f'{namespace}/{project_name}')
+    def __init__(self, access_token: str, full_name_or_id: Union[str, int]):
+        super().__init__()
+        self.__repository = github.Github(access_token).get_repo(full_name_or_id)
 
     def get_labels(self) -> Set[str]:
 
@@ -72,9 +72,9 @@ class GithubHost(SVCHost):
 
 class GitlabHost(SVCHost):
 
-    def __init__(self, access_token: str, namespace: str, project_name: str):
-        super().__init__(access_token, namespace, project_name)
-        self.__project = gitlab.Gitlab('http://gitlab.com', access_token).projects.get(f'{namespace}/{project_name}')
+    def __init__(self, access_token: str, full_name_or_id: Union[str, int]):
+        super().__init__()
+        self.__project = gitlab.Gitlab('http://gitlab.com', access_token).projects.get(full_name_or_id)
 
     def get_labels(self) -> Set[str]:
         return set([label.name for label in self.__project.labels.list()])

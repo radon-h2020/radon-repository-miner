@@ -7,8 +7,8 @@ import unittest
 from dotenv import load_dotenv
 
 from pydriller import GitRepository
-from repositoryminer.file import FixingFile, LabeledFile
-from repositoryminer.repository import RepositoryMiner
+from radonminer.file import FixingFile, LabeledFile
+from radonminer.mining.ansible import AnsibleMiner
 
 ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
 PATH_TO_REPO = os.path.join(ROOT, 'test_data', 'adriagalin', 'ansible.motd')
@@ -26,11 +26,11 @@ class RepositoryMinerTestCase(unittest.TestCase):
         cls.git_repo = GitRepository(PATH_TO_REPO)
         cls.git_repo.reset()
         cls.git_repo.checkout('3a8d9b7ed430a3367d8d8616e0ba5d2bddb07b9e')
-        cls.repo_miner = RepositoryMiner(access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
-                                         path_to_repo=PATH_TO_REPO,
-                                         repo_owner='adriagalin',
-                                         repo_name='ansible.motd',
-                                         branch='master')
+        cls.repo_miner = AnsibleMiner(access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
+                                      path_to_repo=PATH_TO_REPO,
+                                      host='github',
+                                      full_name_or_id='adriagalin/ansible.motd',
+                                      branch='master')
 
     @classmethod
     def tearDownClass(cls):

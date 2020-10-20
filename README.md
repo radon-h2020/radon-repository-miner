@@ -24,7 +24,7 @@ pip install .
 ## Command-line usage
 
 ```
-usage: repository-miner [-h] [-v] [--branch BRANCH] [--verbose]
+usage: radon-miner [-h] [-v] [--branch BRANCH] [--verbose]
                             path_to_repo owner name dest
 
 A Python library to mine Infrastructure-as-Code based software repositories.
@@ -32,8 +32,7 @@ A Python library to mine Infrastructure-as-Code based software repositories.
 positional arguments:
   path_to_repo     the local path to the git repository
   {github,gitlab}  the source code versioning host
-  owner            the repository owner
-  name             the repository name
+  full_name_or_id  the repository full name or id
   dest             destination folder for the reports
 
 optional arguments:
@@ -47,13 +46,14 @@ optional arguments:
 Once generated, paste the token in the input field when asked. For example:
 
 ```
-repository-miner path/to/the/cloned/repository github radon-h2020 radon-repository-miner .
+radon-miner path/to/the/cloned/repository github radon-h2020/radon-repository-miner .
 
 Github access token: <paste your token here>
 ```  
 
 You may want to avoid the previous step. If so, add ```GITHUB_ACCESS_TOKEN=<paste here your token>``` to the environment variables.
 
+Same applies with the option `gitlab`. In that case, you might want to add  add ```GITLAB_ACCESS_TOKEN=<paste here your token>``` to the environment variables.
 
 ### Output
 Running the tool from command-line generates an HTML report accessible at *\<dest\>/report.html*.

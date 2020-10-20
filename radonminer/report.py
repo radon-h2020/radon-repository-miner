@@ -4,10 +4,10 @@ This module is responsible to generate the HTML report for the mining
 import datetime
 
 from typing import List
-from repositoryminer.file import LabeledFile
+from radonminer.file import LabeledFile
 
 
-def create_report(repo_owner:str, repo_name: str, labeled_files: List[LabeledFile]) -> str:
+def create_report(full_name_or_id:str, labeled_files: List[LabeledFile]) -> str:
     """
     Generate an HTML report for the crawled repositories.
     :param labeled_files: a list of labeled files
@@ -22,14 +22,13 @@ def create_report(repo_owner:str, repo_name: str, labeled_files: List[LabeledFil
             <tr>
               <th scope="row">{0}</th>
               <td>{1}</td>
-              <td><a href="https://github.com/{2}/{3}/blob/{4}/{1}" target="_blank">{4}</a></td>
-              <td><a href="https://github.com/{2}/{3}/commit/{5}" target="_blank">{5}</a></td>
+              <td><a href="https://github.com/{2}/blob/{3}/{1}" target="_blank">{3}</a></td>
+              <td><a href="https://github.com/{2}/commit/{4}" target="_blank">{4}</a></td>
             </tr>
         """.format(
             i+1,
             labeled_files[i].filepath,
-            repo_owner,
-            repo_name,
+            full_name_or_id,
             labeled_files[i].commit,
             labeled_files[i].fixing_commit
         )
@@ -79,8 +78,8 @@ def create_report(repo_owner:str, repo_name: str, labeled_files: List[LabeledFil
            
         </html> 
         """.format(
-        f'https://github.com/{repo_owner}/{repo_name}',
-        f'{repo_owner}/{repo_name}',
+        f'https://github.com/{full_name_or_id}',
+        full_name_or_id,
         generation_date,
         len(labeled_files),
         table_body)

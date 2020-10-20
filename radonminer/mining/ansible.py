@@ -5,13 +5,13 @@ It requires that the repository to mine is cloned on the local machine.
 import github
 import re
 
-from typing import Generator, List, Set
+from typing import Generator, List, Set, Union
 from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
 
-from repositoryminer import filters
-from repositoryminer.file import FixingFile, LabeledFile
-from repositoryminer.hosts import GithubHost, GitlabHost
+from radonminer import filters
+from radonminer.file import FixingFile, LabeledFile
+from radonminer.hosts import GithubHost, GitlabHost
 
 # Constants
 BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical', 'ansible_bug',
@@ -22,7 +22,7 @@ BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'B
 FIXING_COMMITS_REGEX = r'(bug|fix|error|crash|problem|fail|defect|patch)'
 
 
-class RepositoryMiner:
+class AnsibleMiner:
     """
     This class is responsible for mining the history of a repository to collect defect-prone and defect-free blueprints.
     """
@@ -31,22 +31,20 @@ class RepositoryMiner:
                  access_token: str,
                  path_to_repo: str,
                  host: str,
-                 repo_owner: str,
-                 repo_name: str,
+                 full_name_or_id: Union[str, int],
                  branch: str = 'master'):
         """
         Initialize a new RepositoryMiner for a software repository.
 
         :param path_to_repo: the path to the repository to analyze;
-        :param repo_owner: the repository's owner;
-        :param repo_name: the name of the repository; 
+        :param full_name_or_id: the repository's full name or id (e.g., radon-h2020/radon-repository-miner);
         :param branch: the branch to analyze. Default 'master';
         """
 
         if host == 'github':
-            self.__host = GithubHost(access_token, repo_owner, repo_name)
+            self.__host = GithubHost(access_token, full_name_or_id)
         elif host == 'gitlab':
-            self.__host = GitlabHost(access_token, repo_owner, repo_name)
+            self.__host = GitlabHost(access_token, full_name_or_id)
         else:
             raise ValueError("Parameter host must be one among ('github', 'gitlab')")
 

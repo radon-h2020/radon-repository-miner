@@ -8,9 +8,9 @@ from datetime import datetime
 from getpass import getpass
 
 from dotenv import load_dotenv
-from repositoryminer.file import LabeledFileEncoder
-from repositoryminer.repository import RepositoryMiner
-from repositoryminer.report import create_report
+from radonminer.file import LabeledFileEncoder
+from radonminer.mining.ansible import AnsibleMiner
+from radonminer.report import create_report
 
 VERSION = '0.2.12'
 
@@ -30,7 +30,7 @@ def valid_path(x: str) -> str:
 def get_parser():
     description = 'A Python library to mine Infrastructure-as-Code based software repositories.'
 
-    parser = argparse.ArgumentParser(prog='iac-repository-repositoryminer', description=description)
+    parser = argparse.ArgumentParser(prog='iac-repository-radonminer', description=description)
     parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
 
     parser.add_argument(action='store',
@@ -45,14 +45,9 @@ def get_parser():
                         help='the source code versioning host')
 
     parser.add_argument(action='store',
-                        dest='owner',
+                        dest='full_name_or_id',
                         type=str,
-                        help='the repository owner')
-
-    parser.add_argument(action='store',
-                        dest='name',
-                        type=str,
-                        help='the repository name')
+                        help='the repository full name or id (e.g., radon-h2020/radon-repository-miner')
 
     parser.add_argument(action='store',
                         dest='dest',
@@ -80,19 +75,22 @@ def main():
 
     load_dotenv()
 
-    token = os.getenv('GITHUB_ACCESS_TOKEN')
-    if not token:
-        token = getpass('Github access token:')
+    if args.host == 'github':
+        token = os.getenv('GITHUB_ACCESS_TOKEN')
+    elif args.host == 'gitlab':
+        token = os.getenv('GITLAB_ACCESS_TOKEN')
+
+    if token is None:
+        token = getpass('Access token:')
 
     if args.verbose:
         print(f'Mining: {args.path_to_repo} [{datetime.now().hour}:{datetime.now().minute}]')
 
-    repository_miner = RepositoryMiner(access_token=token,
-                                       path_to_repo=args.path_to_repo,
-                                       branch=args.branch,
-                                       host=args.host,
-                                       repo_owner=args.owner,
-                                       repo_name=args.name)
+    repository_miner = AnsibleMiner(access_token=token,
+                                    path_to_repo=args.path_to_repo,
+                                    branch=args.branch,
+                                    host=args.host,
+                                    full_name_or_id=args.full_name_or_id)
 
     if args.verbose:
         print(f'Collecting failure-prone scripts')
@@ -107,7 +105,7 @@ def main():
         labeled_files.append(copy.deepcopy(labeled_file))
 
     # Generate html report
-    html = create_report(repo_owner=args.owner, repo_name=args.name, labeled_files=labeled_files)
+    html = create_report(full_name_or_id=args.full_name_or_id, labeled_files=labeled_files)
     filename_html = os.path.join(args.dest, 'report.html')
     filename_json = os.path.join(args.dest, 'report.json')
 
