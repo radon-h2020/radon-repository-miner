@@ -1,14 +1,16 @@
-import argparse
 import copy
 import io
 import json
 import os
 
+from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from datetime import datetime
 from getpass import getpass
 
 from dotenv import load_dotenv
-from radonminer.file import LabeledFileEncoder
+from radonminer.file import LabeledFileEncoder, LabeledFileDecoder
+from radonminer.metrics.ansible import AnsibleMetricsExtractor
+from radonminer.metrics.tosca import ToscaMetricsExtractor
 from radonminer.mining.ansible import AnsibleMiner
 from radonminer.mining.tosca import ToscaMiner
 from radonminer.report import create_report
@@ -16,27 +18,35 @@ from radonminer.report import create_report
 VERSION = '0.3.0'
 
 
-def valid_path(x: str) -> str:
+def valid_dir(x: str) -> str:
     """
-    Check the path exists
+    Check if x is a directory and exists
     :param x: a path
     :return: the path if exists; raise an ArgumentTypeError otherwise
     """
     if not os.path.isdir(x):
-        raise argparse.ArgumentTypeError('Insert a valid path')
+        raise ArgumentTypeError('Insert a valid path')
 
     return x
 
 
-def get_parser():
-    description = 'A Python library and command-line tool to mine Infrastructure-as-Code based software repositories.'
+def valid_file(x: str) -> str:
+    """
+    Check if x is a file and exists
+    :param x: a path
+    :return: the path if exists; raise an ArgumentTypeError otherwise
+    """
+    if not os.path.isfile(x):
+        raise ArgumentTypeError('Insert a valid path')
 
-    parser = argparse.ArgumentParser(prog='radon-miner', description=description)
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
+    return x
 
+
+def set_mine_parser(subparsers):
+    parser = subparsers.add_parser('mine', help='Mine fixing- and clean- files')
     parser.add_argument(action='store',
                         dest='path_to_repo',
-                        type=valid_path,
+                        type=valid_dir,
                         help='the local path to the git repository')
 
     parser.add_argument(action='store',
@@ -58,7 +68,7 @@ def get_parser():
 
     parser.add_argument(action='store',
                         dest='dest',
-                        type=valid_path,
+                        type=valid_dir,
                         help='destination folder for the reports')
 
     parser.add_argument('--branch',
@@ -74,13 +84,59 @@ def get_parser():
                         default=False,
                         help='show log')
 
+
+def set_extract_metrics_parser(subparsers):
+    parser = subparsers.add_parser('extract-metrics', help='Extract metrics from the mined files')
+
+    parser.add_argument(action='store',
+                        dest='path_to_repo',
+                        type=valid_dir,
+                        help='the local path to the git repository')
+
+    parser.add_argument(action='store',
+                        dest='src',
+                        type=valid_file,
+                        help='the json report generated from a previous run of \'radon-miner mine\'')
+
+    parser.add_argument(action='store',
+                        dest='language',
+                        type=str,
+                        choices=['ansible', 'tosca'],
+                        help='extract metrics for Ansible or Tosca')
+
+    parser.add_argument(action='store',
+                        dest='metrics',
+                        type=str,
+                        choices=['product', 'process', 'delta', 'all'],
+                        help='the metrics to extract')
+
+    parser.add_argument(action='store',
+                        dest='at',
+                        type=str,
+                        choices=['release', 'commit'],
+                        help='extract metrics at each release or commit')
+
+    parser.add_argument(action='store',
+                        dest='dest',
+                        type=valid_dir,
+                        help='destination folder to save the resulting csv')
+
+
+def get_parser():
+    description = 'A Python library and command-line tool to mine Infrastructure-as-Code based software repositories.'
+
+    parser = ArgumentParser(prog='radon-miner', description=description)
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + VERSION)
+    subparsers = parser.add_subparsers(dest='command')
+
+    set_mine_parser(subparsers)
+    set_extract_metrics_parser(subparsers)
+
     return parser
 
 
-def main():
+def mine(args: Namespace):
     global token
-    args = get_parser().parse_args()
-
     load_dotenv()
 
     if args.host == 'github':
@@ -139,3 +195,29 @@ def main():
         print(f'JSON report created at {filename_json}')
 
     exit(0)
+
+
+def extract_metrics(args: Namespace):
+    global extractor
+    with open(args.src, 'r') as f:
+        labeled_files = json.load(f, cls=LabeledFileDecoder)
+
+    if args.language == 'ansible':
+        extractor = AnsibleMetricsExtractor(args.path_to_repo)
+    elif args.language == 'tosca':
+        extractor = ToscaMetricsExtractor(args.path_to_repo)
+
+    assert extractor
+    extractor.extract(labeled_files=labeled_files,
+                      process=args.metrics in ('process', 'all'),
+                      product=args.metrics in ('product', 'all'),
+                      delta=args.metrics in ('delta', 'all'),
+                      at=args.at)
+
+
+def main():
+    args = get_parser().parse_args()
+    if args.command == 'mine':
+        mine(args)
+    elif args.command == 'extract-metrics':
+        extract_metrics(args)

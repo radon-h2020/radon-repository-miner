@@ -4,7 +4,10 @@ repo_url: https://github.com/radon-h2020/radon-repository-miner/
 nav:
     - Getting Started:
         - Quick Start: index.md
-    - CLI Usage: cli.md
+    - CLI Usage:
+      - Getting Started: cli/getting_started.md
+      - Mine: cli/mine.md
+      - Extract metrics: cli/metrics.md
     - API Reference: apis.md
     - About: about.md
 markdown_extensions:

@@ -15,6 +15,25 @@ class LabeledFileEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
+class LabeledFileDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, dct):
+        labeled_files = []
+
+        if type(dct) == list:
+            for item in dct:
+                labeled_files.extend(self.object_hook(item))
+        else:
+            labeled_files.append(LabeledFile(filepath=dct["filepath"],
+                                             commit=dct["commit"],
+                                             label=LabeledFile.Label.CLEAN if dct["label"] == 'clean' else LabeledFile.Label.FAILURE_PRONE,
+                                             fixing_commit=dct["fixing_commit"]))
+
+        return labeled_files
+
+
 class FixingFile:
     """
     This class is responsible to implement the methods for storing information about fixing files (i.e., files belonging

@@ -1,11 +1,9 @@
-# Getting Started
+# Mine
 
 `radon-miner -h`
 
 ```text
-usage: radon-miner [-h] [-v] [--branch BRANCH] [--verbose] path_to_repo {github,gitlab} {ansible,tosca} full_name_or_id dest
-
-A Python library and command-line tool to mine Infrastructure-as-Code based software repositories.
+usage: radon-miner mine [-h] [--branch BRANCH] [--verbose] path_to_repo {github,gitlab} {ansible,tosca} full_name_or_id dest
 
 positional arguments:
   path_to_repo     the local path to the git repository
@@ -16,13 +14,12 @@ positional arguments:
 
 optional arguments:
   -h, --help       show this help message and exit
-  -v, --version    show program's version number and exit
   --branch BRANCH  the repository branch to mine (default: master)
   --verbose        show log
 ```
 
 ## path_to_repo
-The path to the cloned repository. This is mandatory to exectute the SZZ algorithm to identify bug-inducing-commits.
+The path to the cloned repository. This is mandatory to execute the SZZ algorithm to identify bug-inducing-commits.
 
 ## host {github, gitlab}
 The SVM hosting platform. Currently, Github and Gitlab are supported.
