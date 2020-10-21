@@ -34,6 +34,7 @@ class AnsibleMiner(BaseMiner):
                                        to_commit=commits[-1],  # last commit in commits
                                        only_in_branch=self.branch).traverse_commits():
 
+            # if none of the modified files is a Ansible file, then discard the commit
             if not any(filters.is_ansible_file(modified_file.new_path) for modified_file in commit.modifications):
                 if commit.hash in commits:
                     commits.remove(commit.hash)
