@@ -181,11 +181,10 @@ class BaseMiner:
                     continue
 
                 # Not interested in type of files
-                if self.ignore_file(modified_file.new_path):
+                if self.ignore_file(modified_file.new_path, modified_file.source_code):
                     continue
 
-                if any(file for file in self.exclude_fixing_files if
-                       file.filepath == modified_file.new_path and file.fic == commit.hash):
+                if any(file.filepath == modified_file.new_path and file.fic == commit.hash for file in self.exclude_fixing_files):
                     continue
 
                 # Identify bug-inducing commits. Dict[modified_file, Set[commit_hashes]]
@@ -218,7 +217,7 @@ class BaseMiner:
 
         return self.fixing_files.copy()
 
-    def ignore_file(self, path_to_file):
+    def ignore_file(self, path_to_file: str, content: str = None):
         return False
 
     def label(self) -> Generator[LabeledFile, None, None]:

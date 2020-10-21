@@ -35,5 +35,5 @@ class ToscaMiner(BaseMiner):
                 if commit.hash in commits:
                     commits.remove(commit.hash)
 
-    def ignore_file(self, path_to_file):
-        raise NotImplementedError
+    def ignore_file(self, path_to_file: str, content: str = None):
+        return not filters.is_tosca_file(path_to_file, content)

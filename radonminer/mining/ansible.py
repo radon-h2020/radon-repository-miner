@@ -39,5 +39,5 @@ class AnsibleMiner(BaseMiner):
                 if commit.hash in commits:
                     commits.remove(commit.hash)
 
-    def ignore_file(self, path_to_file):
+    def ignore_file(self, path_to_file: str, content: str = None):
         return not filters.is_ansible_file(path_to_file)
