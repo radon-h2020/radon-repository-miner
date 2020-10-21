@@ -2,10 +2,13 @@ from abc import ABC, abstractmethod
 from typing import NewType, List, Set, Union
 
 import github
-import gitlab
+from gitlab import Gitlab
+from gitlab.v4.objects import ProjectIssue
+
 import re
 
-GithubIssue = NewType('Issue', github.Issue)
+
+GithubIssue = NewType('GithubIssue', github.Issue.Issue)
 
 
 class SVCHost(ABC):
@@ -72,17 +75,20 @@ class GithubHost(SVCHost):
 
 class GitlabHost(SVCHost):
 
+    # From https://docs.gitlab.com/ee/administration/issue_closing_pattern.html
+    issue_closing_pattern = '((?:[Cc]los(?:e[sd]?|ing)|\b[Ff]ix(?:e[sd]|ing)?|\b[Rr]esolv(?:e[sd]?|ing)|\b[Ii]mplement(?:s|ed|ing)?)(:?) +(?:(?:issues? +)?%{issue_ref}))'
+
     def __init__(self, access_token: str, full_name_or_id: Union[str, int]):
         super().__init__()
-        self.__project = gitlab.Gitlab('http://gitlab.com', access_token).projects.get(full_name_or_id)
+        self.__project = Gitlab('http://gitlab.com', access_token).projects.get(full_name_or_id)
 
     def get_labels(self) -> Set[str]:
-        return set([label.name for label in self.__project.labels.list()])
+        return set([label.name for label in self.__project.labels.list(all=True)])
 
-    def get_closed_issues(self, label: str) -> List[GithubIssue]:
+    def get_closed_issues(self, label: str) -> List[ProjectIssue]:
         return self.__project.issues.list(state='closed', labels=[label], all=True)
 
-    def get_commit_closing_issue(self, issue) -> str:
+    def get_commit_closing_issue(self, issue: ProjectIssue) -> str:
         closed_via_commit = re.compile('closed via commit ([0-9a-f]{5,40})')
         closed_via_mr = re.compile('closed via merge request !([0-9]+)')
 
@@ -106,3 +112,8 @@ class GitlabHost(SVCHost):
             mr = self.__project.mergerequests.get(mr_iid)
             return mr.sha
 
+        # If none works, try by matching issue closing pattern over commits
+        iid_closing_pattern = re.compile(self.issue_closing_pattern.replace('%{issue_ref}', f'#{issue.iid}'))
+        for commit in self.__project.commits.list(all=True, as_list=False):
+            if iid_closing_pattern.match(commit.title) is not None:
+                return commit.id
