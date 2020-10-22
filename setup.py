@@ -25,12 +25,12 @@ setup(name='repository-miner',
           'console_scripts': ['radon-miner=radonminer.cli:main'],
       },
       classifiers=[
-          "Development Status :: 3 - Alpha",
+          "Development Status :: 4 - Beta",
           "Intended Audience :: Developers",
           "Programming Language :: Python :: 3.7",
           "License :: OSI Approved :: Apache Software License",
           "Topic :: Software Development :: Libraries :: Python Modules",
-          "Operating System :: OS Independent"
+          "Operating System :: POSIX :: Linux"
       ],
       insall_requires=requirements
 )
