@@ -214,6 +214,8 @@ def extract_metrics(args: Namespace):
                       delta=args.metrics in ('delta', 'all'),
                       at=args.at)
 
+    extractor.to_csv(os.path.join(args.dest, 'metrics.csv'))
+
 
 def main():
     args = get_parser().parse_args()
