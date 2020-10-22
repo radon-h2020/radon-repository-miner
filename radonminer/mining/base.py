@@ -104,7 +104,6 @@ class BaseMiner:
         :param regex: a regular expression to identify fixing-commit (e.g., '(bug|fix|error|crash|problem|fail)')
         :return: the set of fixing-commit hashes
         """
-
         if not regex:
             regex = FIXING_COMMITS_REGEX
 
@@ -143,7 +142,6 @@ class BaseMiner:
         Collect the IaC files involved in fixing-commits and for each of them identify the bug-inducing-commit.
         :return: the list of files
         """
-
         if not self.fixing_commits:
             return list()
 

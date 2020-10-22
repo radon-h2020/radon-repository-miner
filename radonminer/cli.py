@@ -170,7 +170,7 @@ def mine(args: Namespace):
     for labeled_file in miner.mine(labels=None, regex=None):
 
         if args.verbose:
-            print(f'[{labeled_file.commit}] {labeled_file.filepath}\tfixing-commit: {labeled_file.fixing_commit}')
+            print(f'[{labeled_file.commit}] {labeled_file.filepath}')
 
         # Save repository to collection
         labeled_files.append(copy.deepcopy(labeled_file))
@@ -185,7 +185,7 @@ def mine(args: Namespace):
 
     json_files = []
     for file in labeled_files:
-        json_files.append(json.dumps(file, cls=LabeledFileEncoder))
+        json_files.append(LabeledFileEncoder().default(file))
 
     with open(filename_json, "w") as f:
         json.dump(json_files, f)

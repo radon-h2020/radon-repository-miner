@@ -36,6 +36,27 @@ class BaseMetricsExtractor:
         self.git_repo = GitRepository(path_to_repo)
         self.dataset = pd.DataFrame()
 
+    def get_files(self) -> set:
+        """
+        Return all the files in the repository
+        :return: a set of strings representing the path of the files in the repository
+        """
+
+        files = set()
+
+        for root, _, filenames in os.walk(self.path_to_repo):
+            if '.git' in root:
+                continue
+            for filename in filenames:
+                path = os.path.join(root, filename)
+                path = path.replace(self.path_to_repo, '')
+                if path.startswith('/'):
+                    path = path[1:]
+
+                files.add(path)
+
+        return files
+
     def get_product_metrics(self, script: str) -> dict:
         """
         Extract product metrics from a script
@@ -73,10 +94,13 @@ class BaseMetricsExtractor:
             'dict_additions_avg': lines_count.avg_added(),
             'dict_deletions': lines_count.count_removed(),
             'dict_deletions_max': lines_count.max_removed(),
-            'dict_deletions-avg': lines_count.avg_removed()}
+            'dict_deletions_avg': lines_count.avg_removed()}
 
     def extract(self, labeled_files: List[LabeledFile], product: bool = True, process: bool = True,
                 delta: bool = False, at: str = 'release'):
+
+        if at not in ('release', 'commit'):
+            raise ValueError(f'{at} is not valid! Try with \'release\' or \'commit\'.')
 
         commits_or_releases = list(RepositoryMining(path_to_repo=self.path_to_repo,
                                                     only_releases=True if at == 'release' else False,
@@ -93,48 +117,54 @@ class BaseMetricsExtractor:
                 to_current_commit = commit.hash
                 process_metrics = self.get_process_metrics(from_previous_commit, to_current_commit)
 
-            for modified_file in commit.modifications:
-                idx = labeled_files.index(LabeledFile(filepath=modified_file.new_path, commit=commit.hash,
-                                                      label=None, fixing_commit=''))
-                if idx > -1:
-                    content = get_content(os.path.join(self.path_to_repo, modified_file.new_path))
+            # get all file paths from the root of the repository at this commit
+            for filepath in self.get_files():
 
-                    metrics = dict(
-                        filepath=modified_file.new_path,
-                        commit=commit.hash,
-                        committed_at=str(commit.committer_date),
-                        failure_prone=1 if labeled_files[idx].label == LabeledFile.Label.FAILURE_PRONE else 0
-                    )
+                file_content = get_content(os.path.join(self.path_to_repo, filepath))
 
-                    if process_metrics:
-                        metrics['change_set_max'] = process_metrics['dict_change_set_max']
-                        metrics['change_set_avg'] = process_metrics['dict_change_set_avg']
-                        metrics['code_churn_count'] = process_metrics['dict_code_churn_count'].get(
-                            modified_file.new_path)
-                        metrics['code_churn_max'] = process_metrics['dict_code_churn_max'].get(modified_file.new_path)
-                        metrics['code_churn_avg'] = process_metrics['dict_code_churn_avg'].get(modified_file.new_path)
-                        metrics['commits_count'] = process_metrics['dict_commits_count'].get(modified_file.new_path)
-                        metrics['contributors_count'] = process_metrics['dict_contributors_count'].get(
-                            modified_file.new_path)
-                        metrics['minor_contributors_count'] = process_metrics['dict_minor_contributors_count'].get(
-                            modified_file.new_path)
-                        metrics['highest_contributor_experience'] = process_metrics[
-                            'dict_highest_contributor_experience'].get(
-                            modified_file.new_path)
-                        metrics['hunks_median'] = process_metrics['dict_hunks_median'].get(modified_file.new_path)
-                        metrics['additions'] = process_metrics['dict_additions'].get(modified_file.new_path)
-                        metrics['additions'] = process_metrics['dict_additions_max'].get(modified_file.new_path)
-                        metrics['additions_avg'] = process_metrics['dict_additions_avg'].get(modified_file.new_path)
-                        metrics['deletions'] = process_metrics['dict_deletions'].get(modified_file.new_path)
-                        metrics['deletions_max'] = process_metrics['dict_deletions_max'].get(modified_file.new_path)
-                        metrics['deletions_avg'] = process_metrics['dict_deletions_avg'].get(modified_file.new_path)
+                if self.ignore_file(filepath, file_content):
+                    continue
 
-                    if product:
-                        metrics.update(self.get_product_metrics(content))
+                tmp = LabeledFile(filepath=filepath, commit=commit.hash, label=None, fixing_commit='')
+                if tmp not in labeled_files:
+                    label = 0  # clean
+                else:
+                    label = 1  # failure-prone
 
-                    self.dataset = self.dataset.append(metrics, ignore_index=True)
+                metrics = dict(
+                    filepath=filepath,
+                    commit=commit.hash,
+                    committed_at=str(commit.committer_date),
+                    failure_prone=label
+                )
+
+                if process_metrics:
+                    metrics['change_set_max'] = process_metrics['dict_change_set_max']
+                    metrics['change_set_avg'] = process_metrics['dict_change_set_avg']
+                    metrics['code_churn_count'] = process_metrics['dict_code_churn_count'].get(filepath)
+                    metrics['code_churn_max'] = process_metrics['dict_code_churn_max'].get(filepath)
+                    metrics['code_churn_avg'] = process_metrics['dict_code_churn_avg'].get(filepath)
+                    metrics['commits_count'] = process_metrics['dict_commits_count'].get(filepath)
+                    metrics['contributors_count'] = process_metrics['dict_contributors_count'].get(filepath)
+                    metrics['minor_contributors_count'] = process_metrics['dict_minor_contributors_count'].get(filepath)
+                    metrics['highest_contributor_experience'] = process_metrics['dict_highest_contributor_experience'].get(filepath)
+                    metrics['hunks_median'] = process_metrics['dict_hunks_median'].get(filepath)
+                    metrics['additions'] = process_metrics['dict_additions'].get(filepath)
+                    metrics['additions_max'] = process_metrics['dict_additions_max'].get(filepath)
+                    metrics['additions_avg'] = process_metrics['dict_additions_avg'].get(filepath)
+                    metrics['deletions'] = process_metrics['dict_deletions'].get(filepath)
+                    metrics['deletions_max'] = process_metrics['dict_deletions_max'].get(filepath)
+                    metrics['deletions_avg'] = process_metrics['dict_deletions_avg'].get(filepath)
+
+                if product:
+                    metrics.update(self.get_product_metrics(file_content))
+
+                self.dataset = self.dataset.append(metrics, ignore_index=True)
 
             self.git_repo.reset()
+
+    def ignore_file(self, path_to_file: str, content: str = None):
+        return False
 
     def to_csv(self, path_to_folder):
         """

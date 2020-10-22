@@ -42,8 +42,7 @@ class RepositoryMinerTestCase(unittest.TestCase):
         assert not hashes
 
     def test_get_fixing_commits_from_commit_messages(self):
-        hashes = self.repo_miner.get_fixing_commits_from_commit_messages(
-            regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
+        self.repo_miner.get_fixing_commits_from_commit_messages(regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
         assert self.repo_miner.fixing_commits == ['3994a835f7417703810c95555bf3553b9dcaea9b',
                                                   '38b25771ff411cd05667325e8da3b68f4bb93e68']
 

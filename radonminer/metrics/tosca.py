@@ -1,5 +1,5 @@
 from .base import BaseMetricsExtractor
-
+from radonminer.filters import is_tosca_file
 
 class ToscaMetricsExtractor(BaseMetricsExtractor):
 
@@ -11,3 +11,6 @@ class ToscaMetricsExtractor(BaseMetricsExtractor):
         Extract product metrics from a script
         """
         raise NotImplementedError
+
+    def ignore_file(self, path_to_file: str, content: str = None):
+        return not is_tosca_file(path_to_file, content)
