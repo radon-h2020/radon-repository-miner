@@ -12,7 +12,7 @@ from pydriller.metrics.process.contributors_experience import ContributorsExperi
 from pydriller.metrics.process.hunks_count import HunksCount
 from pydriller.metrics.process.lines_count import LinesCount
 
-from radonminer.file import LabeledFile
+from radonminer.files import FailureProneFile
 
 
 def get_content(path: str) -> str:
@@ -96,7 +96,7 @@ class BaseMetricsExtractor:
             'dict_deletions_max': lines_count.max_removed(),
             'dict_deletions_avg': lines_count.avg_removed()}
 
-    def extract(self, labeled_files: List[LabeledFile], product: bool = True, process: bool = True,
+    def extract(self, labeled_files: List[FailureProneFile], product: bool = True, process: bool = True,
                 delta: bool = False, at: str = 'release'):
 
         if at not in ('release', 'commit'):
@@ -125,7 +125,7 @@ class BaseMetricsExtractor:
                 if self.ignore_file(filepath, file_content):
                     continue
 
-                tmp = LabeledFile(filepath=filepath, commit=commit.hash, label=None, fixing_commit='')
+                tmp = FailureProneFile(filepath=filepath, commit=commit.hash, fixing_commit='')
                 if tmp not in labeled_files:
                     label = 0  # clean
                 else:

@@ -7,7 +7,7 @@ import unittest
 from dotenv import load_dotenv
 
 from pydriller import GitRepository
-from radonminer.file import FixingFile, LabeledFile
+from radonminer.files import FixingFile, FailureProneFile
 from radonminer.mining.tosca import ToscaMiner
 
 ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]

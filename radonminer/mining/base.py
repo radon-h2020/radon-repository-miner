@@ -4,7 +4,7 @@ from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
 from typing import Generator, List, Set, Union
 
-from radonminer.file import FixingFile, LabeledFile
+from radonminer.files import FixingFile, FailureProneFile
 from radonminer.hosts import GithubHost, GitlabHost
 
 # Constants
@@ -218,7 +218,7 @@ class BaseMiner:
     def ignore_file(self, path_to_file: str, content: str = None):
         return False
 
-    def label(self) -> Generator[LabeledFile, None, None]:
+    def label(self) -> Generator[FailureProneFile, None, None]:
         """
         Start labeling process
         :param files: a list of FixingFile objects
@@ -245,10 +245,9 @@ class BaseMiner:
                     idx_commit = self.commit_hashes.index(commit.hash)
 
                     if idx_fic > idx_commit >= idx_bic:
-                        yield LabeledFile(filepath=file.filepath,
-                                          commit=commit.hash,
-                                          label=LabeledFile.Label.FAILURE_PRONE,
-                                          fixing_commit=file.fic)
+                        yield FailureProneFile(filepath=file.filepath,
+                                               commit=commit.hash,
+                                               fixing_commit=file.fic)
 
                     if idx_commit == idx_bic and file.filepath in labeling:
                         if file in labeling[file.filepath]:
@@ -269,13 +268,13 @@ class BaseMiner:
                             file.filepath = modified_file.old_path
                         break
 
-    def mine(self, labels: Set[str] = None, regex: str = None) -> Generator[LabeledFile, None, None]:
+    def mine(self, labels: Set[str] = None, regex: str = None) -> Generator[FailureProneFile, None, None]:
         """
         Mine the repository.
 
         :param labels: bug-related issues labels.
         :param regex: the regular expression used to identify fixing-commits from commits message.
-        :return: yields LabeledFile objects
+        :return: yields FailureProneFile objects
         """
         self.get_fixing_commits_from_closed_issues(labels)
         self.get_fixing_commits_from_commit_messages(regex)

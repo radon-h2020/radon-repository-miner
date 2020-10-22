@@ -2,7 +2,7 @@ import json
 import os
 import unittest
 from pydriller.git_repository import GitRepository
-from radonminer.file import LabeledFileDecoder
+from radonminer.files import FailureProneFileDecoder
 from radonminer.metrics.ansible import AnsibleMetricsExtractor
 from radonminer.metrics.tosca import ToscaMetricsExtractor
 
@@ -21,10 +21,10 @@ class ExtractMetricsTestCase(unittest.TestCase):
         cls.tosc_extractor = ToscaMetricsExtractor(path_to_repo=PATH_TO_ANSIBLE_REPO)
 
         with open(os.path.join(PATH_TO_TEST_DATA, 'ansible_report.json')) as f:
-            cls.ansible_labeled_files = json.load(f, cls=LabeledFileDecoder)
+            cls.ansible_labeled_files = json.load(f, cls=FailureProneFileDecoder)
 
         with open(os.path.join(PATH_TO_TEST_DATA, 'tosca_report.json')) as f:
-            cls.tosca_labeled_files = json.load(f, cls=LabeledFileDecoder)
+            cls.tosca_labeled_files = json.load(f, cls=FailureProneFileDecoder)
 
     @classmethod
     def tearDownClass(cls):

@@ -8,7 +8,7 @@ from datetime import datetime
 from getpass import getpass
 
 from dotenv import load_dotenv
-from radonminer.file import LabeledFileEncoder, LabeledFileDecoder
+from radonminer.files import FailureProneFileEncoder, FailureProneFileDecoder
 from radonminer.metrics.ansible import AnsibleMetricsExtractor
 from radonminer.metrics.tosca import ToscaMetricsExtractor
 from radonminer.mining.ansible import AnsibleMiner
@@ -185,7 +185,7 @@ def mine(args: Namespace):
 
     json_files = []
     for file in labeled_files:
-        json_files.append(LabeledFileEncoder().default(file))
+        json_files.append(FailureProneFileEncoder().default(file))
 
     with open(filename_json, "w") as f:
         json.dump(json_files, f)
@@ -200,7 +200,7 @@ def mine(args: Namespace):
 def extract_metrics(args: Namespace):
     global extractor
     with open(args.src, 'r') as f:
-        labeled_files = json.load(f, cls=LabeledFileDecoder)
+        labeled_files = json.load(f, cls=FailureProneFileDecoder)
 
     if args.language == 'ansible':
         extractor = AnsibleMetricsExtractor(args.path_to_repo)

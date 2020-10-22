@@ -2,29 +2,27 @@ from enum import Enum
 import json
 
 
-class LabeledFileEncoder(json.JSONEncoder):
+class FailureProneFileEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, LabeledFile):
+        if isinstance(o, FailureProneFile):
             return {
                 "filepath": o.filepath,
                 "commit": o.commit,
-                "label": 'clean' if o.label == LabeledFile.Label.CLEAN else 'failure-prone',
                 "fixing_commit": o.fixing_commit
             }
 
         return json.JSONEncoder.default(self, o)
 
 
-class LabeledFileDecoder(json.JSONDecoder):
+class FailureProneFileDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, o):
         if type(o) == dict:
-            return LabeledFile(filepath=o["filepath"],
-                               commit=o["commit"],
-                               label=o["label"],
-                               fixing_commit=o["fixing_commit"])
+            return FailureProneFile(filepath=o["filepath"],
+                                    commit=o["commit"],
+                                    fixing_commit=o["fixing_commit"])
 
 
 class FixingFile:
@@ -50,37 +48,27 @@ class FixingFile:
         return False
 
 
-class LabeledFile:
+class FailureProneFile:
     """
     This class is responsible to implement the methods for storing information about labeled files
     """
 
-    class Label(Enum):
-        """
-        Type of Label. Can be CLEAN or FAILURE_PRONE.
-        """
-        CLEAN = 'clean'
-        FAILURE_PRONE = 'failure-prone'
-
     def __init__(self,
                  filepath: str,
                  commit: str,
-                 label: Label,
                  fixing_commit: str):
         """
         :param filepath: the filepath from the root of the repository
         :param commit: the commit hash
-        :param label: the file label (i.e., 'failure-prone' or 'clean'). Currently, only failure-prone files are returned
         :param fixing_commit: the commit fixing this file
         """
 
         self.filepath = filepath
         self.commit = commit
-        self.label = label
         self.fixing_commit = fixing_commit
 
     def __eq__(self, other):
-        if isinstance(other, LabeledFile):
+        if isinstance(other, FailureProneFile):
             return self.filepath == other.filepath and self.commit == other.commit
 
         return False
