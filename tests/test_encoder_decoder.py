@@ -22,7 +22,7 @@ class TestFailureProneFileEncoderAndDecoder(unittest.TestCase):
             "fixing_commit": 'failure-prone'
         }
 
-        decoded = FailureProneFileDecoder().object_hook(lf1)
+        decoded = FailureProneFileDecoder().to_object(lf1)
         assert type(decoded) == FailureProneFile
 
 

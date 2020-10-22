@@ -16,9 +16,9 @@ class FailureProneFileEncoder(json.JSONEncoder):
 
 class FailureProneFileDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
-        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+        json.JSONDecoder.__init__(self, object_hook=self.to_object, *args, **kwargs)
 
-    def object_hook(self, o):
+    def to_object(self, o):
         if type(o) == dict:
             return FailureProneFile(filepath=o["filepath"],
                                     commit=o["commit"],
