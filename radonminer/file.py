@@ -19,19 +19,12 @@ class LabeledFileDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
 
-    def object_hook(self, dct):
-        labeled_files = []
-
-        if type(dct) == list:
-            for item in dct:
-                labeled_files.extend(self.object_hook(item))
-        else:
-            labeled_files.append(LabeledFile(filepath=dct["filepath"],
-                                             commit=dct["commit"],
-                                             label=LabeledFile.Label.CLEAN if dct["label"] == 'clean' else LabeledFile.Label.FAILURE_PRONE,
-                                             fixing_commit=dct["fixing_commit"]))
-
-        return labeled_files
+    def object_hook(self, o):
+        if type(o) == dict:
+            return LabeledFile(filepath=o["filepath"],
+                               commit=o["commit"],
+                               label=o["label"],
+                               fixing_commit=o["fixing_commit"])
 
 
 class FixingFile:
