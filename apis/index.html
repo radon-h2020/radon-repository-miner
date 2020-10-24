@@ -139,7 +139,6 @@ This variable is used to set up in advance the files to exclude during the minin
 <li><strong><code>get_fixing_commits_from_commit_messages(regex: str) -&gt; List[str]</code></strong>  - Collect fixing-commit hashes by analyzing commit messages.</li>
 <li><strong><code>get_fixing_files() -&gt; List[FixingFile]</code></strong>  - Collect the IaC files involved in fixing-commits and for each of them identify the bug-inducing-commit.</li>
 <li><strong><code>label() -&gt; Generator[LabeledFile, None, None]</code></strong>  - Start labeling process.</li>
-<li><strong><code>mine(labels: Set[str] = None, regex: str = None) -&gt; Generator[LabeledFile, None, None]</code></strong>  - Mine the repository.</li>
 </ul></div>
             </div>
         </div>
