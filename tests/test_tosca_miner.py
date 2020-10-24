@@ -21,9 +21,7 @@ class RepositoryMinerTestCase(unittest.TestCase):
     def setUpClass(cls):
         load_dotenv()
         cls.git_repo = GitRepository(PATH_TO_REPO)
-        cls.repo_miner = ToscaMiner(access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
-                                    path_to_repo=PATH_TO_REPO,
-                                    host='github',
+        cls.repo_miner = ToscaMiner(path_to_repo=PATH_TO_REPO,
                                     full_name_or_id='UoW-CPC/COLARepo',
                                     branch='master')
 
@@ -38,7 +36,7 @@ class RepositoryMinerTestCase(unittest.TestCase):
         self.repo_miner.exclude_fixing_files = list()  # reset list of fixing-files to exclude
 
     def test_get_fixing_commits_from_closed_issues(self):
-        hashes = self.repo_miner.get_fixing_commits_from_closed_issues({'bug'})
+        hashes = self.repo_miner.get_fixing_commits_from_closed_issues(host='github', labels={'bug'})
         assert not hashes
 
     def test_get_fixing_commits_from_commit_messages(self):

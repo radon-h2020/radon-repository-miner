@@ -24,9 +24,7 @@ class RepositoryMinerTestCase(unittest.TestCase):
         cls.git_repo = GitRepository(PATH_TO_REPO)
         cls.git_repo.reset()
         cls.git_repo.checkout('3a8d9b7ed430a3367d8d8616e0ba5d2bddb07b9e')
-        cls.repo_miner = AnsibleMiner(access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
-                                      path_to_repo=PATH_TO_REPO,
-                                      host='github',
+        cls.repo_miner = AnsibleMiner(path_to_repo=PATH_TO_REPO,
                                       full_name_or_id='adriagalin/ansible.motd',
                                       branch='master')
 
@@ -41,7 +39,7 @@ class RepositoryMinerTestCase(unittest.TestCase):
         self.repo_miner.exclude_fixing_files = list()  # reset list of fixing-files to exclude
 
     def test_get_fixing_commits_from_closed_issues(self):
-        hashes = self.repo_miner.get_fixing_commits_from_closed_issues({'bug'})
+        hashes = self.repo_miner.get_fixing_commits_from_closed_issues(host='github', labels={'bug'})
         assert not hashes
 
     def test_get_fixing_commits_from_commit_messages(self):
@@ -139,10 +137,11 @@ class RepositoryMinerTestCase(unittest.TestCase):
         assert fixing_files[1].fic == '72377bb59a484ac7c6c6954ce6bf796eb6143f86'  # Aug 15, 2015
         assert fixing_files[1].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
 
-    def test_mine(self):
+    def test_mining_pipeline(self):
         self.repo_miner.fixing_commits = list()  # reset list of fixing-commits
-        labeled_files = [labeled_file for labeled_file in
-                         self.repo_miner.mine(labels={'bug'}, regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')]
+        self.repo_miner.get_fixing_commits_from_commit_messages(regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
+        self.repo_miner.get_fixing_files()
+        labeled_files = [labeled_file for labeled_file in self.repo_miner.label()]
 
         assert labeled_files
         assert len(labeled_files) == 37

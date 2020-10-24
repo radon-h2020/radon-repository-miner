@@ -22,9 +22,7 @@ class BaseMiner:
     """
 
     def __init__(self,
-                 access_token: str,
                  path_to_repo: str,
-                 host: str,
                  full_name_or_id: Union[str, int],
                  branch: str = 'master'):
         """
@@ -34,15 +32,8 @@ class BaseMiner:
         :param full_name_or_id: the repository's full name or id (e.g., radon-h2020/radon-repository-miner);
         :param branch: the branch to analyze. Default 'master';
         """
-
-        if host == 'github':
-            self.__host = GithubHost(access_token, full_name_or_id)
-        elif host == 'gitlab':
-            self.__host = GitlabHost(access_token, full_name_or_id)
-        else:
-            raise ValueError("Parameter host must be one among ('github', 'gitlab')")
-
         self.path_to_repo = path_to_repo
+        self.full_name_or_id = full_name_or_id
         self.branch = branch
 
         self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
@@ -63,24 +54,31 @@ class BaseMiner:
         """
         pass
 
-    def get_fixing_commits_from_closed_issues(self, labels: Set[str] = None) -> List[str]:
+    def get_fixing_commits_from_closed_issues(self, host: str, labels: Set[str] = None) -> List[str]:
         """
         Collect fixing-commit hashes by analyzing closed issues related to bugs.
         :param labels: bug-related labels (e.g., bug, bugfix, type: bug)
         :return: the set of fixing-commit hashes
         """
 
+        if host == 'github':
+            host = GithubHost(self.full_name_or_id)
+        elif host == 'gitlab':
+            host = GitlabHost(self.full_name_or_id)
+        else:
+            raise ValueError("Parameter host must be one among ('github', 'gitlab')")
+
         if not labels:
             labels = BUG_RELATED_LABELS
 
         # Get the repository labels (self.get_labels()) and keep only those matching the input labels, if any
-        labels = labels.intersection(self.__host.get_labels())
+        labels = labels.intersection(host.get_labels())
 
         fixes_from_issues = list()
 
         for label in labels:
-            for issue in self.__host.get_closed_issues(label):
-                commit = self.__host.get_commit_closing_issue(issue)
+            for issue in host.get_closed_issues(label):
+                commit = host.get_commit_closing_issue(issue)
                 if (commit in self.exclude_commits) or (commit in self.fixing_commits):
                     continue
                 elif commit:
@@ -182,7 +180,8 @@ class BaseMiner:
                 if self.ignore_file(modified_file.new_path, modified_file.source_code):
                     continue
 
-                if any(file.filepath == modified_file.new_path and file.fic == commit.hash for file in self.exclude_fixing_files):
+                if any(file.filepath == modified_file.new_path and file.fic == commit.hash for file in
+                       self.exclude_fixing_files):
                     continue
 
                 # Identify bug-inducing commits. Dict[modified_file, Set[commit_hashes]]
@@ -267,21 +266,6 @@ class BaseMiner:
                         elif modified_file.change_type == ModificationType.RENAME:
                             file.filepath = modified_file.old_path
                         break
-
-    def mine(self, labels: Set[str] = None, regex: str = None) -> Generator[FailureProneFile, None, None]:
-        """
-        Mine the repository.
-
-        :param labels: bug-related issues labels.
-        :param regex: the regular expression used to identify fixing-commits from commits message.
-        :return: yields FailureProneFile objects
-        """
-        self.get_fixing_commits_from_closed_issues(labels)
-        self.get_fixing_commits_from_commit_messages(regex)
-        self.get_fixing_files()
-
-        for labeled_file in self.label():
-            yield labeled_file
 
     def sort_commits(self, commits: List[str]):
         """
