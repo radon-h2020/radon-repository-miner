@@ -2,33 +2,27 @@
 # coding=utf-8
 
 import os
+import shutil
 import unittest
 
-from dotenv import load_dotenv
-
-from pydriller import GitRepository
-from radonminer.files import FixingFile, FailureProneFile
+from radonminer.files import FixingFile
 from radonminer.mining.tosca import ToscaMiner
-
-ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
-PATH_TO_REPO = os.path.join(ROOT, 'test_data', 'COLARepo')
 
 
 class RepositoryMinerTestCase(unittest.TestCase):
-    git_repo = None
 
     @classmethod
     def setUpClass(cls):
-        load_dotenv()
-        cls.git_repo = GitRepository(PATH_TO_REPO)
-        cls.repo_miner = ToscaMiner(path_to_repo=PATH_TO_REPO,
-                                    full_name_or_id='UoW-CPC/COLARepo',
-                                    branch='master')
+        cls.path_to_tmp_dir = os.path.join(os.getcwd(), 'test_data', 'tmp')
+        os.mkdir(cls.path_to_tmp_dir)
+        os.environ["TMP_REPOSITORIES_DIR"] = cls.path_to_tmp_dir
+
+        cls.repo_miner = ToscaMiner(url_to_repo='https://github.com/UoW-CPC/COLARepo.git', branch='master')
 
     @classmethod
     def tearDownClass(cls):
-        if cls.git_repo:
-            cls.git_repo.reset()
+        shutil.rmtree(cls.path_to_tmp_dir)
+        del os.environ["TMP_REPOSITORIES_DIR"]
 
     def setUp(self) -> None:
         self.repo_miner.fixing_commits = list()  # reset list of fixing-commits

@@ -1,24 +1,27 @@
 import json
 import os
+import shutil
 import unittest
-from pydriller.git_repository import GitRepository
+
 from radonminer.files import FailureProneFileDecoder
 from radonminer.metrics.ansible import AnsibleMetricsExtractor
 from radonminer.metrics.tosca import ToscaMetricsExtractor
 
 ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
 PATH_TO_TEST_DATA = os.path.join(ROOT, 'test_data')
-PATH_TO_ANSIBLE_REPO = os.path.join(ROOT, 'test_data', 'adriagalin/ansible.motd')
-PATH_TO_TOSCA_REPO = os.path.join(ROOT, 'test_data', 'COLARepo')
 
 
 class ExtractMetricsTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.git_repo = GitRepository(PATH_TO_ANSIBLE_REPO)
-        cls.ansible_extractor = AnsibleMetricsExtractor(path_to_repo=PATH_TO_ANSIBLE_REPO)
-        cls.tosca_extractor = ToscaMetricsExtractor(path_to_repo=PATH_TO_TOSCA_REPO)
+        cls.path_to_tmp_dir = os.path.join(os.getcwd(), 'test_data', 'tmp')
+        os.mkdir(cls.path_to_tmp_dir)
+        os.environ["TMP_REPOSITORIES_DIR"] = cls.path_to_tmp_dir
+
+        cls.ansible_extractor = AnsibleMetricsExtractor(url_to_repo='https://github.com/adriagalin/ansible.motd.git',
+                                                        at='release')
+        cls.tosca_extractor = ToscaMetricsExtractor(url_to_repo='https://github.com/UoW-CPC/COLARepo.git', at='release')
 
         with open(os.path.join(PATH_TO_TEST_DATA, 'ansible_report.json')) as f:
             cls.ansible_labeled_files = json.load(f, cls=FailureProneFileDecoder)
@@ -28,12 +31,12 @@ class ExtractMetricsTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if cls.git_repo:
-            cls.git_repo.reset()
+        shutil.rmtree(cls.path_to_tmp_dir)
+        del os.environ["TMP_REPOSITORIES_DIR"]
 
     def test_ansible_extract(self):
         self.ansible_extractor.extract(labeled_files=self.ansible_labeled_files, product=True, process=True,
-                                       delta=False, at='release')
+                                       delta=False)
 
         assert 'filepath' in self.ansible_extractor.dataset.columns
         assert 'commit' in self.ansible_extractor.dataset.columns
@@ -42,7 +45,7 @@ class ExtractMetricsTestCase(unittest.TestCase):
         assert self.ansible_extractor.dataset.shape[1] == 66
 
     def test_tosca_extract(self):
-        self.tosca_extractor.extract(self.tosca_labeled_files, product=True, process=True, delta=False, at='release')
+        self.tosca_extractor.extract(self.tosca_labeled_files, product=True, process=True, delta=False)
 
         assert 'filepath' in self.tosca_extractor.dataset.columns
         assert 'commit' in self.tosca_extractor.dataset.columns

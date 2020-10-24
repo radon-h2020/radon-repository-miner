@@ -10,16 +10,14 @@ class AnsibleMiner(BaseMiner):
     This class extends BaseMiner to mine Ansible-based repositories
     """
 
-    def __init__(self, path_to_repo: str,full_name_or_id: Union[str, int],
-                 branch: str = 'master'):
+    def __init__(self, url_to_repo: str, branch: str = 'master'):
         """
         Initialize a new AnsibleMiner for a software repository.
 
-        :param path_to_repo: the path to the repository to analyze;
-        :param full_name_or_id: the repository's full name or id (e.g., radon-h2020/radon-repository-miner);
+        :param url_to_repo: the path to the repository to analyze;
         :param branch: the branch to analyze. Default 'master';
         """
-        super().__init__(path_to_repo, full_name_or_id, branch)
+        super().__init__(url_to_repo, branch)
 
     def discard_undesired_fixing_commits(self, commits: List[str]):
         """

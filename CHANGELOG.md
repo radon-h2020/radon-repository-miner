@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.5.0]
+- Changed command-line options
+- Changed APIs parameters in miners and metrics_extractors
+
 ## [0.3.0]
 - Renamed modules (repository -> mining.ansible, mining.tosca).
 - RepositoryMiner is now BaseMiner in mining.base, and is extended by AnsibleMiner in mining.ansible and ToscaMiner in mining.tosca.

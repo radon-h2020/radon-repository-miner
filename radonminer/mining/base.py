@@ -1,3 +1,4 @@
+import os
 import re
 
 from pydriller.domain.commit import ModificationType
@@ -15,6 +16,8 @@ BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'B
 
 FIXING_COMMITS_REGEX = r'(bug|fix|error|crash|problem|fail|defect|patch)'
 
+full_name_pattern = re.compile(r'git(hub|lab){1}\.com/([\w\W]+)\.git')
+
 
 class BaseMiner:
     """
@@ -22,18 +25,16 @@ class BaseMiner:
     """
 
     def __init__(self,
-                 path_to_repo: str,
-                 full_name_or_id: Union[str, int],
+                 url_to_repo: str,
                  branch: str = 'master'):
         """
         Initialize a new BaseMiner for a software repository.
 
-        :param path_to_repo: the path to the repository to analyze;
-        :param full_name_or_id: the repository's full name or id (e.g., radon-h2020/radon-repository-miner);
+        :param url_to_repo: the HTTPS url to the remote repository to analyze;
         :param branch: the branch to analyze. Default 'master';
         """
-        self.path_to_repo = path_to_repo
-        self.full_name_or_id = full_name_or_id
+        match = full_name_pattern.search(url_to_repo)
+        self.full_name = match.groups()[1]
         self.branch = branch
 
         self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
@@ -43,9 +44,12 @@ class BaseMiner:
 
         # Get all the repository commits sorted by commit date
         self.commit_hashes = [c.hash for c in
-                              RepositoryMining(self.path_to_repo,
+                              RepositoryMining(path_to_repo=url_to_repo,
+                                               clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
                                                only_in_branch=self.branch,
                                                order='date-order').traverse_commits()]
+
+        self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.full_name.split('/')[1])
 
     def discard_undesired_fixing_commits(self, commits: List[str]):
         """
@@ -62,9 +66,9 @@ class BaseMiner:
         """
 
         if host == 'github':
-            host = GithubHost(self.full_name_or_id)
+            host = GithubHost(self.full_name)
         elif host == 'gitlab':
-            host = GitlabHost(self.full_name_or_id)
+            host = GitlabHost(self.full_name)
         else:
             raise ValueError("Parameter host must be one among ('github', 'gitlab')")
 
@@ -221,7 +225,7 @@ class BaseMiner:
         """
         Start labeling process
         :param files: a list of FixingFile objects
-        :return: yields labeled files
+        :return: yields failure prone files
         """
 
         if not (self.fixing_commits or self.fixing_files):

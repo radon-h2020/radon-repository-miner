@@ -9,9 +9,9 @@ class HostTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.gh = GithubHost(full_name_or_id='stefanodallapalma/test-github-apis')
+        cls.gh = GithubHost(full_name='stefanodallapalma/test-github-apis')
 
-        cls.gl = GitlabHost(full_name_or_id='stefanodallapalma/test-gitlab-apis')
+        cls.gl = GitlabHost(full_name='stefanodallapalma/test-gitlab-apis')
 
     def test_github_get_labels(self):
         assert set(self.gh.get_labels()) == {'bug', 'documentation', 'duplicate', 'duplicate', 'enhancement',

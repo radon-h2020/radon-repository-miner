@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import re
 
 from typing import List
 from pydriller.git_repository import GitRepository
@@ -13,6 +14,8 @@ from pydriller.metrics.process.hunks_count import HunksCount
 from pydriller.metrics.process.lines_count import LinesCount
 
 from radonminer.files import FailureProneFile
+
+full_name_pattern = re.compile(r'git(hub|lab){1}\.com/([\w\W]+)\.git')
 
 
 def get_content(path: str) -> str:
@@ -31,9 +34,20 @@ def get_content(path: str) -> str:
 
 class BaseMetricsExtractor:
 
-    def __init__(self, path_to_repo: str):
-        self.path_to_repo = path_to_repo
-        self.git_repo = GitRepository(path_to_repo)
+    def __init__(self, url_to_repo: str, at: str = 'release'):
+
+        if at not in ('release', 'commit'):
+            raise ValueError(f'{at} is not valid! Try with \'release\' or \'commit\'.')
+
+        match = full_name_pattern.search(url_to_repo)
+        self.full_name = match.groups()[1]
+
+        self.repo_miner = RepositoryMining(path_to_repo=url_to_repo,
+                                           clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
+                                           only_releases=True if at == 'release' else False,
+                                           order='date-order')
+
+        self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.full_name.split('/')[1])
         self.dataset = pd.DataFrame()
 
     def get_files(self) -> set:
@@ -96,20 +110,20 @@ class BaseMetricsExtractor:
             'dict_deletions_max': lines_count.max_removed(),
             'dict_deletions_avg': lines_count.avg_removed()}
 
-    def extract(self, labeled_files: List[FailureProneFile], product: bool = True, process: bool = True,
-                delta: bool = False, at: str = 'release'):
+    def extract(self,
+                labeled_files: List[FailureProneFile],
+                product: bool = True,
+                process: bool = True,
+                delta: bool = False):
 
-        if at not in ('release', 'commit'):
-            raise ValueError(f'{at} is not valid! Try with \'release\' or \'commit\'.')
+        commits_or_releases = list(self.repo_miner.traverse_commits())
 
-        commits_or_releases = list(RepositoryMining(path_to_repo=self.path_to_repo,
-                                                    only_releases=True if at == 'release' else False,
-                                                    order='date-order').traverse_commits())
+        git_repo = GitRepository(self.path_to_repo)
 
         for i in range(len(commits_or_releases)):
             commit = commits_or_releases[i]
 
-            self.git_repo.checkout(commit.hash)
+            git_repo.checkout(commit.hash)
 
             if process:
                 # Extract process metrics
@@ -147,7 +161,8 @@ class BaseMetricsExtractor:
                     metrics['commits_count'] = process_metrics['dict_commits_count'].get(filepath)
                     metrics['contributors_count'] = process_metrics['dict_contributors_count'].get(filepath)
                     metrics['minor_contributors_count'] = process_metrics['dict_minor_contributors_count'].get(filepath)
-                    metrics['highest_contributor_experience'] = process_metrics['dict_highest_contributor_experience'].get(filepath)
+                    metrics['highest_contributor_experience'] = process_metrics[
+                        'dict_highest_contributor_experience'].get(filepath)
                     metrics['hunks_median'] = process_metrics['dict_hunks_median'].get(filepath)
                     metrics['additions'] = process_metrics['dict_additions'].get(filepath)
                     metrics['additions_max'] = process_metrics['dict_additions_max'].get(filepath)
@@ -161,7 +176,7 @@ class BaseMetricsExtractor:
 
                 self.dataset = self.dataset.append(metrics, ignore_index=True)
 
-            self.git_repo.reset()
+            git_repo.reset()
 
     def ignore_file(self, path_to_file: str, content: str = None):
         return False
