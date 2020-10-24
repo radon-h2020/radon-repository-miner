@@ -1,5 +1,8 @@
+import os
+
 from abc import ABC, abstractmethod
 from typing import NewType, List, Set, Union
+from dotenv import load_dotenv
 
 import github
 from gitlab import Gitlab
@@ -14,7 +17,7 @@ GithubIssue = NewType('GithubIssue', github.Issue.Issue)
 class SVCHost(ABC):
 
     def __init__(self):
-        pass
+        load_dotenv()
 
     @abstractmethod
     def get_labels(self) -> Set[str]:
@@ -47,9 +50,9 @@ class SVCHost(ABC):
 
 class GithubHost(SVCHost):
 
-    def __init__(self, access_token: str, full_name_or_id: Union[str, int]):
+    def __init__(self, full_name_or_id: Union[str, int]):
         super().__init__()
-        self.__repository = github.Github(access_token).get_repo(full_name_or_id)
+        self.__repository = github.Github(os.getenv('GITHUB_ACCESS_TOKEN')).get_repo(full_name_or_id)
 
     def get_labels(self) -> Set[str]:
 
@@ -78,9 +81,9 @@ class GitlabHost(SVCHost):
     # From https://docs.gitlab.com/ee/administration/issue_closing_pattern.html
     issue_closing_pattern = '((?:[Cc]los(?:e[sd]?|ing)|\b[Ff]ix(?:e[sd]|ing)?|\b[Rr]esolv(?:e[sd]?|ing)|\b[Ii]mplement(?:s|ed|ing)?)(:?) +(?:(?:issues? +)?%{issue_ref}))'
 
-    def __init__(self, access_token: str, full_name_or_id: Union[str, int]):
+    def __init__(self, full_name_or_id: Union[str, int]):
         super().__init__()
-        self.__project = Gitlab('http://gitlab.com', access_token).projects.get(full_name_or_id)
+        self.__project = Gitlab('http://gitlab.com', os.getenv('GITLAB_ACCESS_TOKEN')).projects.get(full_name_or_id)
 
     def get_labels(self) -> Set[str]:
         return set([label.name for label in self.__project.labels.list(all=True)])

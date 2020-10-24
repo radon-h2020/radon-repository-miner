@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from dotenv import load_dotenv
+
 from radonminer.hosts import GithubHost, GitlabHost
 
 
@@ -9,12 +9,9 @@ class HostTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        load_dotenv()
-        cls.gh = GithubHost(access_token=os.getenv('GITHUB_ACCESS_TOKEN'),
-                            full_name_or_id='stefanodallapalma/test-github-apis')
+        cls.gh = GithubHost(full_name_or_id='stefanodallapalma/test-github-apis')
 
-        cls.gl = GitlabHost(access_token=os.getenv('GITLAB_ACCESS_TOKEN'),
-                            full_name_or_id='stefanodallapalma/test-gitlab-apis')
+        cls.gl = GitlabHost(full_name_or_id='stefanodallapalma/test-gitlab-apis')
 
     def test_github_get_labels(self):
         assert set(self.gh.get_labels()) == {'bug', 'documentation', 'duplicate', 'duplicate', 'enhancement',
