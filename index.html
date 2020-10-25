@@ -128,7 +128,19 @@ pip install -r requirements.txt
 pip install .
 </code></pre>
 <h1 id="how-to-test">How to test</h1>
-<pre><code>pip install pytest
+<p>To avoid affecting the current environment, it is strongly recommended to create and activate a virtual environment:</p>
+<pre><code>sudo apt install python3-venv
+python3 -m venv radon-miner-env
+source radon-miner-env/bin/activate
+</code></pre>
+<p>Setup environment variables:</p>
+<pre><code class="language-text">export GITHUB_ACCESS_TOKEN=************
+export GITLAB_ACCESS_TOKEN=************
+</code></pre>
+<p>Then</p>
+<pre><code class="language-text">pip install pytest
+pip install -r requirements.txt
+pip install .
 unzip test_data.zip -d .
 pytest tests/
 </code></pre></div>
