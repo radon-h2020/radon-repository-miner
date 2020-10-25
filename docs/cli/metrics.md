@@ -6,7 +6,7 @@
 usage: radon-miner extract-metrics [-h] path_to_repo src {ansible,tosca} {product,process,delta,all} {release,commit} dest
 
 positional arguments:
-  path_to_repo          the local path to the git repository
+  path_to_repo          the path to a cloned git repository
   src                   the json report generated from a previous run of 'radon-miner mine'
   {ansible,tosca}       extract metrics for Ansible or Tosca
   {product,process,delta,all}
@@ -17,6 +17,11 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
 ```
+
+!!! note
+    This command is expected to be executed after `radon-miner mine`. Therefore, it does not automatically clones the 
+    repository. Rather, it requires the path to a cloned repository, which can be the one cloned in `$TMP_REPOSITORIES_DIR`
+    during a previous mining, or one cloned anywhere on the user machine.
 
 ## path_to_repo
 The path to the cloned repository. This is mandatory to access the file content and to extract metrics.

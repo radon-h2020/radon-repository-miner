@@ -16,7 +16,7 @@ BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'B
 
 FIXING_COMMITS_REGEX = r'(bug|fix|error|crash|problem|fail|defect|patch)'
 
-full_name_pattern = re.compile(r'git(hub|lab){1}\.com/([\w\W]+)\.git')
+full_name_pattern = re.compile(r'(github|gilab){1}\.com/([\w\W]+)\.git')
 
 
 class BaseMiner:
@@ -34,7 +34,8 @@ class BaseMiner:
         :param branch: the branch to analyze. Default 'master';
         """
         match = full_name_pattern.search(url_to_repo)
-        self.full_name = match.groups()[1]
+        self.host = match.groups()[0]
+        self.repository = match.groups()[1]
         self.branch = branch
 
         self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
@@ -49,7 +50,7 @@ class BaseMiner:
                                                only_in_branch=self.branch,
                                                order='date-order').traverse_commits()]
 
-        self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.full_name.split('/')[1])
+        self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.repository.split('/')[1])
 
     def discard_undesired_fixing_commits(self, commits: List[str]):
         """
@@ -58,17 +59,17 @@ class BaseMiner:
         """
         pass
 
-    def get_fixing_commits_from_closed_issues(self, host: str, labels: Set[str] = None) -> List[str]:
+    def get_fixing_commits_from_closed_issues(self, labels: Set[str] = None) -> List[str]:
         """
         Collect fixing-commit hashes by analyzing closed issues related to bugs.
         :param labels: bug-related labels (e.g., bug, bugfix, type: bug)
         :return: the set of fixing-commit hashes
         """
 
-        if host == 'github':
-            host = GithubHost(self.full_name)
-        elif host == 'gitlab':
-            host = GitlabHost(self.full_name)
+        if self.host == 'github':
+            host = GithubHost(self.repository)
+        elif self.host == 'gitlab':
+            host = GitlabHost(self.repository)
         else:
             raise ValueError("Parameter host must be one among ('github', 'gitlab')")
 

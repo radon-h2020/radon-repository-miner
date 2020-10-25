@@ -34,7 +34,7 @@ class RepositoryMinerTestCase(unittest.TestCase):
         self.repo_miner.exclude_fixing_files = list()
 
     def test_get_fixing_commits_from_closed_issues(self):
-        hashes = self.repo_miner.get_fixing_commits_from_closed_issues(host='github', labels={'bug'})
+        hashes = self.repo_miner.get_fixing_commits_from_closed_issues(labels={'bug'})
         assert not hashes
 
     def test_get_fixing_commits_from_commit_messages(self):

@@ -44,10 +44,6 @@ def valid_file(x: str) -> str:
 
 def set_mine_parser(subparsers):
     parser = subparsers.add_parser('mine', help='Mine fixing- and clean- files')
-    parser.add_argument(action='store',
-                        dest='url_to_repo',
-                        type=valid_dir,
-                        help='the local path to the git repository')
 
     parser.add_argument(action='store',
                         dest='host',
@@ -60,6 +56,10 @@ def set_mine_parser(subparsers):
                         type=str,
                         choices=['ansible', 'tosca'],
                         help='mine only commits modifying files of this language')
+
+    parser.add_argument(action='store',
+                        dest='repository',
+                        help='the repository full name: <onwer/name> (e.g., radon-h2020/radon-repository-miner)')
 
     parser.add_argument(action='store',
                         dest='dest',
@@ -84,9 +84,9 @@ def set_extract_metrics_parser(subparsers):
     parser = subparsers.add_parser('extract-metrics', help='Extract metrics from the mined files')
 
     parser.add_argument(action='store',
-                        dest='url_to_repo',
+                        dest='path_to_repo',
                         type=valid_dir,
-                        help='the local path to the git repository')
+                        help='the path to a cloned git repository')
 
     parser.add_argument(action='store',
                         dest='src',
@@ -131,29 +131,31 @@ def get_parser():
 
 
 def mine(args: Namespace):
-    global token
+    global token, url_to_repo
     load_dotenv()
 
     if args.host == 'github':
         token = os.getenv('GITHUB_ACCESS_TOKEN')
+        url_to_repo = f'https://github.com/{args.repository}.git'
     elif args.host == 'gitlab':
         token = os.getenv('GITLAB_ACCESS_TOKEN')
+        url_to_repo = f'https://gitlab.com/{args.repository}.git'
 
     if token is None:
         token = getpass('Access token:')
 
     if args.verbose:
-        print(f'Mining: {args.url_to_repo} [{datetime.now().hour}:{datetime.now().minute}]')
+        print(f'Mining {args.repository} [started at: {datetime.now().hour}:{datetime.now().minute}]')
 
     if args.language == 'ansible':
-        miner = AnsibleMiner(url_to_repo=args.url_to_repo, branch=args.branch)
+        miner = AnsibleMiner(url_to_repo=url_to_repo, branch=args.branch)
     else:
-        miner = ToscaMiner(url_to_repo=args.url_to_repo, branch=args.branch)
+        miner = ToscaMiner(url_to_repo=url_to_repo, branch=args.branch)
 
     if args.verbose:
         print('Identifying fixing-commits from closed issues related to bugs')
 
-    miner.get_fixing_commits_from_closed_issues(host=args.host, labels=None)
+    miner.get_fixing_commits_from_closed_issues(labels=None)
 
     if args.verbose:
         print('Identifying fixing-commits from commit messages')
@@ -173,7 +175,7 @@ def mine(args: Namespace):
     if args.verbose:
         print('Generating reports')
 
-    html = create_report(full_name_or_id=args.args.url_to_repo, labeled_files=failure_prone_files)
+    html = create_report(full_name_or_id=args.repository, labeled_files=failure_prone_files)
     filename_html = os.path.join(args.dest, 'report.html')
     filename_json = os.path.join(args.dest, 'report.json')
 

@@ -19,9 +19,13 @@ class ExtractMetricsTestCase(unittest.TestCase):
         os.mkdir(cls.path_to_tmp_dir)
         os.environ["TMP_REPOSITORIES_DIR"] = cls.path_to_tmp_dir
 
-        cls.ansible_extractor = AnsibleMetricsExtractor(url_to_repo='https://github.com/adriagalin/ansible.motd.git',
-                                                        at='release')
-        cls.tosca_extractor = ToscaMetricsExtractor(url_to_repo='https://github.com/UoW-CPC/COLARepo.git', at='release')
+        path_to_ansible_repo = os.path.join(os.getcwd(), 'test_data', 'repositories', 'ansible.motd')
+        path_to_tosca_repo = os.path.join(os.getcwd(), 'test_data', 'repositories', 'COLARepo')
+        path_to_remote_ansible_repo = 'https://github.com/adriagalin/ansible.motd.git'
+
+        cls.ansible_extractor = AnsibleMetricsExtractor(path_to_repo=path_to_ansible_repo, at='release')
+        cls.tosca_extractor = ToscaMetricsExtractor(path_to_repo=path_to_tosca_repo, at='release')
+        cls.remote_ansible_extractor = AnsibleMetricsExtractor(path_to_repo=path_to_remote_ansible_repo, at='release')
 
         with open(os.path.join(PATH_TO_TEST_DATA, 'ansible_report.json')) as f:
             cls.ansible_labeled_files = json.load(f, cls=FailureProneFileDecoder)
@@ -52,6 +56,16 @@ class ExtractMetricsTestCase(unittest.TestCase):
         assert 'committed_at' in self.tosca_extractor.dataset.columns
         assert 'failure_prone' in self.tosca_extractor.dataset.columns
         assert self.tosca_extractor.dataset.shape[1] == 61
+
+    def test_remote_ansible_extract(self):
+        self.remote_ansible_extractor.extract(labeled_files=self.ansible_labeled_files, product=True, process=True,
+                                              delta=False)
+
+        assert 'filepath' in self.ansible_extractor.dataset.columns
+        assert 'commit' in self.ansible_extractor.dataset.columns
+        assert 'committed_at' in self.ansible_extractor.dataset.columns
+        assert 'failure_prone' in self.ansible_extractor.dataset.columns
+        assert self.ansible_extractor.dataset.shape[1] == 66
 
 
 if __name__ == '__main__':

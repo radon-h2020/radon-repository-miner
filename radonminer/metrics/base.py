@@ -32,22 +32,35 @@ def get_content(path: str) -> str:
         return f.read()
 
 
+def is_remote(repo: str) -> bool:
+    return repo.startswith("git@") or repo.startswith("https://")
+
+
 class BaseMetricsExtractor:
 
-    def __init__(self, url_to_repo: str, at: str = 'release'):
+    def __init__(self, path_to_repo: str, at: str = 'release'):
 
         if at not in ('release', 'commit'):
             raise ValueError(f'{at} is not valid! Try with \'release\' or \'commit\'.')
 
-        match = full_name_pattern.search(url_to_repo)
-        self.full_name = match.groups()[1]
+        self.path_to_repo = path_to_repo
 
-        self.repo_miner = RepositoryMining(path_to_repo=url_to_repo,
-                                           clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
-                                           only_releases=True if at == 'release' else False,
-                                           order='date-order')
+        # If path_to_repo is a remote url, then clone it in os.getenv('TMP_REPOSITORIES_DIR')
+        if is_remote(path_to_repo):
+            self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
+                                               clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
+                                               only_releases=True if at == 'release' else False,
+                                               order='date-order')
 
-        self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.full_name.split('/')[1])
+            match = full_name_pattern.search(path_to_repo)
+            repo_name = match.groups()[1].split('/')[1]
+            self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), repo_name)
+
+        else:
+            self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
+                                               only_releases=True if at == 'release' else False,
+                                               order='date-order')
+
         self.dataset = pd.DataFrame()
 
     def get_files(self) -> set:

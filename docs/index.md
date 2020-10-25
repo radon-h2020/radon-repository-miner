@@ -15,7 +15,7 @@ pip install .
 
 # How to test
 
-```
+```text
 pip install pytest
 unzip test_data.zip -d .
 pytest tests/

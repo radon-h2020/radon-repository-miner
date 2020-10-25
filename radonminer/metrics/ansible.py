@@ -7,8 +7,8 @@ from radonminer.filters import is_ansible_file
 
 class AnsibleMetricsExtractor(BaseMetricsExtractor):
 
-    def __init__(self, url_to_repo: str, at: str):
-        super().__init__(url_to_repo, at)
+    def __init__(self, path_to_repo: str, at: str):
+        super().__init__(path_to_repo, at)
 
     def get_product_metrics(self, script: str) -> dict:
         """
