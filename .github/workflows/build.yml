@@ -40,4 +40,6 @@ jobs:
         GITHUB_ACCESS_TOKEN: ${{ secrets.RADON_GITHUB_ACCESS_TOKEN }}
         GITLAB_ACCESS_TOKEN: ${{ secrets.RADON_GITLAB_ACCESS_TOKEN }}
       run: |
+        pip install .
+        sudo mv /opt/hostedtoolcache/Python/3.8.6/x64/bin/radon-miner /usr/local/bin
         pytest
