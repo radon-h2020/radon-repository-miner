@@ -72,7 +72,7 @@ export TMP_REPOSITORIES_DIR=./radon-miner-env/tmp/
 
 Install the package:
 
-`pip install radon-repository-miner`
+`pip install repository-miner`
 
 Finally, run:
 

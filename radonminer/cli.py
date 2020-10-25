@@ -15,7 +15,7 @@ from radonminer.mining.ansible import AnsibleMiner
 from radonminer.mining.tosca import ToscaMiner
 from radonminer.report import create_report
 
-VERSION = '0.5.0'
+VERSION = '0.6.0'
 
 
 def valid_dir(x: str) -> str:

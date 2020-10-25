@@ -9,7 +9,7 @@ from radonminer.files import FixingFile
 from radonminer.mining.tosca import ToscaMiner
 
 
-class RepositoryMinerTestCase(unittest.TestCase):
+class ToscaMinerTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

@@ -9,7 +9,7 @@ from radonminer.files import FixingFile
 from radonminer.mining.ansible import AnsibleMiner
 
 
-class RepositoryMinerTestCase(unittest.TestCase):
+class AnsibleMinerTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
