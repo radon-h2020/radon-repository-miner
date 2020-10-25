@@ -86,7 +86,7 @@ def set_extract_metrics_parser(subparsers):
     parser.add_argument(action='store',
                         dest='path_to_repo',
                         type=valid_dir,
-                        help='the path to a cloned git repository')
+                        help='the absolute path to a cloned repository or the url to a remote repository')
 
     parser.add_argument(action='store',
                         dest='src',
@@ -115,6 +115,12 @@ def set_extract_metrics_parser(subparsers):
                         dest='dest',
                         type=valid_dir,
                         help='destination folder to save the resulting csv')
+
+    parser.add_argument('--verbose',
+                        action='store_true',
+                        dest='verbose',
+                        default=False,
+                        help='show log')
 
 
 def get_parser():
@@ -176,8 +182,8 @@ def mine(args: Namespace):
         print('Generating reports')
 
     html = create_report(full_name_or_id=args.repository, labeled_files=failure_prone_files)
-    filename_html = os.path.join(args.dest, 'report.html')
-    filename_json = os.path.join(args.dest, 'report.json')
+    filename_html = os.path.join(args.dest, 'failure-prone-files.html')
+    filename_json = os.path.join(args.dest, 'failure-prone-files.json')
 
     with io.open(filename_html, "w", encoding="utf-8") as f:
         f.write(html)
@@ -198,13 +204,23 @@ def mine(args: Namespace):
 
 def extract_metrics(args: Namespace):
     global extractor
+
+    if args.verbose:
+        print(f'Extracting metrics from {args.path_to_repo} using report {args.src} [started at: {datetime.now().hour}:{datetime.now().minute}]')
+
     with open(args.src, 'r') as f:
         labeled_files = json.load(f, cls=FailureProneFileDecoder)
 
+    if args.verbose:
+        print(f'Setting up {args.language} metrics extractor')
+
     if args.language == 'ansible':
-        extractor = AnsibleMetricsExtractor(args.url_to_repo, at=args.at)
+        extractor = AnsibleMetricsExtractor(args.path_to_repo, at=args.at)
     elif args.language == 'tosca':
-        extractor = ToscaMetricsExtractor(args.url_to_repo, at=args.at)
+        extractor = ToscaMetricsExtractor(args.path_to_repo, at=args.at)
+
+    if args.verbose:
+        print(f'Extracting {args.metrics} metrics')
 
     assert extractor
     extractor.extract(labeled_files=labeled_files,
@@ -213,6 +229,9 @@ def extract_metrics(args: Namespace):
                       delta=args.metrics in ('delta', 'all'))
 
     extractor.to_csv(os.path.join(args.dest, 'metrics.csv'))
+
+    if args.verbose:
+        print(f'Metrics saved at {args.dest}/metrics.csv [completed at: {datetime.now().hour}:{datetime.now().minute}]')
 
 
 def main():

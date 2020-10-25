@@ -18,8 +18,11 @@ optional arguments:
 !!! note "Output"
     Running this command will generate the following report files:
     
-    * `dest/report.html`
-    * `dest/report.json`
+    * `dest/failure-prone-files.html`
+    * `dest/failure-prone-files.json`
+    
+    File `failure-prone-files.json` is a list of dictionaries containing the `filepath` relative to the repository root,
+    the `commit` hash at which the file was failure-prone, and the respective `fixing-commit` hash.
 
 !!! warning "Requirements"
     To properly use this command you **MUST** add the following to your environment variables: 
@@ -95,7 +98,7 @@ You can now see the reports:
 ```text
 ls
 
-report.html report.json
+failure-prone-files.html failure-prone-files.json
 ```  
 
 ## Mine repository (using the Docker image)
