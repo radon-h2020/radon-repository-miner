@@ -1,5 +1,5 @@
 from pydriller.repository_mining import RepositoryMining
-from typing import List, Union
+from typing import List
 
 from radonminer import filters
 from radonminer.mining.base import BaseMiner

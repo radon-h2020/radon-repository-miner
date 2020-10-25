@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 from pydriller.repository_mining import RepositoryMining
 
 from radonminer import filters

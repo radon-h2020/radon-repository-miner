@@ -3,7 +3,7 @@ import re
 
 from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
-from typing import Generator, List, Set, Union
+from typing import Generator, List, Set
 
 from radonminer.files import FixingFile, FailureProneFile
 from radonminer.hosts import GithubHost, GitlabHost
