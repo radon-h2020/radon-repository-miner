@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as reqs_file:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-VERSION = '0.6.0'
+VERSION = '0.7.0'
 
 setup(name='repository-miner',
       version=VERSION,
@@ -22,7 +22,7 @@ setup(name='repository-miner',
       download_url=f'https://github.com/radon-h2020/radon-repository-miner/archive/{VERSION}.tar.gz',
       packages=find_packages(exclude=('tests',)),
       entry_points={
-          'console_scripts': ['radon-miner=radonminer.cli:main'],
+          'console_scripts': ['repo-miner=repominer.cli:main'],
       },
       classifiers=[
           "Development Status :: 4 - Beta",

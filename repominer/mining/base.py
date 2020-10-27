@@ -5,8 +5,8 @@ from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
 from typing import Generator, List, Set
 
-from radonminer.files import FixingFile, FailureProneFile
-from radonminer.hosts import GithubHost, GitlabHost
+from repominer.files import FixingFile, FailureProneFile
+from repominer.hosts import GithubHost, GitlabHost
 
 # Constants
 BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical', 'ansible_bug',

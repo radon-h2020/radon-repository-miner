@@ -1,8 +1,8 @@
 from typing import List
 from pydriller.repository_mining import RepositoryMining
 
-from radonminer import filters
-from radonminer.mining.base import BaseMiner
+from repominer import filters
+from repominer.mining.base import BaseMiner
 
 
 class AnsibleMiner(BaseMiner):

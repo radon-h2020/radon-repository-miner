@@ -2,7 +2,7 @@ import io
 
 from ansiblemetrics import metrics_extractor
 from .base import BaseMetricsExtractor
-from radonminer.filters import is_ansible_file
+from repominer.filters import is_ansible_file
 
 
 class AnsibleMetricsExtractor(BaseMetricsExtractor):

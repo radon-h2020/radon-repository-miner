@@ -5,8 +5,8 @@ import os
 import shutil
 import unittest
 
-from radonminer.files import FixingFile
-from radonminer.mining.tosca import ToscaMiner
+from repominer.files import FixingFile
+from repominer.mining.tosca import ToscaMiner
 
 
 class ToscaMinerTestCase(unittest.TestCase):

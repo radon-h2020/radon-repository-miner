@@ -1,11 +1,11 @@
 # Extract metrics
 
 ```text
-usage: radon-miner extract-metrics [-h] [--verbose] path_to_repo src {ansible,tosca} {product,process,delta,all} {release,commit} dest
+usage: repo-miner extract-metrics [-h] [--verbose] path_to_repo src {ansible,tosca} {product,process,delta,all} {release,commit} dest
 
 positional arguments:
   path_to_repo          the absolute path to a cloned repository or the url to a remote repository
-  src                   the json report generated from a previous run of 'radon-miner mine'
+  src                   the json report generated from a previous run of 'repo-miner mine'
   {ansible,tosca}       extract metrics for Ansible or Tosca
   {product,process,delta,all}
                         the metrics to extract
@@ -48,12 +48,12 @@ section to generate the `failure-prone-files.json`.
 
 Afterwards, run:
 
-`radon-miner extract-metrics radon-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose`
+`repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose`
 
 You should get a similar output:
 
 ```text
-Extracting metrics from radon-miner-env/tmp/ansible.motd using report ./failure_prone_files.json [started at: 17:34]
+Extracting metrics from repo-miner-env/tmp/ansible.motd using report ./failure_prone_files.json [started at: 17:34]
 Setting up ansible metrics extractor
 Extracting all metrics
 Metrics saved at ./metrics.csv [completed at: 17:35]

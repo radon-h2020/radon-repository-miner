@@ -4,7 +4,7 @@ This module is responsible to generate the HTML report for the mining
 import datetime
 
 from typing import List
-from radonminer.files import FailureProneFile
+from repominer.files import FailureProneFile
 
 
 def create_report(full_name_or_id:str, labeled_files: List[FailureProneFile]) -> str:

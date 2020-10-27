@@ -21,7 +21,7 @@ class CLIExtractMetricsTestCase(unittest.TestCase):
         shutil.rmtree(cls.path_to_tmp_dir)
 
     def test_mine(self):
-        result = os.system('radon-miner extract-metrics {0} {1} ansible all release {2}'.format(self.path_to_repo,
+        result = os.system('repo-miner extract-metrics {0} {1} ansible all release {2}'.format(self.path_to_repo,
                                                                                                 self.path_to_report,
                                                                                                 self.path_to_tmp_dir))
         assert result == 0

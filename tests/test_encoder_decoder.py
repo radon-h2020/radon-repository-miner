@@ -1,5 +1,5 @@
 import unittest
-from radonminer.files import FailureProneFile, FailureProneFileEncoder, FailureProneFileDecoder
+from repominer.files import FailureProneFile, FailureProneFileEncoder, FailureProneFileDecoder
 
 
 class TestFailureProneFileEncoderAndDecoder(unittest.TestCase):

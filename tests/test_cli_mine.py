@@ -20,7 +20,7 @@ class CLIMineTestCase(unittest.TestCase):
         del os.environ["TMP_REPOSITORIES_DIR"]
 
     def test_mine(self):
-        result = os.system('radon-miner mine github ansible adriagalin/ansible.motd {}'.format(self.path_to_tmp_dir))
+        result = os.system('repo-miner mine github ansible adriagalin/ansible.motd {}'.format(self.path_to_tmp_dir))
         assert result == 0
         assert 'failure-prone-files.html' in os.listdir(self.path_to_tmp_dir)
         assert 'failure-prone-files.json' in os.listdir(self.path_to_tmp_dir)

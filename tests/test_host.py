@@ -2,7 +2,7 @@ import unittest
 import os
 
 
-from radonminer.hosts import GithubHost, GitlabHost
+from repominer.hosts import GithubHost, GitlabHost
 
 
 class HostTestCase(unittest.TestCase):

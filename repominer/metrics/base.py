@@ -13,7 +13,7 @@ from pydriller.metrics.process.contributors_experience import ContributorsExperi
 from pydriller.metrics.process.hunks_count import HunksCount
 from pydriller.metrics.process.lines_count import LinesCount
 
-from radonminer.files import FailureProneFile
+from repominer.files import FailureProneFile
 
 full_name_pattern = re.compile(r'git(hub|lab){1}\.com/([\w\W]+)\.git')
 

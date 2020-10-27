@@ -1,8 +1,8 @@
 from pydriller.repository_mining import RepositoryMining
 from typing import List
 
-from radonminer import filters
-from radonminer.mining.base import BaseMiner
+from repominer import filters
+from repominer.mining.base import BaseMiner
 
 
 class ToscaMiner(BaseMiner):

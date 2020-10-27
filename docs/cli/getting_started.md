@@ -1,9 +1,7 @@
 # Getting Started
 
-`radon-miner  -h`
-
 ```text
-usage: radon-miner [-h] [-v] {mine,extract-metrics} ...
+usage: repo-miner [-h] [-v] {mine,extract-metrics} ...
 
 A Python library and command-line tool to mine Infrastructure-as-Code based software repositories.
 

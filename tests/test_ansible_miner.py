@@ -5,8 +5,8 @@ import os
 import shutil
 import unittest
 
-from radonminer.files import FixingFile
-from radonminer.mining.ansible import AnsibleMiner
+from repominer.files import FixingFile
+from repominer.mining.ansible import AnsibleMiner
 
 
 class AnsibleMinerTestCase(unittest.TestCase):

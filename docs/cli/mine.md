@@ -1,7 +1,7 @@
 # Mine
 
 ```text
-usage: radon-miner mine [-h] [--branch BRANCH] [--verbose] {github,gitlab} {ansible,tosca} repository dest
+usage: repo-miner mine [-h] [--branch BRANCH] [--verbose] {github,gitlab} {ansible,tosca} repository dest
 
 positional arguments:
   {github,gitlab}  the source code versioning host
@@ -50,15 +50,15 @@ To avoid affecting the original environment, create a new virtual environment:
 
 ```text
 sudo apt install python3-venv
-python3 -m venv radon-miner-env
-source radon-miner-env/bin/activate
+python3 -m venv repo-miner-env
+source repo-miner-env/bin/activate
 ```
 
 Create a `tmp` folder to clone the repositories to analyze:
 
 ```text
-mkdir radon-miner-env/tmp
-ls radon-miner-env/
+mkdir repo-miner-env/tmp
+ls repo-miner-env/
 
 bin  include  lib  lib64  pyvenv.cfg  share  tmp
 ```
@@ -67,7 +67,7 @@ Set up the environment variables required by the tool:
 
 ```text
 export GITHUB_ACCESS_TOKEN=***************
-export TMP_REPOSITORIES_DIR=./radon-miner-env/tmp/
+export TMP_REPOSITORIES_DIR=./repo-miner-env/tmp/
 ``` 
 
 Install the package:
@@ -77,7 +77,7 @@ Install the package:
 Finally, run:
 
 ```text
-radon-miner mine github ansible adriagalin/ansible.motd . --verbose
+repo-miner mine github ansible adriagalin/ansible.motd . --verbose
 ```
 
 You should get a similar output:

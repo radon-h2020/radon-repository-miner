@@ -3,9 +3,9 @@ import os
 import shutil
 import unittest
 
-from radonminer.files import FailureProneFileDecoder
-from radonminer.metrics.ansible import AnsibleMetricsExtractor
-from radonminer.metrics.tosca import ToscaMetricsExtractor
+from repominer.files import FailureProneFileDecoder
+from repominer.metrics.ansible import AnsibleMetricsExtractor
+from repominer.metrics.tosca import ToscaMetricsExtractor
 
 ROOT = os.path.realpath(__file__).rsplit(os.sep, 2)[0]
 PATH_TO_TEST_DATA = os.path.join(ROOT, 'test_data')

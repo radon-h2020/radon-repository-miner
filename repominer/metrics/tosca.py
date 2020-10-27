@@ -1,7 +1,7 @@
 from io import StringIO
 from toscametrics import metrics_extractor
 from .base import BaseMetricsExtractor
-from radonminer.filters import is_tosca_file
+from repominer.filters import is_tosca_file
 
 
 class ToscaMetricsExtractor(BaseMetricsExtractor):
