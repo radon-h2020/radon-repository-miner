@@ -43,23 +43,22 @@ class BaseMetricsExtractor:
         if at not in ('release', 'commit'):
             raise ValueError(f'{at} is not valid! Try with \'release\' or \'commit\'.')
 
-        self.path_to_repo = path_to_repo
-
         if os.path.isdir(path_to_repo):
+            self.path_to_repo = path_to_repo
             self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
                                                only_releases=True if at == 'release' else False,
                                                order='date-order')
-
         elif is_remote(path_to_repo):
-            # If path_to_repo is a remote url, then clone it to os.getenv('TMP_REPOSITORIES_DIR')
-            self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
-                                               clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
-                                               only_releases=True if at == 'release' else False,
-                                               order='date-order')
-
             match = full_name_pattern.search(path_to_repo)
             repo_name = match.groups()[1].split('/')[1]
-            self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), repo_name)
+            path_to_clone = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), repo_name)
+            self.path_to_repo = path_to_clone
+
+            self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
+                                               clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR') if not os.path.isdir(
+                                                   path_to_clone) else None,
+                                               only_releases=True if at == 'release' else False,
+                                               order='date-order')
 
         else:
             raise ValueError(f'{path_to_repo} does not seem a path or url to a Git repository.')

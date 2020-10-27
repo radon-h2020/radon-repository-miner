@@ -56,7 +56,7 @@ Using the `github` argument:
 
 ## Extract metrics
 
-`docker run -v /tmp:/app  repo-miner:test repo-miner extract-metrics https://github.com/<owner>/<repository>.git /tmp/failure_prone_files.json ansible all release . --verbose`
+`docker run -v /tmp:/app  repo-miner:test repo-miner extract-metrics https://github.com/<owner>/<repository>.git /tmp/failure-prone-files.json ansible all release . --verbose`
 
 
 ## CHANGELOG
