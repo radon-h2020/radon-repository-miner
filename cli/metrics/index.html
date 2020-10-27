@@ -118,11 +118,11 @@
                     <div class="col-md-9" role="main">
 
 <h1 id="extract-metrics">Extract metrics</h1>
-<pre><code class="language-text">usage: radon-miner extract-metrics [-h] [--verbose] path_to_repo src {ansible,tosca} {product,process,delta,all} {release,commit} dest
+<pre><code class="language-text">usage: repo-miner extract-metrics [-h] [--verbose] path_to_repo src {ansible,tosca} {product,process,delta,all} {release,commit} dest
 
 positional arguments:
   path_to_repo          the absolute path to a cloned repository or the url to a remote repository
-  src                   the json report generated from a previous run of 'radon-miner mine'
+  src                   the json report generated from a previous run of 'repo-miner mine'
   {ansible,tosca}       extract metrics for Ansible or Tosca
   {product,process,delta,all}
                         the metrics to extract
@@ -167,9 +167,9 @@ the <a href="https://pydriller.readthedocs.io/en/latest/processmetrics.html"><co
 <p>Follows one of the <a href="https://radon-h2020.github.io/radon-repository-miner/cli/mine/#Examples">examples</a> in the previous 
 section to generate the <code>failure-prone-files.json</code>.</p>
 <p>Afterwards, run:</p>
-<p><code>radon-miner extract-metrics radon-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose</code></p>
+<p><code>repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose</code></p>
 <p>You should get a similar output:</p>
-<pre><code class="language-text">Extracting metrics from radon-miner-env/tmp/ansible.motd using report ./failure_prone_files.json [started at: 17:34]
+<pre><code class="language-text">Extracting metrics from repo-miner-env/tmp/ansible.motd using report ./failure_prone_files.json [started at: 17:34]
 Setting up ansible metrics extractor
 Extracting all metrics
 Metrics saved at ./metrics.csv [completed at: 17:35]
