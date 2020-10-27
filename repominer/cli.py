@@ -7,7 +7,6 @@ from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from datetime import datetime
 from getpass import getpass
 
-from dotenv import load_dotenv
 from radonminer.files import FailureProneFileEncoder, FailureProneFileDecoder
 from radonminer.metrics.ansible import AnsibleMetricsExtractor
 from radonminer.metrics.tosca import ToscaMetricsExtractor
@@ -138,7 +137,6 @@ def get_parser():
 
 def mine(args: Namespace):
     global token, url_to_repo
-    load_dotenv()
 
     if args.host == 'github':
         token = os.getenv('GITHUB_ACCESS_TOKEN')
