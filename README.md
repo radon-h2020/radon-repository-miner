@@ -41,22 +41,22 @@ pytest
 # How to run Docker container
 
 First create or define a directory to mount inside the Docker container to access the results once generated.
-For the sake of the example let's use `/tmp/`.
+For the sake of the example let's use `/tmp/repo-miner`.
  
 ## Mine
 
 Using the `github` argument:
 
-`docker run -v /tmp:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:test repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+`docker run -v /tmp/repo-miner:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:test repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
 
 Using the `github` argument:
 
-`docker run -v /tmp:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:test repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+`docker run -v /tmp/repo-miner:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:test repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
 
 
 ## Extract metrics
 
-`docker run -v /tmp:/app  repo-miner:test repo-miner extract-metrics https://github.com/<owner>/<repository>.git /tmp/failure-prone-files.json ansible all release . --verbose`
+`docker run -v /tmp/repo-miner:/app  repo-miner:test repo-miner extract-metrics https://github.com/<owner>/<repository>.git ./failure-prone-files.json ansible all release . --verbose`
 
 
 ## CHANGELOG

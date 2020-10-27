@@ -21,3 +21,5 @@ RUN pip install repository-miner
 
 # Environment variable for temporary repositories
 ENV TMP_REPOSITORIES_DIR=/tmp/
+
+CMD repo-miner -h
