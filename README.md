@@ -27,11 +27,37 @@ pip install .
 
 # How to test
 
-```
+```text
 pip install pytest
 unzip test_data.zip -d .
-pytest tests/
+pytest
 ```
+
+
+# How to build Docker container
+
+`docker build --tag repo-miner:latest .`
+
+# How to run Docker container
+
+First create or define a directory to mount inside the Docker container to access the results once generated.
+For the sake of the example let's use `/tmp/`.
+ 
+## Mine
+
+Using the `github` argument:
+
+`docker run -v /tmp:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:test repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+
+Using the `github` argument:
+
+`docker run -v /tmp:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:test repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+
+
+## Extract metrics
+
+`docker run -v /tmp:/app  repo-miner:test repo-miner extract-metrics https://github.com/<owner>/<repository>.git /tmp/failure_prone_files.json ansible all release . --verbose`
+
 
 ## CHANGELOG
 See the [CHANGELOG](CHANGELOG.md) for information about the release history.

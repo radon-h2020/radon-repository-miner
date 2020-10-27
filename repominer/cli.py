@@ -14,7 +14,19 @@ from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 from repominer.report import create_report
 
-VERSION = '0.7.0'
+VERSION = '0.7.1'
+
+
+def valid_dir_or_url(x: str) -> str:
+    """
+    Check if x is a directory and exists, or a remote url
+    :param x: a path
+    :return: the path if exists or is a remote url; raise an ArgumentTypeError otherwise
+    """
+    if not (os.path.isdir(x) or x.startswith("git@") or x.startswith("https://")):
+        raise ArgumentTypeError('Insert a valid path or url')
+
+    return x
 
 
 def valid_dir(x: str) -> str:
@@ -84,7 +96,7 @@ def set_extract_metrics_parser(subparsers):
 
     parser.add_argument(action='store',
                         dest='path_to_repo',
-                        type=valid_dir,
+                        type=valid_dir_or_url,
                         help='the absolute path to a cloned repository or the url to a remote repository')
 
     parser.add_argument(action='store',
@@ -204,7 +216,8 @@ def extract_metrics(args: Namespace):
     global extractor
 
     if args.verbose:
-        print(f'Extracting metrics from {args.path_to_repo} using report {args.src} [started at: {datetime.now().hour}:{datetime.now().minute}]')
+        print(
+            f'Extracting metrics from {args.path_to_repo} using report {args.src} [started at: {datetime.now().hour}:{datetime.now().minute}]')
 
     with open(args.src, 'r') as f:
         labeled_files = json.load(f, cls=FailureProneFileDecoder)

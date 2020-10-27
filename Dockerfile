@@ -1,12 +1,23 @@
-FROM python:3.8-buster
+FROM ubuntu:20.04
 
 MAINTAINER Stefano Dalla Palma
 
-RUN python3.8 -m pip install --upgrade pip
+# Install python
+RUN apt-get update \
+  && apt-get install -y python3-pip python3-dev \
+  && cd /usr/local/bin \
+  && ln -s /usr/bin/python3 python \
+  && pip3 install --upgrade pip
+
+# Install git
+RUN apt-get install git -y
 
 COPY . /app
 WORKDIR /app
 
-RUN pip install repository-miner==0.7.0
+# Install application (latest)
+RUN pip install -r requirements.txt
+RUN pip install repository-miner
 
-CMD repo-miner -h
+# Environment variable for temporary repositories
+ENV TMP_REPOSITORIES_DIR=/tmp/

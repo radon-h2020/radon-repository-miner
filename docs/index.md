@@ -17,7 +17,7 @@ pip install .
 
 To avoid affecting the current environment, it is strongly recommended to create and activate a virtual environment:
 
-```
+```text
 sudo apt install python3-venv
 python3 -m venv repo-miner-env
 source repo-miner-env/bin/activate

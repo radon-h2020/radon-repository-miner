@@ -45,8 +45,13 @@ class BaseMetricsExtractor:
 
         self.path_to_repo = path_to_repo
 
-        # If path_to_repo is a remote url, then clone it in os.getenv('TMP_REPOSITORIES_DIR')
-        if is_remote(path_to_repo):
+        if os.path.isdir(path_to_repo):
+            self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
+                                               only_releases=True if at == 'release' else False,
+                                               order='date-order')
+
+        elif is_remote(path_to_repo):
+            # If path_to_repo is a remote url, then clone it to os.getenv('TMP_REPOSITORIES_DIR')
             self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
                                                clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
                                                only_releases=True if at == 'release' else False,
@@ -57,9 +62,7 @@ class BaseMetricsExtractor:
             self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), repo_name)
 
         else:
-            self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
-                                               only_releases=True if at == 'release' else False,
-                                               order='date-order')
+            raise ValueError(f'{path_to_repo} does not seem a path or url to a Git repository.')
 
         self.dataset = pd.DataFrame()
 
