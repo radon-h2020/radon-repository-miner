@@ -127,19 +127,24 @@
                     <div class="col-md-9" role="main">
 
 <h1 id="mine">Mine</h1>
-<pre><code class="language-text">usage: repo-miner mine [-h] [--branch BRANCH] [--verbose] {github,gitlab} {ansible,tosca} repository dest
+<pre><code class="language-text">usage: repo-miner mine [-h] [--branch BRANCH] [--exclude-commits EXCLUDE_COMMITS] [--exclude-files EXCLUDE_FILES] [--verbose] {fixing-commits,fixed-files,failure-prone-files} {github,gitlab} {ansible,tosca} repository dest
 
 positional arguments:
-  {fixing-commits,fixed-files,failure-prone-files} the information to mine
-  {github,gitlab}  the source code versioning host
-  {ansible,tosca}  mine only commits modifying files of this language
-  repository       the repository full name: &lt;onwer/name&gt; (e.g., radon-h2020/radon-repository-miner) 
-  dest             destination folder for the reports
+  {fixing-commits,fixed-files,failure-prone-files}
+                        the information to mine
+  {github,gitlab}       the source code versioning host
+  {ansible,tosca}       mine only commits modifying files of this language
+  repository            the repository full name: &lt;onwer/name&gt; (e.g., radon-h2020/radon-repository-miner)
+  dest                  destination folder for the reports
 
 optional arguments:
-  -h, --help       show this help message and exit
-  --branch BRANCH  the repository branch to mine (default: master)
-  --verbose        show log
+  -h, --help            show this help message and exit
+  --branch BRANCH       the repository branch to mine (default: master)
+  --exclude-commits EXCLUDE_COMMITS
+                        the path to a JSON file containing the list of commit hashes to exclude
+  --exclude-files EXCLUDE_FILES
+                        the path to a JSON file containing the list of FixedFiles to exclude
+  --verbose             show log
 </code></pre>
 <div class="admonition note">
 <p class="admonition-title">Output</p>
