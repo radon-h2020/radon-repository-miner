@@ -4,6 +4,7 @@
 usage: repo-miner mine [-h] [--branch BRANCH] [--verbose] {github,gitlab} {ansible,tosca} repository dest
 
 positional arguments:
+  {fixing-commits,fixing-files,failure-prone-files} the information to mine
   {github,gitlab}  the source code versioning host
   {ansible,tosca}  mine only commits modifying files of this language
   repository       the repository full name: <onwer/name> (e.g., radon-h2020/radon-repository-miner) 
@@ -59,9 +60,9 @@ optional arguments:
     
 4. **Mine**
     
-    *(using github)* `docker run -v /tmp/repo-miner:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+    *(using github)* `docker run -v /tmp/repo-miner:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine failure-prone-files github ansible adriagalin/ansible.motd . --verbose`
     
-    *(using gitlab)* `docker run -v /tmp/repo-miner:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+    *(using gitlab)* `docker run -v /tmp/repo-miner:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine failure-prone-files github ansible adriagalin/ansible.motd . --verbose`
 
 5. **Access reports**
     
@@ -96,7 +97,7 @@ optional arguments:
 
 5. **Mine**
 
-    `repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+    `repo-miner mine failure-prone-files github ansible adriagalin/ansible.motd . --verbose`
 
 6. **Access reports**
     
@@ -111,9 +112,12 @@ In both cases you should get a similar output:
 Mining adriagalin/ansible.motd [started at: 15:29]
 Identifying fixing-commits from closed issues related to bugs
 Identifying fixing-commits from commit messages
+Saving fixing-commits
+JSON created at ./fixing-commits.json
 Identifying ansible files modified in fixing-commits
+Saving fixing-files
+JSON created at ./fixing-files.json
 Identifying and labeling failure-prone files
-Generating reports
-HTML report created at ./failure-prone-files.html
-JSON report created at ./failure-prone-files.json
+Saving failure-prone files
+JSON created at ./failure-prone-files.json
 ```

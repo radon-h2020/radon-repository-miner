@@ -43,14 +43,14 @@ class BaseMiner:
         self.fixing_commits = list()
         self.fixing_files = list()
 
+        self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.repository.split('/')[1])
+
         # Get all the repository commits sorted by commit date
         self.commit_hashes = [c.hash for c in
-                              RepositoryMining(path_to_repo=url_to_repo,
+                              RepositoryMining(path_to_repo=self.path_to_repo if os.path.isdir(self.path_to_repo) else url_to_repo,
                                                clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
                                                only_in_branch=self.branch,
                                                order='date-order').traverse_commits()]
-
-        self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.repository.split('/')[1])
 
     def discard_undesired_fixing_commits(self, commits: List[str]):
         """

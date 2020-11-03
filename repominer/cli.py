@@ -7,9 +7,10 @@ from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from datetime import datetime
 from getpass import getpass
 
-from repominer.files import FailureProneFileEncoder, FailureProneFileDecoder
+from repominer.files import FixingFileEncoder, FixingFileDecoder, FailureProneFileEncoder, FailureProneFileDecoder
 from repominer.metrics.ansible import AnsibleMetricsExtractor
 from repominer.metrics.tosca import ToscaMetricsExtractor
+from repominer.mining.base import BaseMiner
 from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 from repominer.report import create_report
@@ -57,6 +58,12 @@ def set_mine_parser(subparsers):
     parser = subparsers.add_parser('mine', help='Mine fixing- and clean- files')
 
     parser.add_argument(action='store',
+                        dest='info_to_mine',
+                        type=str,
+                        choices=['fixing-commits', 'fixing-files', 'failure-prone-files'],
+                        help='the information to mine')
+
+    parser.add_argument(action='store',
                         dest='host',
                         type=str,
                         choices=['github', 'gitlab'],
@@ -83,6 +90,18 @@ def set_mine_parser(subparsers):
                         type=str,
                         default='master',
                         help='the repository branch to mine (default: %(default)s)')
+
+    parser.add_argument('--exclude-commits',
+                        action='store',
+                        dest='exclude_commits',
+                        type=valid_file,
+                        help='the path to a JSON file containing the list of commit hashes to exclude')
+
+    parser.add_argument('--exclude-files',
+                        action='store',
+                        dest='exclude_files',
+                        type=valid_file,
+                        help='the path to a JSON file containing the list of FixedFiles to exclude')
 
     parser.add_argument('--verbose',
                         action='store_true',
@@ -147,18 +166,92 @@ def get_parser():
     return parser
 
 
+def mine_fixing_commits(miner: BaseMiner, verbose: bool, dest: str, exclude_commits: str = None):
+
+    if exclude_commits:
+        with open(exclude_commits, 'r') as f:
+            commits = json.load(f)
+            miner.exclude_commits = set(commits)
+
+    if verbose:
+        print('Identifying fixing-commits from closed issues related to bugs')
+
+    miner.get_fixing_commits_from_closed_issues(labels=None)
+
+    if verbose:
+        print('Identifying fixing-commits from commit messages')
+
+    miner.get_fixing_commits_from_commit_messages(regex=None)
+
+    if verbose:
+        print('Saving fixing-commits')
+
+    filename_json = os.path.join(dest, 'fixing-commits.json')
+
+    with io.open(filename_json, "w") as f:
+        json.dump(miner.fixing_commits, f)
+
+    if verbose:
+        print(f'JSON created at {filename_json}')
+
+
+def mine_fixing_files(miner: BaseMiner, verbose: bool, dest: str, exclude_files: str = None):
+
+    if exclude_files:
+        with open(exclude_files, 'r') as f:
+            files = json.load(f, cls=FixingFileDecoder)
+            miner.exclude_fixing_files = files
+
+    if verbose:
+        language = 'Ansible' if isinstance(miner, AnsibleMiner) else 'Tosca'
+        print(f'Identifying {language} files modified in fixing-commits')
+
+    fixing_files = miner.get_fixing_files()
+
+    if verbose:
+        print('Saving fixed-files')
+
+    filename_json = os.path.join(dest, 'fixed-files.json')
+    json_files = []
+    for file in fixing_files:
+        json_files.append(FixingFileEncoder().default(file))
+
+    with io.open(filename_json, "w") as f:
+        json.dump(json_files, f)
+
+    if verbose:
+        print(f'JSON created at {filename_json}')
+
+
+def mine_failure_prone_files(miner: BaseMiner, verbose: bool, dest: str):
+    if verbose:
+        print('Identifying and labeling failure-prone files')
+
+    failure_prone_files = [copy.deepcopy(file) for file in miner.label()]
+
+    if verbose:
+        print('Saving failure-prone files')
+
+    filename_json = os.path.join(dest, 'failure-prone-files.json')
+
+    json_files = []
+    for file in failure_prone_files:
+        json_files.append(FailureProneFileEncoder().default(file))
+
+    with open(filename_json, "w") as f:
+        json.dump(json_files, f)
+
+    if verbose:
+        print(f'JSON created at {filename_json}')
+
+
 def mine(args: Namespace):
-    global token, url_to_repo
+    url_to_repo = None
 
     if args.host == 'github':
-        token = os.getenv('GITHUB_ACCESS_TOKEN')
         url_to_repo = f'https://github.com/{args.repository}.git'
     elif args.host == 'gitlab':
-        token = os.getenv('GITLAB_ACCESS_TOKEN')
         url_to_repo = f'https://gitlab.com/{args.repository}.git'
-
-    if token is None:
-        token = getpass('Access token:')
 
     if args.verbose:
         print(f'Mining {args.repository} [started at: {datetime.now().hour}:{datetime.now().minute}]')
@@ -168,46 +261,13 @@ def mine(args: Namespace):
     else:
         miner = ToscaMiner(url_to_repo=url_to_repo, branch=args.branch)
 
-    if args.verbose:
-        print('Identifying fixing-commits from closed issues related to bugs')
+    mine_fixing_commits(miner, args.verbose, args.dest, args.exclude_commits)
 
-    miner.get_fixing_commits_from_closed_issues(labels=None)
+    if args.info_to_mine in ('fixing-files', 'failure-prone-files'):
+        mine_fixing_files(miner, args.verbose, args.dest, args.exclude_files)
 
-    if args.verbose:
-        print('Identifying fixing-commits from commit messages')
-
-    miner.get_fixing_commits_from_commit_messages(regex=None)
-
-    if args.verbose:
-        print(f'Identifying {args.language} files modified in fixing-commits')
-
-    miner.get_fixing_files()
-
-    if args.verbose:
-        print('Identifying and labeling failure-prone files')
-
-    failure_prone_files = [copy.deepcopy(file) for file in miner.label()]
-
-    if args.verbose:
-        print('Generating reports')
-
-    html = create_report(full_name_or_id=args.repository, labeled_files=failure_prone_files)
-    filename_html = os.path.join(args.dest, 'failure-prone-files.html')
-    filename_json = os.path.join(args.dest, 'failure-prone-files.json')
-
-    with io.open(filename_html, "w", encoding="utf-8") as f:
-        f.write(html)
-
-    json_files = []
-    for file in failure_prone_files:
-        json_files.append(FailureProneFileEncoder().default(file))
-
-    with open(filename_json, "w") as f:
-        json.dump(json_files, f)
-
-    if args.verbose:
-        print(f'HTML report created at {filename_html}')
-        print(f'JSON report created at {filename_json}')
+    if args.info_to_mine == 'failure-prone-files':
+        mine_failure_prone_files(miner, args.verbose, args.dest)
 
     exit(0)
 

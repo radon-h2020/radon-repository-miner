@@ -1,27 +1,27 @@
 import json
 
 
-class FailureProneFileEncoder(json.JSONEncoder):
+class FixingFileEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, FailureProneFile):
+        if isinstance(o, FixingFile):
             return {
                 "filepath": o.filepath,
-                "commit": o.commit,
-                "fixing_commit": o.fixing_commit
+                "fic": o.fic,
+                "bic": o.bic
             }
 
         return json.JSONEncoder.default(self, o)
 
 
-class FailureProneFileDecoder(json.JSONDecoder):
+class FixingFileDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         json.JSONDecoder.__init__(self, object_hook=self.to_object, *args, **kwargs)
 
     def to_object(self, o):
         if type(o) == dict:
-            return FailureProneFile(filepath=o["filepath"],
-                                    commit=o["commit"],
-                                    fixing_commit=o["fixing_commit"])
+            return FixingFile(filepath=o["filepath"],
+                              fic=o["fic"],
+                              bic=o["bic"])
 
 
 class FixingFile:
@@ -45,6 +45,29 @@ class FixingFile:
             return self.filepath == other.filepath
 
         return False
+
+
+class FailureProneFileEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, FailureProneFile):
+            return {
+                "filepath": o.filepath,
+                "commit": o.commit,
+                "fixing_commit": o.fixing_commit
+            }
+
+        return json.JSONEncoder.default(self, o)
+
+
+class FailureProneFileDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        json.JSONDecoder.__init__(self, object_hook=self.to_object, *args, **kwargs)
+
+    def to_object(self, o):
+        if type(o) == dict:
+            return FailureProneFile(filepath=o["filepath"],
+                                    commit=o["commit"],
+                                    fixing_commit=o["fixing_commit"])
 
 
 class FailureProneFile:
