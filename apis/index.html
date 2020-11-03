@@ -120,7 +120,7 @@
 This variable is used to set up in advance the commits to exclude during the mining.</p>
 </li>
 <li>
-<p><strong><code>self.exclude_fixing_files: Lists[FixingFile]</code></strong>  - There may be several false-positives among the identified fixing-files. 
+<p><strong><code>self.exclude_fixed_files: Lists[FixedFile]</code></strong>  - There may be several false-positives among the identified fixed-files. 
 This variable is used to set up in advance the files to exclude during the mining for a given commit.</p>
 </li>
 <li>
@@ -128,7 +128,7 @@ This variable is used to set up in advance the files to exclude during the minin
    These are set up during the mining, although it can be defined in advance to speed up the mining avoiding to analyze commits that are already present here.</p>
 </li>
 <li>
-<p><strong><code>self.fixing_files: List[FixingFiles]</code></strong>  - Contains the files modified i fixing-commits.</p>
+<p><strong><code>self.fixed_files: List[FixedFiles]</code></strong>  - Contains the files modified i fixing-commits.</p>
 </li>
 <li>
 <p><strong><code>discard_non_iac_fixing_commits(commits: List[str])</code></strong>  - Given a list of commits, discard commits that do not modify IaC files (i.e., Ansible).</p>
@@ -137,7 +137,7 @@ This variable is used to set up in advance the files to exclude during the minin
 <li><strong><code>get_closed_issues(label: str) -&gt; Set[Issue]</code></strong>  - Get all the closed issues with a given label.</li>
 <li><strong><code>get_fixing_commits_from_closed_issues(labels: Set[str]) -&gt; List[str]</code></strong>  - Collect fixing-commit hashes by analyzing closed issues related to bugs.</li>
 <li><strong><code>get_fixing_commits_from_commit_messages(regex: str) -&gt; List[str]</code></strong>  - Collect fixing-commit hashes by analyzing commit messages.</li>
-<li><strong><code>get_fixing_files() -&gt; List[FixingFile]</code></strong>  - Collect the IaC files involved in fixing-commits and for each of them identify the bug-inducing-commit.</li>
+<li><strong><code>get_fixed_files() -&gt; List[FixedFile]</code></strong>  - Collect the IaC files involved in fixing-commits and for each of them identify the bug-inducing-commit.</li>
 <li><strong><code>label() -&gt; Generator[LabeledFile, None, None]</code></strong>  - Start labeling process.</li>
 </ul></div>
             </div>
