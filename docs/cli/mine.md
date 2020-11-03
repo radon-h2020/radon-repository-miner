@@ -39,48 +39,73 @@ optional arguments:
     
 
 
-# Examples
+# Example
 
-## Mine repository (using a venv)
-For the sake of the example, let's create and move to an example directory:
+## Using Docker
+
+1. **Setup environment variables**
+
+    `export GITHUB_ACCESS_TOKEN=***************` 
+    
+    `export GITLAB_ACCESS_TOKEN=***************` 
+
+2. **Pull the Docker image**
+
+    `docker pull radonconsortium/repo-miner:latest`
+
+3. **Create a folder to share results**
+    
+    `mkdir /tmp/repo-miner`
+    
+4. **Mine**
+    
+    *(using github)* `docker run -v /tmp/repo-miner:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+    
+    *(using gitlab)* `docker run -v /tmp/repo-miner:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+
+5. **Access reports**
+    
+    `ls /tmp/repo-miner`
+
+
+
+
+## Using the CLI on local machine
+
+1. **Setup environment variables**
+
+    `export GITHUB_ACCESS_TOKEN=***************` 
+    
+    `export GITLAB_ACCESS_TOKEN=***************` 
+    
+    `export TMP_REPOSITORIES_DIR=/tmp/` 
+
+2. **Create a working directory and move there**
  
-`mkdir radon-example && cd radon-example`
+    `mkdir radon-example && cd radon-example`
 
-To avoid affecting the original environment, create a new virtual environment:
+3. **(Optional) Create a virtualenv to avoid affecting the original environment**
 
-```text
-sudo apt install python3-venv
-python3 -m venv repo-miner-env
-source repo-miner-env/bin/activate
-```
+    `sudo apt install python3-venv`<br>
+    `python3 -m venv repo-miner-env`<br>
+    `source repo-miner-env/bin/activate`
 
-Create a `tmp` folder to clone the repositories to analyze:
+4. **Install the package**
 
-```text
-mkdir repo-miner-env/tmp
-ls repo-miner-env/
+    `pip install repository-miner`
 
-bin  include  lib  lib64  pyvenv.cfg  share  tmp
-```
+5. **Mine**
 
-Set up the environment variables required by the tool:
+    `repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
 
-```text
-export GITHUB_ACCESS_TOKEN=***************
-export TMP_REPOSITORIES_DIR=./repo-miner-env/tmp/
-``` 
+6. **Access reports**
+    
+    `ls .` (Recall the working directory is `radon-example`)
 
-Install the package:
 
-`pip install repository-miner`
+---
 
-Finally, run:
-
-```text
-repo-miner mine github ansible adriagalin/ansible.motd . --verbose
-```
-
-You should get a similar output:
+In both cases you should get a similar output:
 
 ```text
 Mining adriagalin/ansible.motd [started at: 15:29]
@@ -89,16 +114,6 @@ Identifying fixing-commits from commit messages
 Identifying ansible files modified in fixing-commits
 Identifying and labeling failure-prone files
 Generating reports
-HTML report created at ./report.html
-JSON report created at ./report.json
+HTML report created at ./failure-prone-files.html
+JSON report created at ./failure-prone-files.json
 ```
-
-You can now see the reports:
-
-```text
-ls
-
-failure-prone-files.html failure-prone-files.json
-```  
-
-## Mine repository (using the Docker image)

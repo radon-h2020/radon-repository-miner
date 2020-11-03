@@ -41,16 +41,52 @@ the [`ishepard/pydriller`](https://pydriller.readthedocs.io/en/latest/processmet
 * `delta`: **delta metrics** are calculated as the difference of each metric between two successive releases or commits.
 
 
-## Examples
 
-Follows one of the [examples](https://radon-h2020.github.io/radon-repository-miner/cli/mine/#Examples) in the previous 
+# Example
+
+Follow the [mine example](https://radon-h2020.github.io/radon-repository-miner/cli/mine/#Example) in the previous 
 section to generate the `failure-prone-files.json`.
 
-Afterwards, run:
+Afterwards, extract metrics as follow.
 
-`repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose`
+## Using Docker
+    
+1. **Extract metrics**
+    
+    `docker run -v /tmp/repo-miner:/app repo-miner:latest repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose`
+    
+    or (passing the url to repository)
+    
+    `docker run -v /tmp/repo-miner:/app repo-miner:latest repo-miner extract-metrics https://github.com/adriagalin/ansible.motd.git ./failure_prone_files.json ansible all release . --verbose`
 
-You should get a similar output:
+2. **Access reports**
+    
+    `ls /tmp/repo-miner`
+
+
+
+## Using the CLI on local machine
+
+1. **Move (or stay) in the working directory**
+
+    `cd radon-example`
+    
+2. **Extract metrics**
+
+    `repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose`
+
+3. **Access results**
+    
+    `ls .`
+
+
+You can now see that `metrics.csv` has been added to the folder:
+
+
+
+---
+
+In both cases, you should get a similar output:
 
 ```text
 Extracting metrics from repo-miner-env/tmp/ansible.motd using report ./failure_prone_files.json [started at: 17:34]
@@ -59,10 +95,8 @@ Extracting all metrics
 Metrics saved at ./metrics.csv [completed at: 17:35]
 ```
 
-You can now see that `metrics.csv` has been added to the folder:
+The results directory should contain the following files:
 
 ```text
-ls
-
 failure-prone-files.html failure-prone-files.json metrics.csv
 ```  
