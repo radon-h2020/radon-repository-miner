@@ -5,7 +5,7 @@ from pydriller.domain.commit import ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
 from typing import Generator, List, Set
 
-from repominer.files import FixingFile, FailureProneFile
+from repominer.files import FixedFile, FailureProneFile
 from repominer.hosts import GithubHost, GitlabHost
 
 # Constants
@@ -39,9 +39,9 @@ class BaseMiner:
         self.branch = branch
 
         self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
-        self.exclude_fixing_files = list()  # This is to set up files in fixing-commits known to be false-positive
+        self.exclude_fixed_files = list()  # This is to set up files in fixing-commits known to be false-positive
         self.fixing_commits = list()
-        self.fixing_files = list()
+        self.fixed_files = list()
 
         self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.repository.split('/')[1])
 
@@ -140,7 +140,7 @@ class BaseMiner:
 
         return fixes_from_message
 
-    def get_fixing_files(self) -> List[FixingFile]:
+    def get_fixed_files(self) -> List[FixedFile]:
         """
         Collect the IaC files involved in fixing-commits and for each of them identify the bug-inducing-commit.
         :return: the list of files
@@ -150,7 +150,7 @@ class BaseMiner:
 
         self.sort_commits(self.fixing_commits)
 
-        self.fixing_files = list()
+        self.fixed_files = list()
         renamed_files = dict()
         git_repo = GitRepository(self.path_to_repo)
 
@@ -186,7 +186,7 @@ class BaseMiner:
                     continue
 
                 if any(file.filepath == modified_file.new_path and file.fic == commit.hash for file in
-                       self.exclude_fixing_files):
+                       self.exclude_fixed_files):
                     continue
 
                 # Identify bug-inducing commits. Dict[modified_file, Set[commit_hashes]]
@@ -199,25 +199,25 @@ class BaseMiner:
                     self.sort_commits(bug_inducing_commits)
                     bic = bug_inducing_commits[0]  # bic is the oldest bug-inducing-commit
 
-                current_fix = FixingFile(filepath=renamed_files.get(modified_file.new_path, modified_file.new_path),
-                                         bic=bic,
-                                         fic=commit.hash)
+                current_fix = FixedFile(filepath=renamed_files.get(modified_file.new_path, modified_file.new_path),
+                                        bic=bic,
+                                        fic=commit.hash)
 
-                if current_fix not in self.fixing_files:
-                    self.fixing_files.append(current_fix)
+                if current_fix not in self.fixed_files:
+                    self.fixed_files.append(current_fix)
                 else:
-                    idx = self.fixing_files.index(current_fix)
-                    existing_fix = self.fixing_files[idx]
+                    idx = self.fixed_files.index(current_fix)
+                    existing_fix = self.fixed_files[idx]
 
-                    # If the current FIC is older than the existing bic, then save it as a new FixingFile.
+                    # If the current FIC is older than the existing bic, then save it as a new FixedFile.
                     # Else it means the current fix is between the existing fix bic and fic.
                     # If the current BIC is older than the existing bic, then update the bic.
                     if self.commit_hashes.index(current_fix.fic) < self.commit_hashes.index(existing_fix.bic):
-                        self.fixing_files.append(current_fix)
+                        self.fixed_files.append(current_fix)
                     elif self.commit_hashes.index(current_fix.bic) < self.commit_hashes.index(existing_fix.bic):
                         existing_fix.bic = current_fix.bic
 
-        return self.fixing_files.copy()
+        return self.fixed_files.copy()
 
     def ignore_file(self, path_to_file: str, content: str = None):
         return False
@@ -225,15 +225,15 @@ class BaseMiner:
     def label(self) -> Generator[FailureProneFile, None, None]:
         """
         Start labeling process
-        :param files: a list of FixingFile objects
+        :param files: a list of FixedFile objects
         :return: yields failure prone files
         """
 
-        if not (self.fixing_commits or self.fixing_files):
+        if not (self.fixing_commits or self.fixed_files):
             return
 
         labeling = dict()
-        for file in self.fixing_files:
+        for file in self.fixed_files:
             labeling.setdefault(file.filepath, list()).append(file)
 
         for commit in RepositoryMining(self.path_to_repo,

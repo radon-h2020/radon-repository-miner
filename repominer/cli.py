@@ -7,7 +7,7 @@ from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from datetime import datetime
 from getpass import getpass
 
-from repominer.files import FixingFileEncoder, FixingFileDecoder, FailureProneFileEncoder, FailureProneFileDecoder
+from repominer.files import FixedFileEncoder, FixedFileDecoder, FailureProneFileEncoder, FailureProneFileDecoder
 from repominer.metrics.ansible import AnsibleMetricsExtractor
 from repominer.metrics.tosca import ToscaMetricsExtractor
 from repominer.mining.base import BaseMiner
@@ -15,7 +15,7 @@ from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 from repominer.report import create_report
 
-VERSION = '0.7.2'
+VERSION = '0.8.0'
 
 
 def valid_dir_or_url(x: str) -> str:
@@ -60,7 +60,7 @@ def set_mine_parser(subparsers):
     parser.add_argument(action='store',
                         dest='info_to_mine',
                         type=str,
-                        choices=['fixing-commits', 'fixing-files', 'failure-prone-files'],
+                        choices=['fixing-commits', 'fixed-files', 'failure-prone-files'],
                         help='the information to mine')
 
     parser.add_argument(action='store',
@@ -195,26 +195,26 @@ def mine_fixing_commits(miner: BaseMiner, verbose: bool, dest: str, exclude_comm
         print(f'JSON created at {filename_json}')
 
 
-def mine_fixing_files(miner: BaseMiner, verbose: bool, dest: str, exclude_files: str = None):
+def mine_fixed_files(miner: BaseMiner, verbose: bool, dest: str, exclude_files: str = None):
 
     if exclude_files:
         with open(exclude_files, 'r') as f:
-            files = json.load(f, cls=FixingFileDecoder)
-            miner.exclude_fixing_files = files
+            files = json.load(f, cls=FixedFileDecoder)
+            miner.exclude_fixed_files = files
 
     if verbose:
         language = 'Ansible' if isinstance(miner, AnsibleMiner) else 'Tosca'
         print(f'Identifying {language} files modified in fixing-commits')
 
-    fixing_files = miner.get_fixing_files()
+    fixed_files = miner.get_fixed_files()
 
     if verbose:
         print('Saving fixed-files')
 
     filename_json = os.path.join(dest, 'fixed-files.json')
     json_files = []
-    for file in fixing_files:
-        json_files.append(FixingFileEncoder().default(file))
+    for file in fixed_files:
+        json_files.append(FixedFileEncoder().default(file))
 
     with io.open(filename_json, "w") as f:
         json.dump(json_files, f)
@@ -263,8 +263,8 @@ def mine(args: Namespace):
 
     mine_fixing_commits(miner, args.verbose, args.dest, args.exclude_commits)
 
-    if args.info_to_mine in ('fixing-files', 'failure-prone-files'):
-        mine_fixing_files(miner, args.verbose, args.dest, args.exclude_files)
+    if args.info_to_mine in ('fixed-files', 'failure-prone-files'):
+        mine_fixed_files(miner, args.verbose, args.dest, args.exclude_files)
 
     if args.info_to_mine == 'failure-prone-files':
         mine_failure_prone_files(miner, args.verbose, args.dest)

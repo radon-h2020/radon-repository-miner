@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.8.0]
+- Added two more options to the CLI to mine fixing-commits and fixed-files
+- Refactored application
+
 ## [0.5.0]
 - Changed command-line options
 - Changed APIs parameters in miners and metrics_extractors

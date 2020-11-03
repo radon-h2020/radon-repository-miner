@@ -1,12 +1,12 @@
 import unittest
-from repominer.files import FixingFile, FixingFileEncoder, FixingFileDecoder, FailureProneFile, FailureProneFileEncoder, FailureProneFileDecoder
+from repominer.files import FixedFile, FixedFileEncoder, FixedFileDecoder, FailureProneFile, FailureProneFileEncoder, FailureProneFileDecoder
 
 
-class TestFixingFileEncoderAndDecoder(unittest.TestCase):
+class TestFixedFileEncoderAndDecoder(unittest.TestCase):
 
     def test_encoder(self):
-        ff1 = FixingFile(filepath='file1.yml', fic='123', bic='456')
-        encoded = FixingFileEncoder().default(ff1)
+        ff1 = FixedFile(filepath='file1.yml', fic='123', bic='456')
+        encoded = FixedFileEncoder().default(ff1)
         assert type(encoded) == dict
         assert encoded == {
             "filepath": ff1.filepath,
@@ -21,8 +21,8 @@ class TestFixingFileEncoderAndDecoder(unittest.TestCase):
             "bic": 'failure-prone'
         }
 
-        decoded = FixingFileDecoder().to_object(ff1)
-        assert type(decoded) == FixingFile
+        decoded = FixedFileDecoder().to_object(ff1)
+        assert type(decoded) == FixedFile
 
 
 class TestFailureProneFileEncoderAndDecoder(unittest.TestCase):

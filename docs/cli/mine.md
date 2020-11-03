@@ -4,7 +4,7 @@
 usage: repo-miner mine [-h] [--branch BRANCH] [--verbose] {github,gitlab} {ansible,tosca} repository dest
 
 positional arguments:
-  {fixing-commits,fixing-files,failure-prone-files} the information to mine
+  {fixing-commits,fixed-files,failure-prone-files} the information to mine
   {github,gitlab}  the source code versioning host
   {ansible,tosca}  mine only commits modifying files of this language
   repository       the repository full name: <onwer/name> (e.g., radon-h2020/radon-repository-miner) 
@@ -115,8 +115,8 @@ Identifying fixing-commits from commit messages
 Saving fixing-commits
 JSON created at ./fixing-commits.json
 Identifying ansible files modified in fixing-commits
-Saving fixing-files
-JSON created at ./fixing-files.json
+Saving fixed-files
+JSON created at ./fixed-files.json
 Identifying and labeling failure-prone files
 Saving failure-prone files
 JSON created at ./failure-prone-files.json

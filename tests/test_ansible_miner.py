@@ -5,7 +5,7 @@ import os
 import shutil
 import unittest
 
-from repominer.files import FixingFile
+from repominer.files import FixedFile
 from repominer.mining.ansible import AnsibleMiner
 
 
@@ -31,7 +31,7 @@ class AnsibleMinerTestCase(unittest.TestCase):
                                            'fd15570a031fa042ae11e0bb0831e86e1acb6843',
                                            '8a062eea882ba9d7f93634c8f0ac09b821963ad3',
                                            '86c9a39a318240f51961b956e20c1261031966dd'}
-        self.repo_miner.exclude_fixing_files = list()
+        self.repo_miner.exclude_fixed_files = list()
 
     def test_get_fixing_commits_from_closed_issues(self):
         hashes = self.repo_miner.get_fixing_commits_from_closed_issues(labels={'bug'})
@@ -72,70 +72,70 @@ class AnsibleMinerTestCase(unittest.TestCase):
                                        '72377bb59a484ac7c6c6954ce6bf796eb6143f86',
                                        'be34c67e75c2788742f3e87313a0b646af1006db'}
 
-    def test_get_fixing_files(self):
+    def test_get_fixed_files(self):
         self.repo_miner.get_fixing_commits_from_commit_messages(
             regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
-        fixing_files = self.repo_miner.get_fixing_files()
+        fixed_files = self.repo_miner.get_fixed_files()
 
-        assert fixing_files
-        assert len(fixing_files) == 3
+        assert fixed_files
+        assert len(fixed_files) == 3
 
-        assert fixing_files[0].filepath == os.path.join('meta', 'main.yml')
-        assert fixing_files[0].fic == 'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703'  # Jun 27, 2019
-        assert fixing_files[0].bic == 'e3a4420937cd9061a6525d541d525ac2167d7322'  # Aug 26, 2016
+        assert fixed_files[0].filepath == os.path.join('meta', 'main.yml')
+        assert fixed_files[0].fic == 'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703'  # Jun 27, 2019
+        assert fixed_files[0].bic == 'e3a4420937cd9061a6525d541d525ac2167d7322'  # Aug 26, 2016
 
-        assert fixing_files[1].filepath == os.path.join('tasks', 'main.yml')
-        assert fixing_files[1].fic == 'be34c67e75c2788742f3e87313a0b646af1006db'  # Jun 20, 2019
-        assert fixing_files[1].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
+        assert fixed_files[1].filepath == os.path.join('tasks', 'main.yml')
+        assert fixed_files[1].fic == 'be34c67e75c2788742f3e87313a0b646af1006db'  # Jun 20, 2019
+        assert fixed_files[1].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
 
-        assert fixing_files[2].filepath == os.path.join('meta', 'main.yml')
-        assert fixing_files[2].fic == '72377bb59a484ac7c6c6954ce6bf796eb6143f86'  # Aug 15, 2015
-        assert fixing_files[2].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
+        assert fixed_files[2].filepath == os.path.join('meta', 'main.yml')
+        assert fixed_files[2].fic == '72377bb59a484ac7c6c6954ce6bf796eb6143f86'  # Aug 15, 2015
+        assert fixed_files[2].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
 
-    def test_get_fixing_files_with_exclude_commits(self):
+    def test_get_fixed_files_with_exclude_commits(self):
         self.repo_miner.exclude_commits.add('f9ac8bbc68dedb742e5825c5cf47bca8e6f71703')
 
         self.repo_miner.get_fixing_commits_from_commit_messages(
             regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
-        fixing_files = self.repo_miner.get_fixing_files()
+        fixed_files = self.repo_miner.get_fixed_files()
 
-        assert fixing_files
-        assert len(fixing_files) == 2
+        assert fixed_files
+        assert len(fixed_files) == 2
 
-        assert fixing_files[0].filepath == os.path.join('tasks', 'main.yml')
-        assert fixing_files[0].fic == 'be34c67e75c2788742f3e87313a0b646af1006db'  # Jun 20, 2019
-        assert fixing_files[0].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
+        assert fixed_files[0].filepath == os.path.join('tasks', 'main.yml')
+        assert fixed_files[0].fic == 'be34c67e75c2788742f3e87313a0b646af1006db'  # Jun 20, 2019
+        assert fixed_files[0].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
 
-        assert fixing_files[1].filepath == os.path.join('meta', 'main.yml')
-        assert fixing_files[1].fic == '72377bb59a484ac7c6c6954ce6bf796eb6143f86'  # Aug 15, 2015
-        assert fixing_files[1].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
+        assert fixed_files[1].filepath == os.path.join('meta', 'main.yml')
+        assert fixed_files[1].fic == '72377bb59a484ac7c6c6954ce6bf796eb6143f86'  # Aug 15, 2015
+        assert fixed_files[1].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
 
-    def test_get_fixing_files_with_exclude_files(self):
-        self.repo_miner.exclude_fixing_files = [
-            FixingFile(filepath=os.path.join('meta', 'main.yml'),
-                       fic='f9ac8bbc68dedb742e5825c5cf47bca8e6f71703',
-                       bic='e3a4420937cd9061a6525d541d525ac2167d7322')
+    def test_get_fixed_files_with_exclude_files(self):
+        self.repo_miner.exclude_fixed_files = [
+            FixedFile(filepath=os.path.join('meta', 'main.yml'),
+                      fic='f9ac8bbc68dedb742e5825c5cf47bca8e6f71703',
+                      bic='e3a4420937cd9061a6525d541d525ac2167d7322')
         ]
 
         self.repo_miner.get_fixing_commits_from_commit_messages(r'(bug|fix|error|crash|problem|fail|defect|patch)')
-        fixing_files = self.repo_miner.get_fixing_files()
+        fixed_files = self.repo_miner.get_fixed_files()
 
-        assert fixing_files
-        assert len(fixing_files) == 2
+        assert fixed_files
+        assert len(fixed_files) == 2
 
-        assert fixing_files[0].filepath == os.path.join('tasks', 'main.yml')
-        assert fixing_files[0].fic == 'be34c67e75c2788742f3e87313a0b646af1006db'  # Jun 20, 2019
-        assert fixing_files[0].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
+        assert fixed_files[0].filepath == os.path.join('tasks', 'main.yml')
+        assert fixed_files[0].fic == 'be34c67e75c2788742f3e87313a0b646af1006db'  # Jun 20, 2019
+        assert fixed_files[0].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
 
-        assert fixing_files[1].filepath == os.path.join('meta', 'main.yml')
-        assert fixing_files[1].fic == '72377bb59a484ac7c6c6954ce6bf796eb6143f86'  # Aug 15, 2015
-        assert fixing_files[1].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
+        assert fixed_files[1].filepath == os.path.join('meta', 'main.yml')
+        assert fixed_files[1].fic == '72377bb59a484ac7c6c6954ce6bf796eb6143f86'  # Aug 15, 2015
+        assert fixed_files[1].bic == '033cd106f8c3f552d98438bf06cb38e7b8f4fbfd'  # Aug 13, 2015
 
     def test_mining_pipeline(self):
         self.repo_miner.fixing_commits = list()  # reset list of fixing-commits
         self.repo_miner.get_fixing_commits_from_commit_messages(
             regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
-        self.repo_miner.get_fixing_files()
+        self.repo_miner.get_fixed_files()
         failure_prone_files = [failure_prone_file for failure_prone_file in self.repo_miner.label()]
 
         assert failure_prone_files

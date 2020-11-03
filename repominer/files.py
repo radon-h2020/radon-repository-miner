@@ -1,9 +1,9 @@
 import json
 
 
-class FixingFileEncoder(json.JSONEncoder):
+class FixedFileEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, FixingFile):
+        if isinstance(o, FixedFile):
             return {
                 "filepath": o.filepath,
                 "fic": o.fic,
@@ -13,18 +13,18 @@ class FixingFileEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-class FixingFileDecoder(json.JSONDecoder):
+class FixedFileDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         json.JSONDecoder.__init__(self, object_hook=self.to_object, *args, **kwargs)
 
     def to_object(self, o):
         if type(o) == dict:
-            return FixingFile(filepath=o["filepath"],
-                              fic=o["fic"],
-                              bic=o["bic"])
+            return FixedFile(filepath=o["filepath"],
+                             fic=o["fic"],
+                             bic=o["bic"])
 
 
-class FixingFile:
+class FixedFile:
     """
     This class is responsible to implement the methods for storing information about fixing files (i.e., files belonging
     to fixing commits)
@@ -41,7 +41,7 @@ class FixingFile:
         self.bic = bic
 
     def __eq__(self, other):
-        if isinstance(other, FixingFile):
+        if isinstance(other, FixedFile):
             return self.filepath == other.filepath
 
         return False
