@@ -106,7 +106,16 @@
             
             <li class="nav-item" data-level="1"><a href="#extract-metrics" class="nav-link">Extract metrics</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#examples" class="nav-link">Examples</a>
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="1"><a href="#example" class="nav-link">Example</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#using-docker" class="nav-link">Using Docker</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#using-the-cli-on-local-machine" class="nav-link">Using the CLI on local machine</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -163,21 +172,48 @@ the <a href="https://pydriller.readthedocs.io/en/latest/processmetrics.html"><co
 <p><code>delta</code>: <strong>delta metrics</strong> are calculated as the difference of each metric between two successive releases or commits.</p>
 </li>
 </ul>
-<h2 id="examples">Examples</h2>
-<p>Follows one of the <a href="https://radon-h2020.github.io/radon-repository-miner/cli/mine/#Examples">examples</a> in the previous 
+<h1 id="example">Example</h1>
+<p>Follow the <a href="https://radon-h2020.github.io/radon-repository-miner/cli/mine/#Example">mine example</a> in the previous 
 section to generate the <code>failure-prone-files.json</code>.</p>
-<p>Afterwards, run:</p>
+<p>Afterwards, extract metrics as follow.</p>
+<h2 id="using-docker">Using Docker</h2>
+<ol>
+<li>
+<p><strong>Extract metrics</strong></p>
+<p><code>docker run -v /tmp/repo-miner:/app repo-miner:latest repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose</code></p>
+<p>or (passing the url to repository)</p>
+<p><code>docker run -v /tmp/repo-miner:/app repo-miner:latest repo-miner extract-metrics https://github.com/adriagalin/ansible.motd.git ./failure_prone_files.json ansible all release . --verbose</code></p>
+</li>
+<li>
+<p><strong>Access reports</strong></p>
+<p><code>ls /tmp/repo-miner</code></p>
+</li>
+</ol>
+<h2 id="using-the-cli-on-local-machine">Using the CLI on local machine</h2>
+<ol>
+<li>
+<p><strong>Move (or stay) in the working directory</strong></p>
+<p><code>cd radon-example</code></p>
+</li>
+<li>
+<p><strong>Extract metrics</strong></p>
 <p><code>repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose</code></p>
-<p>You should get a similar output:</p>
+</li>
+<li>
+<p><strong>Access results</strong></p>
+<p><code>ls .</code></p>
+</li>
+</ol>
+<p>You can now see that <code>metrics.csv</code> has been added to the folder:</p>
+<hr />
+<p>In both cases, you should get a similar output:</p>
 <pre><code class="language-text">Extracting metrics from repo-miner-env/tmp/ansible.motd using report ./failure_prone_files.json [started at: 17:34]
 Setting up ansible metrics extractor
 Extracting all metrics
 Metrics saved at ./metrics.csv [completed at: 17:35]
 </code></pre>
-<p>You can now see that <code>metrics.csv</code> has been added to the folder:</p>
-<pre><code class="language-text">ls
-
-failure-prone-files.html failure-prone-files.json metrics.csv
+<p>The results directory should contain the following files:</p>
+<pre><code class="language-text">failure-prone-files.html failure-prone-files.json metrics.csv
 </code></pre></div>
             </div>
         </div>

@@ -109,13 +109,13 @@
               </ul>
             </li>
             
-            <li class="nav-item" data-level="1"><a href="#examples" class="nav-link">Examples</a>
+            <li class="nav-item" data-level="1"><a href="#example" class="nav-link">Example</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#mine-repository-using-a-venv" class="nav-link">Mine repository (using a venv)</a>
+            <li class="nav-item" data-level="2"><a href="#using-docker" class="nav-link">Using Docker</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="2"><a href="#mine-repository-using-the-docker-image" class="nav-link">Mine repository (using the Docker image)</a>
+            <li class="nav-item" data-level="2"><a href="#using-the-cli-on-local-machine" class="nav-link">Using the CLI on local machine</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -169,46 +169,74 @@ when and if needed. </p>
 </li>
 </ul>
 </div>
-<h1 id="examples">Examples</h1>
-<h2 id="mine-repository-using-a-venv">Mine repository (using a venv)</h2>
-<p>For the sake of the example, let's create and move to an example directory:</p>
+<h1 id="example">Example</h1>
+<h2 id="using-docker">Using Docker</h2>
+<ol>
+<li>
+<p><strong>Setup environment variables</strong></p>
+<p><code>export GITHUB_ACCESS_TOKEN=***************</code> </p>
+<p><code>export GITLAB_ACCESS_TOKEN=***************</code> </p>
+</li>
+<li>
+<p><strong>Pull the Docker image</strong></p>
+<p><code>docker pull radonconsortium/repo-miner:latest</code></p>
+</li>
+<li>
+<p><strong>Create a folder to share results</strong></p>
+<p><code>mkdir /tmp/repo-miner</code></p>
+</li>
+<li>
+<p><strong>Mine</strong></p>
+<p><em>(using github)</em> <code>docker run -v /tmp/repo-miner:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine github ansible adriagalin/ansible.motd . --verbose</code></p>
+<p><em>(using gitlab)</em> <code>docker run -v /tmp/repo-miner:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine github ansible adriagalin/ansible.motd . --verbose</code></p>
+</li>
+<li>
+<p><strong>Access reports</strong></p>
+<p><code>ls /tmp/repo-miner</code></p>
+</li>
+</ol>
+<h2 id="using-the-cli-on-local-machine">Using the CLI on local machine</h2>
+<ol>
+<li>
+<p><strong>Setup environment variables</strong></p>
+<p><code>export GITHUB_ACCESS_TOKEN=***************</code> </p>
+<p><code>export GITLAB_ACCESS_TOKEN=***************</code> </p>
+<p><code>export TMP_REPOSITORIES_DIR=/tmp/</code> </p>
+</li>
+<li>
+<p><strong>Create a working directory and move there</strong></p>
 <p><code>mkdir radon-example &amp;&amp; cd radon-example</code></p>
-<p>To avoid affecting the original environment, create a new virtual environment:</p>
-<pre><code class="language-text">sudo apt install python3-venv
-python3 -m venv repo-miner-env
-source repo-miner-env/bin/activate
-</code></pre>
-<p>Create a <code>tmp</code> folder to clone the repositories to analyze:</p>
-<pre><code class="language-text">mkdir repo-miner-env/tmp
-ls repo-miner-env/
-
-bin  include  lib  lib64  pyvenv.cfg  share  tmp
-</code></pre>
-<p>Set up the environment variables required by the tool:</p>
-<pre><code class="language-text">export GITHUB_ACCESS_TOKEN=***************
-export TMP_REPOSITORIES_DIR=./repo-miner-env/tmp/
-</code></pre>
-<p>Install the package:</p>
+</li>
+<li>
+<p><strong>(Optional) Create a virtualenv to avoid affecting the original environment</strong></p>
+<p><code>sudo apt install python3-venv</code><br>
+<code>python3 -m venv repo-miner-env</code><br>
+<code>source repo-miner-env/bin/activate</code></p>
+</li>
+<li>
+<p><strong>Install the package</strong></p>
 <p><code>pip install repository-miner</code></p>
-<p>Finally, run:</p>
-<pre><code class="language-text">repo-miner mine github ansible adriagalin/ansible.motd . --verbose
-</code></pre>
-<p>You should get a similar output:</p>
+</li>
+<li>
+<p><strong>Mine</strong></p>
+<p><code>repo-miner mine github ansible adriagalin/ansible.motd . --verbose</code></p>
+</li>
+<li>
+<p><strong>Access reports</strong></p>
+<p><code>ls .</code> (Recall the working directory is <code>radon-example</code>)</p>
+</li>
+</ol>
+<hr />
+<p>In both cases you should get a similar output:</p>
 <pre><code class="language-text">Mining adriagalin/ansible.motd [started at: 15:29]
 Identifying fixing-commits from closed issues related to bugs
 Identifying fixing-commits from commit messages
 Identifying ansible files modified in fixing-commits
 Identifying and labeling failure-prone files
 Generating reports
-HTML report created at ./report.html
-JSON report created at ./report.json
-</code></pre>
-<p>You can now see the reports:</p>
-<pre><code class="language-text">ls
-
-failure-prone-files.html failure-prone-files.json
-</code></pre>
-<h2 id="mine-repository-using-the-docker-image">Mine repository (using the Docker image)</h2></div>
+HTML report created at ./failure-prone-files.html
+JSON report created at ./failure-prone-files.json
+</code></pre></div>
             </div>
         </div>
 
