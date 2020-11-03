@@ -47,11 +47,11 @@ For the sake of the example let's use `/tmp/repo-miner`.
 
 Using the `github` argument:
 
-`docker run -v /tmp/repo-miner:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+`docker run -v /tmp/repo-miner:/app  -e GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine failure-prone-files github ansible adriagalin/ansible.motd . --verbose`
 
 Using the `github` argument:
 
-`docker run -v /tmp/repo-miner:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine github ansible adriagalin/ansible.motd . --verbose`
+`docker run -v /tmp/repo-miner:/app  -e GITLAB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN repo-miner:latest repo-miner mine failure-prone-files github ansible adriagalin/ansible.motd . --verbose`
 
 
 ## Extract metrics
