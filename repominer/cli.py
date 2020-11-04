@@ -14,7 +14,7 @@ from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 # from repominer.report import create_report
 
-VERSION = '0.8.1'
+VERSION = '0.8.2'
 
 
 def valid_dir_or_url(x: str) -> str:

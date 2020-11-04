@@ -74,10 +74,18 @@ class GithubHost(SVCHost):
 class GitlabHost(SVCHost):
 
     # From https://docs.gitlab.com/ee/administration/issue_closing_pattern.html
-    issue_closing_pattern = '((?:[Cc]los(?:e[sd]?|ing)|\b[Ff]ix(?:e[sd]|ing)?|\b[Rr]esolv(?:e[sd]?|ing)|\b[Ii]mplement(?:s|ed|ing)?)(:?) +(?:(?:issues? +)?%{issue_ref}))'
+    issue_closing_pattern = r'((?:[Cc]los(?:e[sd]?|ing)|\b[Ff]ix(?:e[sd]|ing)?|\b[Rr]esolv(?:e[sd]?|ing)|\b[Ii]mplement(?:s|ed|ing)?)(:?) +(?:(?:issues? +)?#(\d+)))'
 
     def __init__(self, full_name: Union[str, int]):
         self.__project = Gitlab('http://gitlab.com', os.getenv('GITLAB_ACCESS_TOKEN')).projects.get(full_name)
+        self.__commit_closing_issues = dict()
+
+        iid_closing_pattern = re.compile(self.issue_closing_pattern)
+        for commit in self.__project.commits.list(all=True, as_list=False):
+            match = iid_closing_pattern.match(commit.title)
+            if match and match.groups():
+                iid = match.groups()[-1]
+                self.__commit_closing_issues[int(iid)] = commit.id
 
     def get_labels(self) -> Set[str]:
         return set([label.name for label in self.__project.labels.list(all=True)])
@@ -86,11 +94,15 @@ class GitlabHost(SVCHost):
         return self.__project.issues.list(state='closed', labels=[label], all=True)
 
     def get_commit_closing_issue(self, issue: ProjectIssue) -> str:
+
+        sha = self.__commit_closing_issues.get(issue.iid)
+        if sha:
+            return sha
+
         closed_via_commit = re.compile('closed via commit ([0-9a-f]{5,40})')
         closed_via_mr = re.compile('closed via merge request !([0-9]+)')
 
         mr_iid = None
-        sha = None
 
         for note in issue.notes.list(all=True, as_list=False, sort='desc'):
             match = re.search(closed_via_mr, note.body)
@@ -108,9 +120,3 @@ class GitlabHost(SVCHost):
         elif mr_iid:
             mr = self.__project.mergerequests.get(mr_iid)
             return mr.sha
-
-        # If none works, try by matching issue closing pattern over commits
-        iid_closing_pattern = re.compile(self.issue_closing_pattern.replace('%{issue_ref}', f'#{issue.iid}'))
-        for commit in self.__project.commits.list(all=True, as_list=False):
-            if iid_closing_pattern.match(commit.title) is not None:
-                return commit.id
