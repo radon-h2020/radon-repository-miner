@@ -16,7 +16,7 @@ BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'B
 
 FIXING_COMMITS_REGEX = r'(bug|fix|error|crash|problem|fail|defect|patch)'
 
-full_name_pattern = re.compile(r'(github|gilab){1}\.com/([\w\W]+)\.git')
+full_name_pattern = re.compile(r'(github|gitlab){1}\.com/([\w\W]+)\.git')
 
 
 class BaseMiner:

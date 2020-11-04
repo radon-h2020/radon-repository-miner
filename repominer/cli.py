@@ -5,7 +5,6 @@ import os
 
 from argparse import ArgumentParser, ArgumentTypeError, Namespace
 from datetime import datetime
-from getpass import getpass
 
 from repominer.files import FixedFileEncoder, FixedFileDecoder, FailureProneFileEncoder, FailureProneFileDecoder
 from repominer.metrics.ansible import AnsibleMetricsExtractor
@@ -13,9 +12,9 @@ from repominer.metrics.tosca import ToscaMetricsExtractor
 from repominer.mining.base import BaseMiner
 from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
-from repominer.report import create_report
+# from repominer.report import create_report
 
-VERSION = '0.8.0'
+VERSION = '0.8.1'
 
 
 def valid_dir_or_url(x: str) -> str:
@@ -84,7 +83,7 @@ def set_mine_parser(subparsers):
                         type=valid_dir,
                         help='destination folder for the reports')
 
-    parser.add_argument('--branch',
+    parser.add_argument('-b', '--branch',
                         action='store',
                         dest='branch',
                         type=str,

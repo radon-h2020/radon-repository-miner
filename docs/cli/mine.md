@@ -13,7 +13,7 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --branch BRANCH       the repository branch to mine (default: master)
+  -b, --branch BRANCH   the repository branch to mine (default: master)
   --exclude-commits EXCLUDE_COMMITS
                         the path to a JSON file containing the list of commit hashes to exclude
   --exclude-files EXCLUDE_FILES
