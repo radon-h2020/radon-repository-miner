@@ -79,27 +79,27 @@ class BaseMiner:
         # Get the repository labels (self.get_labels()) and keep only those matching the input labels, if any
         labels = labels.intersection(host.get_labels())
 
-        fixes_from_issues = list()
-
+        # Get fixing commits
+        commits = []
         for label in labels:
             for issue in host.get_closed_issues(label):
                 commit = host.get_commit_closing_issue(issue)
                 if (commit in self.exclude_commits) or (commit in self.fixing_commits):
                     continue
                 elif commit:
-                    fixes_from_issues.append(commit)
+                    commits.append(commit)
 
-        if fixes_from_issues:
+        if commits:
             # Discard commits that do not touch IaC files
-            self.discard_undesired_fixing_commits(fixes_from_issues)
+            self.discard_undesired_fixing_commits(commits)
 
             # Update the list of fixing commits
-            self.fixing_commits.extend(fixes_from_issues)
+            self.fixing_commits.extend(commits)
 
             # Sort fixing_commits in ascending order of date
             self.sort_commits(self.fixing_commits)
 
-        return fixes_from_issues
+        return commits
 
     def get_fixing_commits_from_commit_messages(self, regex: str = None) -> List[str]:
         """
@@ -110,7 +110,7 @@ class BaseMiner:
         if not regex:
             regex = FIXING_COMMITS_REGEX
 
-        fixes_from_message = list()
+        commits = list()
 
         for commit in RepositoryMining(self.path_to_repo, only_in_branch=self.branch).traverse_commits():
 
@@ -126,19 +126,19 @@ class BaseMiner:
 
             # Match the regular expression to the message
             if re.match(regex, msg.lower()):
-                fixes_from_message.append(commit.hash)
+                commits.append(commit.hash)
 
-        if fixes_from_message:
+        if commits:
             # Discard commits that do not touch IaC files
-            self.discard_undesired_fixing_commits(fixes_from_message)
+            self.discard_undesired_fixing_commits(commits)
 
             # Update the list of fixing commits
-            self.fixing_commits.extend(fixes_from_message)
+            self.fixing_commits.extend(commits)
 
             # Sort fixing_commits in ascending order of date
             self.sort_commits(self.fixing_commits)
 
-        return fixes_from_message
+        return commits
 
     def get_fixed_files(self) -> List[FixedFile]:
         """

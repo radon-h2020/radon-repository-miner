@@ -27,6 +27,10 @@ class HostTestCase(unittest.TestCase):
         closing_commit = self.gh.get_commit_closing_issue(issue)
         assert closing_commit == 'c9ada15de53d048f4d8e74d12bea62174bc0f957'
 
+    def test_github_get_commit_closing_labeled_issues(self):
+        commits = self.gh.get_commits_closing_labeled_issues(labels=['bug'])
+        assert commits == ['c9ada15de53d048f4d8e74d12bea62174bc0f957']
+
     def test_gitlab_get_labels(self):
         assert self.gl.get_labels() == {'bug', 'confirmed', 'critical', 'discussion', 'documentation', 'enhancement',
                                         'suggestion', 'support'}
@@ -40,6 +44,10 @@ class HostTestCase(unittest.TestCase):
         issue = [issue for issue in issues if issue.iid == 2][0]
         closing_commit = self.gl.get_commit_closing_issue(issue)
         assert closing_commit == '6aa96ed603f827f0bef9f9553b39c3234d1c119f'
+
+    def test_gitlab_get_commit_closing_labeled_issues(self):
+        commits = self.gl.get_commits_closing_labeled_issues(labels={'bug'})
+        assert commits == ['6aa96ed603f827f0bef9f9553b39c3234d1c119f']
 
 
 if __name__ == '__main__':

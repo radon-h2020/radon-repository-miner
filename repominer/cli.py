@@ -13,7 +13,7 @@ from repominer.mining.base import BaseMiner
 from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 
-VERSION = '0.8.3'
+VERSION = '0.8.4'
 
 
 def valid_dir_or_url(x: str) -> str:
@@ -185,15 +185,15 @@ def mine_fixing_commits(miner: BaseMiner, verbose: bool, dest: str, exclude_comm
     if verbose:
         print('Identifying fixing-commits from closed issues related to bugs')
 
-    miner.get_fixing_commits_from_closed_issues(labels=None)
+    from_issues = miner.get_fixing_commits_from_closed_issues(labels=None)
 
     if verbose:
         print('Identifying fixing-commits from commit messages')
 
-    miner.get_fixing_commits_from_commit_messages(regex=None)
+    from_msg = miner.get_fixing_commits_from_commit_messages(regex=None)
 
     if verbose:
-        print('Saving fixing-commits')
+        print(f'Saving {len(miner.fixing_commits)} fixing-commits ({len(from_issues)} from closed issue, {len(from_msg)} from commit messages) [{datetime.now().hour}:{datetime.now().minute}]')
 
     filename_json = os.path.join(dest, 'fixing-commits.json')
 
@@ -218,7 +218,7 @@ def mine_fixed_files(miner: BaseMiner, verbose: bool, dest: str, exclude_files: 
     fixed_files = miner.get_fixed_files()
 
     if verbose:
-        print('Saving fixed-files')
+        print(f'Saving {len(fixed_files)} fixed-files [{datetime.now().hour}:{datetime.now().minute}]')
 
     filename_json = os.path.join(dest, 'fixed-files.json')
     json_files = []

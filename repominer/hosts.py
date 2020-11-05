@@ -15,6 +15,10 @@ GithubIssue = NewType('GithubIssue', github.Issue.Issue)
 
 class SVCHost(ABC):
 
+    # From https://docs.gitlab.com/ee/administration/issue_closing_pattern.html
+    issue_closing_pattern = re.compile(
+        r'\b((?:[Cc]los(?:e[sd]?|ing)|\b[Ff]ix(?:e[sd]|ing)?|\b[Rr]esolv(?:e[sd]?|ing)|\b[Ii]mplement(?:s|ed|ing)?)(:?) +(?:(?:issues? +)?#(\d+)(?:(?: *,? +and +| *,? *)?)|([A-Z][A-Z0-9_]+-\d+))+)')
+
     @abstractmethod
     def get_labels(self) -> Set[str]:
         """
@@ -43,14 +47,30 @@ class SVCHost(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_commits_closing_labeled_issues(self, labels: Union[List[str], Set[str]]) -> List[str]:
+        """
+        Return the commits that close an issue with one or more of the given labels
+
+        :param labels: the issue label(s)
+        :return: the list of commit closing issues with those labels
+        """
+        pass
+
 
 class GithubHost(SVCHost):
 
     def __init__(self, full_name: Union[str, int]):
         self.__repository = github.Github(os.getenv('GITHUB_ACCESS_TOKEN')).get_repo(full_name)
+        self.__commit_closing_issues = dict()
+
+        for commit in self.__repository.get_commits():
+            matches = self.issue_closing_pattern.findall(commit.commit.message)
+            for match in matches:
+                iid = match[2]
+                self.__commit_closing_issues[int(iid)] = commit.sha
 
     def get_labels(self) -> Set[str]:
-
         labels = set()
         for label in self.__repository.get_labels():
             if type(label) == github.Label.Label:
@@ -70,21 +90,27 @@ class GithubHost(SVCHost):
             if (is_merged or is_closed) and e.commit_id:
                 return e.commit_id
 
+    def get_commits_closing_labeled_issues(self, labels: Union[List[str], Set[str]]) -> List[str]:
+        commits = list()
+        for iid, commit_sha in self.__commit_closing_issues.items():
+            issue = self.__repository.get_issue(iid)
+            issue_labels = [label.name for label in issue.labels]
+            if issue.state == 'closed' and any(label in issue_labels for label in labels):
+                commits.append(commit_sha)
+
+        return commits
+
 
 class GitlabHost(SVCHost):
-
-    # From https://docs.gitlab.com/ee/administration/issue_closing_pattern.html
-    issue_closing_pattern = r'((?:[Cc]los(?:e[sd]?|ing)|\b[Ff]ix(?:e[sd]|ing)?|\b[Rr]esolv(?:e[sd]?|ing)|\b[Ii]mplement(?:s|ed|ing)?)(:?) +(?:(?:issues? +)?#(\d+)))'
 
     def __init__(self, full_name: Union[str, int]):
         self.__project = Gitlab('http://gitlab.com', os.getenv('GITLAB_ACCESS_TOKEN')).projects.get(full_name)
         self.__commit_closing_issues = dict()
 
-        iid_closing_pattern = re.compile(self.issue_closing_pattern)
         for commit in self.__project.commits.list(all=True, as_list=False):
-            match = iid_closing_pattern.match(commit.title)
-            if match and match.groups():
-                iid = match.groups()[-1]
+            matches = self.issue_closing_pattern.findall(commit.title)
+            for match in matches:
+                iid = match[2]
                 self.__commit_closing_issues[int(iid)] = commit.id
 
     def get_labels(self) -> Set[str]:
@@ -94,7 +120,6 @@ class GitlabHost(SVCHost):
         return self.__project.issues.list(state='closed', labels=[label], all=True)
 
     def get_commit_closing_issue(self, issue: ProjectIssue) -> str:
-
         sha = self.__commit_closing_issues.get(issue.iid)
         if sha:
             return sha
@@ -120,3 +145,16 @@ class GitlabHost(SVCHost):
         elif mr_iid:
             mr = self.__project.mergerequests.get(mr_iid)
             return mr.sha
+
+    def get_commits_closing_labeled_issues(self, labels: Union[List[str], Set[str]]) -> List[str]:
+        """
+        Return the commits that close an issue with one or more of the given labels
+        """
+        commits = list()
+        for iid, commit_sha in self.__commit_closing_issues.items():
+            issue = self.__project.issues.get(iid)
+
+            if issue.state == 'closed' and any(label in issue.labels for label in labels):
+                commits.append(commit_sha)
+
+        return commits
