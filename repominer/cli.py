@@ -12,9 +12,8 @@ from repominer.metrics.tosca import ToscaMetricsExtractor
 from repominer.mining.base import BaseMiner
 from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
-# from repominer.report import create_report
 
-VERSION = '0.8.2'
+VERSION = '0.8.3'
 
 
 def valid_dir_or_url(x: str) -> str:
@@ -96,6 +95,12 @@ def set_mine_parser(subparsers):
                         type=valid_file,
                         help='the path to a JSON file containing the list of commit hashes to exclude')
 
+    parser.add_argument('--include-commits',
+                        action='store',
+                        dest='include_commits',
+                        type=valid_file,
+                        help='the path to a JSON file containing the list of commit hashes to include')
+
     parser.add_argument('--exclude-files',
                         action='store',
                         dest='exclude_files',
@@ -165,12 +170,17 @@ def get_parser():
     return parser
 
 
-def mine_fixing_commits(miner: BaseMiner, verbose: bool, dest: str, exclude_commits: str = None):
+def mine_fixing_commits(miner: BaseMiner, verbose: bool, dest: str, exclude_commits: str = None, include_commits: str = None):
 
     if exclude_commits:
         with open(exclude_commits, 'r') as f:
             commits = json.load(f)
             miner.exclude_commits = set(commits)
+
+    if include_commits:
+        with open(include_commits, 'r') as f:
+            commits = json.load(f)
+            miner.fixing_commits = commits
 
     if verbose:
         print('Identifying fixing-commits from closed issues related to bugs')
@@ -260,7 +270,7 @@ def mine(args: Namespace):
     else:
         miner = ToscaMiner(url_to_repo=url_to_repo, branch=args.branch)
 
-    mine_fixing_commits(miner, args.verbose, args.dest, args.exclude_commits)
+    mine_fixing_commits(miner, args.verbose, args.dest, args.exclude_commits, args.include_commits)
 
     if args.info_to_mine in ('fixed-files', 'failure-prone-files'):
         mine_fixed_files(miner, args.verbose, args.dest, args.exclude_files)

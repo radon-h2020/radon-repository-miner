@@ -16,6 +16,8 @@ optional arguments:
   -b, --branch BRANCH   the repository branch to mine (default: master)
   --exclude-commits EXCLUDE_COMMITS
                         the path to a JSON file containing the list of commit hashes to exclude
+  --include-commits INCLUDE_COMMITS
+                        the path to a JSON file containing the list of commit hashes to include
   --exclude-files EXCLUDE_FILES
                         the path to a JSON file containing the list of FixedFiles to exclude
   --verbose             show log
@@ -24,11 +26,10 @@ optional arguments:
 !!! note "Output"
     Running this command will generate the following report files:
     
-    * `dest/failure-prone-files.html`
-    * `dest/failure-prone-files.json`
+    * `dest/fixing-commits.json` containing the list of fixing-commit hashes;
+    * `dest/fixed-files.json` containing the list of FixedFile objects (if mined `fixed-files` or `failure-prone-files`);
+    * `dest/failure-prone-files.json` containing the list of FailureProne objects (if mined `failure-prone-files`);
     
-    File `failure-prone-files.json` is a list of dictionaries containing the `filepath` relative to the repository root,
-    the `commit` hash at which the file was failure-prone, and the respective `fixing-commit` hash.
 
 !!! warning "Requirements"
     To properly use this command you **MUST** add the following to your environment variables: 
@@ -41,7 +42,7 @@ optional arguments:
     
     * `TMP_REPOSITORIES_DIR=<path/to/tmp/repositories/>` to temporary clone the remote repository for analysis. 
     Please, note that the repository will be cloned in this folder but not deleted. The latter step is left to the user,
-    when and if needed. 
+    when and if needed. **Note:** this variable is not needed if using the Docker image.
     
 
 

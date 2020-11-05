@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.8.3]
+- Added cli option (--include-commits) to include a list of fixing-commits. The purpose is to save time during future
+analyses.
+- Upgraded dependencies.
+
 ## [0.8.0]
 - Added two more options to the CLI to mine fixing-commits and fixed-files
 - Refactored application
