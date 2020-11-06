@@ -15,7 +15,7 @@ from pydriller.metrics.process.lines_count import LinesCount
 
 from repominer.files import FailureProneFile
 
-full_name_pattern = re.compile(r'git(hub|lab){1}\.com/([\w\W]+)\.git')
+full_name_pattern = re.compile(r'git(hub|lab){1}\.com/([\w\W]+)$')
 
 
 def get_content(path: str) -> str:
@@ -49,7 +49,7 @@ class BaseMetricsExtractor:
                                                only_releases=True if at == 'release' else False,
                                                order='date-order')
         elif is_remote(path_to_repo):
-            match = full_name_pattern.search(path_to_repo)
+            match = full_name_pattern.search(path_to_repo.replace('.git', ''))
             repo_name = match.groups()[1].split('/')[1]
             path_to_clone = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), repo_name)
             self.path_to_repo = path_to_clone

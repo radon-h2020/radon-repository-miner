@@ -16,7 +16,7 @@ BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'B
 
 FIXING_COMMITS_REGEX = r'(bug|fix|error|crash|problem|fail|defect|patch)'
 
-full_name_pattern = re.compile(r'(github|gitlab){1}\.com/([\w\W]+)\.git')
+full_name_pattern = re.compile(r'(github|gitlab){1}\.com/([\w\W]+)$')
 
 
 class BaseMiner:
@@ -33,7 +33,7 @@ class BaseMiner:
         :param url_to_repo: the HTTPS url to the remote repository to analyze;
         :param branch: the branch to analyze. Default 'master';
         """
-        match = full_name_pattern.search(url_to_repo)
+        match = full_name_pattern.search(url_to_repo.replace('.git', ''))
         self.host = match.groups()[0]
         self.repository = match.groups()[1]
         self.branch = branch

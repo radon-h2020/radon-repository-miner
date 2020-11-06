@@ -13,7 +13,7 @@ from repominer.mining.base import BaseMiner
 from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 
-VERSION = '0.8.4'
+VERSION = '0.8.5'
 
 
 def valid_dir_or_url(x: str) -> str:
@@ -258,9 +258,9 @@ def mine(args: Namespace):
     url_to_repo = None
 
     if args.host == 'github':
-        url_to_repo = f'https://github.com/{args.repository}.git'
+        url_to_repo = f'https://github.com/{args.repository}'
     elif args.host == 'gitlab':
-        url_to_repo = f'https://gitlab.com/{args.repository}.git'
+        url_to_repo = f'https://gitlab.com/{args.repository}'
 
     if args.verbose:
         print(f'Mining {args.repository} [started at: {datetime.now().hour}:{datetime.now().minute}]')
