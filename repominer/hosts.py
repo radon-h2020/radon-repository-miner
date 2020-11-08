@@ -67,8 +67,9 @@ class GithubHost(SVCHost):
         for commit in self.__repository.get_commits():
             matches = self.issue_closing_pattern.findall(commit.commit.message)
             for match in matches:
-                iid = match[2]
-                self.__commit_closing_issues[int(iid)] = commit.sha
+                iid = match[2].strip()
+                if iid:
+                    self.__commit_closing_issues[int(iid)] = commit.sha
 
     def get_labels(self) -> Set[str]:
         labels = set()

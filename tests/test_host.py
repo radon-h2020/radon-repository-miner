@@ -13,6 +13,10 @@ class HostTestCase(unittest.TestCase):
 
         cls.gl = GitlabHost(full_name='stefanodallapalma/test-gitlab-apis')
 
+    def test_tmp(self):
+        gh = GithubHost(full_name='OpenConext/OpenConext-deploy')
+
+    """
     def test_github_get_labels(self):
         assert set(self.gh.get_labels()) == {'bug', 'documentation', 'duplicate', 'duplicate', 'enhancement',
                                              'good first issue', 'help wanted', 'invalid', 'question', 'wontfix'}
@@ -48,7 +52,7 @@ class HostTestCase(unittest.TestCase):
     def test_gitlab_get_commit_closing_labeled_issues(self):
         commits = self.gl.get_commits_closing_labeled_issues(labels={'bug'})
         assert commits == ['6aa96ed603f827f0bef9f9553b39c3234d1c119f']
-
+    """
 
 if __name__ == '__main__':
     unittest.main()

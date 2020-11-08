@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.8.6]
+- Bugfix: ValueError: invalid literal for int() with base 10: ''
+
 ## [0.8.3]
 - Added cli option (--include-commits) to include a list of fixing-commits. The purpose is to save time during future
 analyses.
