@@ -4,7 +4,7 @@ def is_ansible_file(path: str) -> bool:
     :param path: a path
     :return: True if the path links to an Ansible file. False, otherwise
     """
-    return path and ('test' not in path) and any(w in path for w in ['ansible', 'playbooks', 'meta', 'tasks', 'handlers', 'roles']) and path.endswith('.yml')
+    return path and ('test' not in path) and any(w in path for w in ['playbooks/', 'meta/', 'tasks/', 'handlers/', 'roles/']) and path.endswith('.yml')
 
 
 def is_tosca_file(path: str, content: str = None) -> bool:

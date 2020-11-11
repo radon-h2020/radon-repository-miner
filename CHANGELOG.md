@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.8.7]
+- Updated discard of undesired commits and ansible file recognition
+
 ## [0.8.6]
 - Bugfix: ValueError: invalid literal for int() with base 10: ''
 

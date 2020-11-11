@@ -1,5 +1,7 @@
-from typing import List
 from pydriller.repository_mining import RepositoryMining
+from pydriller.domain.commit import ModificationType
+
+from typing import List
 
 from repominer import filters
 from repominer.mining.base import BaseMiner
@@ -33,7 +35,7 @@ class AnsibleMiner(BaseMiner):
                                        only_in_branch=self.branch).traverse_commits():
 
             # if none of the modified files is a Ansible file, then discard the commit
-            if not any(filters.is_ansible_file(modified_file.new_path) for modified_file in commit.modifications):
+            if not any(modified_file.change_type == ModificationType.MODIFY and filters.is_ansible_file(modified_file.new_path) for modified_file in commit.modifications):
                 if commit.hash in commits:
                     commits.remove(commit.hash)
 
