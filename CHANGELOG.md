@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [0.8.8]
+## [0.8.9]
 - Updated dependency to AnsibleMetrics (0.3.8)
 
 ## [0.8.7]
