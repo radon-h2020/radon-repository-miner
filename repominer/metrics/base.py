@@ -46,6 +46,9 @@ class BaseMetricsExtractor:
         if at not in ('release', 'commit'):
             raise ValueError(f'{at} is not valid! Try with \'release\' or \'commit\'.')
 
+        if at == 'commit':
+            raise NotImplementedError('This functionality is not implemented yet! Please, use at=release')
+
         if os.path.isdir(path_to_repo):
             self.path_to_repo = path_to_repo
             self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
@@ -66,6 +69,7 @@ class BaseMetricsExtractor:
         else:
             raise ValueError(f'{path_to_repo} does not seem a path or url to a Git repository.')
 
+        self.releases = [commit.hash for commit in self.repo_miner.traverse_commits()]
         self.dataset = pd.DataFrame()
 
     def get_files(self) -> set:
@@ -133,19 +137,34 @@ class BaseMetricsExtractor:
                 product: bool = True,
                 process: bool = True,
                 delta: bool = False):
-        commits_or_releases = list(self.repo_miner.traverse_commits())
 
         git_repo = GitRepository(self.path_to_repo)
 
-        for i in range(len(commits_or_releases)):
-            commit = commits_or_releases[i]
+        metrics_previous_release = dict()  # Values for iac metrics in the last release
 
+        for commit in RepositoryMining(self.path_to_repo, order='date-order').traverse_commits():
+
+            # To handle renaming in metrics_previous_release
+            for modified_file in commit.modifications:
+
+                old_path = modified_file.old_path
+                new_path = modified_file.new_path
+
+                if old_path != new_path and old_path in metrics_previous_release:
+                    # Rename key old_path wit new_path
+                    metrics_previous_release[new_path] = metrics_previous_release.pop(old_path)
+
+            if commit.hash not in self.releases:
+                continue
+
+            # Else
             git_repo.checkout(commit.hash)
 
             if process:
                 # Extract process metrics
-                from_previous_commit = commit.hash if i == 0 else commits_or_releases[i - 1].hash
-                to_current_commit = commit.hash
+                i = self.releases.index(commit.hash)
+                from_previous_commit = commit.hash if i == 0 else self.releases[i - 1]
+                to_current_commit = commit.hash  # = self.releases[i]
                 process_metrics = self.get_process_metrics(from_previous_commit, to_current_commit)
 
             for filepath in self.get_files():
@@ -171,24 +190,39 @@ class BaseMetricsExtractor:
                 if process_metrics:
                     metrics['change_set_max'] = process_metrics['dict_change_set_max']
                     metrics['change_set_avg'] = process_metrics['dict_change_set_avg']
-                    metrics['code_churn_count'] = process_metrics['dict_code_churn_count'].get(filepath)
-                    metrics['code_churn_max'] = process_metrics['dict_code_churn_max'].get(filepath)
-                    metrics['code_churn_avg'] = process_metrics['dict_code_churn_avg'].get(filepath)
-                    metrics['commits_count'] = process_metrics['dict_commits_count'].get(filepath)
-                    metrics['contributors_count'] = process_metrics['dict_contributors_count'].get(filepath)
-                    metrics['minor_contributors_count'] = process_metrics['dict_minor_contributors_count'].get(filepath)
+                    metrics['code_churn_count'] = process_metrics['dict_code_churn_count'].get(filepath, 0)
+                    metrics['code_churn_max'] = process_metrics['dict_code_churn_max'].get(filepath, 0)
+                    metrics['code_churn_avg'] = process_metrics['dict_code_churn_avg'].get(filepath, 0)
+                    metrics['commits_count'] = process_metrics['dict_commits_count'].get(filepath, 0)
+                    metrics['contributors_count'] = process_metrics['dict_contributors_count'].get(filepath, 0)
+                    metrics['minor_contributors_count'] = process_metrics['dict_minor_contributors_count'].get(filepath, 0)
                     metrics['highest_contributor_experience'] = process_metrics[
-                        'dict_highest_contributor_experience'].get(filepath)
-                    metrics['hunks_median'] = process_metrics['dict_hunks_median'].get(filepath)
-                    metrics['additions'] = process_metrics['dict_additions'].get(filepath)
-                    metrics['additions_max'] = process_metrics['dict_additions_max'].get(filepath)
-                    metrics['additions_avg'] = process_metrics['dict_additions_avg'].get(filepath)
-                    metrics['deletions'] = process_metrics['dict_deletions'].get(filepath)
-                    metrics['deletions_max'] = process_metrics['dict_deletions_max'].get(filepath)
-                    metrics['deletions_avg'] = process_metrics['dict_deletions_avg'].get(filepath)
+                        'dict_highest_contributor_experience'].get(filepath, 0)
+                    metrics['hunks_median'] = process_metrics['dict_hunks_median'].get(filepath, 0)
+                    metrics['additions'] = process_metrics['dict_additions'].get(filepath, 0)
+                    metrics['additions_max'] = process_metrics['dict_additions_max'].get(filepath, 0)
+                    metrics['additions_avg'] = process_metrics['dict_additions_avg'].get(filepath, 0)
+                    metrics['deletions'] = process_metrics['dict_deletions'].get(filepath, 0)
+                    metrics['deletions_max'] = process_metrics['dict_deletions_max'].get(filepath, 0)
+                    metrics['deletions_avg'] = process_metrics['dict_deletions_avg'].get(filepath, 0)
 
                 if product:
                     metrics.update(self.get_product_metrics(file_content))
+
+                if delta:
+                    delta_metrics = dict()
+
+                    previous = metrics_previous_release.get(filepath, dict())
+                    for metric, value in previous.items():
+
+                        if metric in ('filepath', 'commit', 'committed_at', 'failure_prone'):
+                            continue
+
+                        difference = metrics.get(metric, 0) - value
+                        delta_metrics[f'delta_{metric}'] = round(difference, 3)
+
+                    metrics_previous_release[filepath] = metrics.copy()
+                    metrics.update(delta_metrics)
 
                 self.dataset = self.dataset.append(metrics, ignore_index=True)
 
