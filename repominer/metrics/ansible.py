@@ -12,11 +12,13 @@ class AnsibleMetricsExtractor(BaseMetricsExtractor):
 
     def get_product_metrics(self, script: str) -> dict:
         """
-        Extract product metrics from a script
+        Extract product metrics from a script.
+        :param script: the script from which to run AnsibleMetrics on
+        :return: a dictionary {string: float} with metrics. If an error occurs, return an empty dictionary
         """
         try:
             return metrics_extractor.extract_all(io.StringIO(script))
-        except ValueError:
+        except (TypeError, ValueError):
             return {}
 
     def ignore_file(self, path_to_file: str, content: str = None):
