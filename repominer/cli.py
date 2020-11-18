@@ -13,7 +13,7 @@ from repominer.mining.base import BaseMiner
 from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 
-VERSION = '0.8.11'
+VERSION = '0.8.12'
 
 
 def valid_dir_or_url(x: str) -> str:
