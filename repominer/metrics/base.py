@@ -26,10 +26,13 @@ def get_content(path: str) -> str:
     :return: the content of the file, if exists; None otherwise.
     """
     if not os.path.isfile(path):
-        return ''
+        return None
 
-    with open(path, 'r') as f:
-        return f.read()
+    try:
+        with open(path, 'r') as f:
+            return f.read()
+    except UnicodeDecodeError:
+        return None
 
 
 def is_remote(repo: str) -> bool:
@@ -130,7 +133,6 @@ class BaseMetricsExtractor:
                 product: bool = True,
                 process: bool = True,
                 delta: bool = False):
-
         commits_or_releases = list(self.repo_miner.traverse_commits())
 
         git_repo = GitRepository(self.path_to_repo)
@@ -146,12 +148,11 @@ class BaseMetricsExtractor:
                 to_current_commit = commit.hash
                 process_metrics = self.get_process_metrics(from_previous_commit, to_current_commit)
 
-            # get all file paths from the root of the repository at this commit
             for filepath in self.get_files():
 
                 file_content = get_content(os.path.join(self.path_to_repo, filepath))
 
-                if self.ignore_file(filepath, file_content):
+                if not file_content or self.ignore_file(filepath, file_content):
                     continue
 
                 tmp = FailureProneFile(filepath=filepath, commit=commit.hash, fixing_commit='')
