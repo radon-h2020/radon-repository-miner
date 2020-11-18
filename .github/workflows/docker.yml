@@ -1,13 +1,17 @@
 name: Build and push image to Dockerhub
 
 on:
-  release:
-    types: [published]
+  repository_dispatch:
+    types: [trigger-workflow-docker]
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
+      -
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.client_payload.sha }}
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1

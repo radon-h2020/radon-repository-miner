@@ -29,3 +29,11 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
         twine upload dist/*
+    - name: Trigger next workflow to publish on Dockerhub
+      if: success()
+      uses: peter-evans/repository-dispatch@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        event-type: trigger-workflow-docker
+        client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
