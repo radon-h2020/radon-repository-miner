@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.8.11]
+- Bugfix: Caught missing TypeError that made the program fail when executing AnsibleMetrics on an empty script
+
 ## [0.8.10]
 - Bugfix UnicodeDecodeError when reading file content
 
