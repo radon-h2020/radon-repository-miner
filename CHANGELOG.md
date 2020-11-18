@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.8.8]
+- Updated dependency to AnsibleMetrics (0.3.8)
+
 ## [0.8.7]
 - Updated discard of undesired commits and ansible file recognition
 
