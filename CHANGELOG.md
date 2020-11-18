@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## [0.8.10]
+- Bugfix UnicodeDecodeError when reading file content
+
 ## [0.8.9]
 - Updated dependency to AnsibleMetrics (0.3.8)
 
