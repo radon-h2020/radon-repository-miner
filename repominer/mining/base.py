@@ -1,12 +1,29 @@
 import os
+import nltk
 import re
 
-from pydriller.domain.commit import ModificationType
-from pydriller.repository_mining import GitRepository, RepositoryMining
+from abc import ABCMeta, abstractmethod
 from typing import Generator, List, Set
 
+from pydriller.domain.commit import Commit, ModificationType
+from pydriller.repository_mining import GitRepository, RepositoryMining
+
+from repominer import utils
 from repominer.files import FixedFile, FailureProneFile
 from repominer.hosts import GithubHost, GitlabHost
+from repominer.mining import rules
+
+# Important: downloading resources for NLTK
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+
 
 # Constants
 BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical', 'ansible_bug',
@@ -280,3 +297,147 @@ class BaseMiner:
         sorted_commits = [sha for sha in self.commit_hashes if sha in commits]
         commits.clear()
         commits.extend(sorted_commits)
+
+
+class FixingCommitClassifier(metaclass=ABCMeta):
+    """
+    This class implements rules to detect fixing-commit categories related to IaC defects,
+    as defined in http://chrisparnin.me/pdf/GangOfEight.pdf.
+    """
+
+    def __init__(self, commit: Commit):
+
+        if commit is None:
+            raise TypeError('Expected a pydriller.domain.commit.Commit object, not None.')
+
+        self.commit = commit
+        self.sentences = []  # will be list of tokens list
+
+        for sentence in nltk.sent_tokenize(commit.msg):
+            # split into words
+            tokens = nltk.tokenize.word_tokenize(sentence)
+
+            # remove all tokens that are not alphabetic
+            tokens = [word.strip() for word in tokens if word.isalpha()]
+
+            self.sentences.append(tokens)
+
+    def comment_changed(self) -> bool:
+
+        for modification in self.commit.modifications:
+            if modification.change_type != ModificationType.MODIFY:
+                continue
+
+            diff = [line.strip() for _, line in modification.diff_parsed.get('added', {})]
+            diff.extend([line.strip() for _, line in modification.diff_parsed.get('deleted', {})])
+            if any(line.startswith('#') for line in diff):
+                return True
+
+        return False
+
+    @abstractmethod
+    def data_changed(self) -> bool:
+        pass
+
+    @abstractmethod
+    def include_changed(self) -> bool:
+        pass
+
+    @abstractmethod
+    def service_changed(self) -> bool:
+        pass
+
+    def fixes_conditional(self):
+
+        for sentence in self.sentences:
+            sentence = ' '.join(sentence)
+            sentence_dep = ' '.join(utils.get_head_dependents(sentence))
+            if rules.has_defect_pattern(sentence) and rules.has_conditional_pattern(sentence_dep):
+                return True
+
+        return False
+
+    def fixes_configuration_data(self):
+
+        is_data_changed = self.data_changed()
+
+        for sentence in self.sentences:
+            sentence = ' '.join(sentence)
+            sentence_dep = ' '.join(utils.get_head_dependents(sentence))
+
+            if rules.has_defect_pattern(sentence) and \
+                    (rules.has_storage_configuration_pattern(sentence_dep)
+                     or rules.has_file_configuration_pattern(sentence_dep)
+                     or rules.has_network_configuration_pattern(sentence_dep)
+                     or rules.has_user_configuration_pattern(sentence_dep)
+                     or rules.has_cache_configuration_pattern(sentence_dep)
+                     or is_data_changed):
+                return True
+
+        return False
+
+    def fixes_dependency(self):
+
+        is_include_changed = self.include_changed()
+
+        for sentence in self.sentences:
+            sentence = ' '.join(sentence)
+            sentence_dep = ' '.join(utils.get_head_dependents(sentence))
+            if rules.has_defect_pattern(sentence) and (rules.has_dependency_pattern(sentence_dep) or is_include_changed):
+                return True
+
+        return False
+
+    def fixes_documentation(self):
+
+        is_comment_changed = self.comment_changed()
+
+        for sentence in self.sentences:
+            sentence = ' '.join(sentence)
+            sentence_dep = ' '.join(utils.get_head_dependents(sentence))
+            if rules.has_defect_pattern(sentence) and (rules.has_documentation_pattern(sentence_dep) or is_comment_changed):
+                return True
+
+        return False
+
+    def fixes_idempotency(self):
+
+        for sentence in self.sentences:
+            sentence = ' '.join(sentence)
+            sentence_dep = ' '.join(utils.get_head_dependents(sentence))
+            if rules.has_defect_pattern(sentence) and rules.has_idempotency_pattern(sentence_dep):
+                return True
+
+        return False
+
+    def fixes_security(self):
+
+        for sentence in self.sentences:
+            sentence = ' '.join(sentence)
+            sentence_dep = ' '.join(utils.get_head_dependents(sentence))
+            if rules.has_defect_pattern(sentence) and rules.has_security_pattern(sentence_dep):
+                return True
+
+        return False
+
+    def fixes_service(self):
+
+        is_service_changed = self.service_changed()
+
+        for sentence in self.sentences:
+            sentence = ' '.join(sentence)
+            sentence_dep = ' '.join(utils.get_head_dependents(sentence))
+            if rules.has_defect_pattern(sentence) and (rules.has_service_pattern(sentence_dep) or is_service_changed):
+                return True
+
+        return False
+
+    def fixes_syntax(self):
+
+        for sentence in self.sentences:
+            sentence = ' '.join(sentence)
+            sentence_dep = ' '.join(utils.get_head_dependents(sentence))
+            if rules.has_defect_pattern(sentence) and rules.has_syntax_pattern(sentence_dep):
+                return True
+
+        return False
