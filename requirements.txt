@@ -1,6 +1,8 @@
 ansiblemetrics~=0.3.8
+nltk~=3.5
 pandas~=1.1.4
 pydriller~=1.15.3
 pygithub~=1.53
 python-gitlab~=2.5.0
+spacy~=2.3.4
 tosca-metrics~=0.0.5

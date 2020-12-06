@@ -26,6 +26,10 @@ pip install -r requirements.txt
 pip install .
 ```
 
+**Important:** to properly use the FixingCommitCategorized, install the spaCy statistical model `en_core_web_sm`: 
+
+`python -m spacy download en_core_web_sm`
+
 # How to test
 
 ```text
@@ -60,5 +64,6 @@ Using the `gitlab` argument:
 `docker run -v /tmp/repo-miner:/app  repo-miner:latest repo-miner extract-metrics https://github.com/<owner>/<repository>.git ./failure-prone-files.json ansible all release . --verbose`
 
 
-## CHANGELOG
+
+# CHANGELOG
 See the [CHANGELOG](CHANGELOG.md) for information about the release history.
