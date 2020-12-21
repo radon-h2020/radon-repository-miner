@@ -1,0 +1,401 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Bug-Fixing Commits Classifiers &mdash; radon-repository-miner 0.8.13 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Metrics" href="api.metrics.html" />
+    <link rel="prev" title="Miners" href="api.miners.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> radon-repository-miner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="apis.html">APIs Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.miners.html">Miners</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Bug-Fixing Commits Classifiers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#base-classifier">Base Classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ansible-classifier">Ansible Classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.metrics.html">Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Help Needed</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radon-repository-miner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="apis.html">APIs Reference</a> &raquo;</li>
+        
+      <li>Bug-Fixing Commits Classifiers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.fixing.commits.classifiers.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="bug-fixing-commits-classifiers">
+<h1>Bug-Fixing Commits Classifiers<a class="headerlink" href="#bug-fixing-commits-classifiers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="base-classifier">
+<h2>Base Classifier<a class="headerlink" href="#base-classifier" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="repominer.mining.base.FixingCommitClassifier">
+<em class="property">class </em><code class="sig-prename descclassname">repominer.mining.base.</code><code class="sig-name descname">FixingCommitClassifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commit</span><span class="p">:</span> <span class="n">pydriller.domain.commit.Commit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class implements rules to detect fixing commits categories related to IaC defects, as defined in
+<a class="reference external" href="http://chrisparnin.me/pdf/GangOfEight.pdf">http://chrisparnin.me/pdf/GangOfEight.pdf</a>.</p>
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commit</span><span class="p">:</span> <span class="n">pydriller.domain.commit.Commit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>commit</strong> (<em>Commit</em>) – The commit to analyze.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If commit is None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.comment_changed">
+<code class="sig-name descname">comment_changed</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.comment_changed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes a comment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit modifies a comment</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.fixes_conditional">
+<code class="sig-name descname">fixes_conditional</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.fixes_conditional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes a conditional.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit fixes a conditional. False, otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.fixes_configuration_data">
+<code class="sig-name descname">fixes_configuration_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.fixes_configuration_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes configuration data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit fixes configuration data. False, otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.fixes_dependency">
+<code class="sig-name descname">fixes_dependency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.fixes_dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes a dependency.
+For example, if an import or include is changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit fixes a dependency. False, otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.fixes_documentation">
+<code class="sig-name descname">fixes_documentation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.fixes_documentation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes the documentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit fixes the documentation. False, otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.fixes_idempotency">
+<code class="sig-name descname">fixes_idempotency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.fixes_idempotency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes an idempotency issue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit fixes an idempotency. False, otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.fixes_security">
+<code class="sig-name descname">fixes_security</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.fixes_security" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes a security issue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit fixes security. False, otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.fixes_service">
+<code class="sig-name descname">fixes_service</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.fixes_service" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes a service issue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit fixes a service. False, otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.FixingCommitClassifier.fixes_syntax">
+<code class="sig-name descname">fixes_syntax</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.FixingCommitClassifier.fixes_syntax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the commit fixes a syntax issue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the commit fixes syntnax. False, otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ansible-classifier">
+<h2>Ansible Classifier<a class="headerlink" href="#ansible-classifier" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="repominer.mining.ansible.AnsibleFixingCommitClassifier">
+<em class="property">class </em><code class="sig-prename descclassname">repominer.mining.ansible.</code><code class="sig-name descname">AnsibleFixingCommitClassifier</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commit</span><span class="p">:</span> <span class="n">pydriller.domain.commit.Commit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.ansible.AnsibleFixingCommitClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#repominer.mining.base.FixingCommitClassifier" title="repominer.mining.base.FixingCommitClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">repominer.mining.base.FixingCommitClassifier</span></code></a></p>
+<p>This class extends a FixingCommitClassifier to classify bug-fixing commits of Ansible files.</p>
+<dl class="py method">
+<dt id="repominer.mining.ansible.AnsibleFixingCommitClassifier.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commit</span><span class="p">:</span> <span class="n">pydriller.domain.commit.Commit</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.ansible.AnsibleFixingCommitClassifier.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>commit</strong> (<em>Commit</em>) – The commit to analyze.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If commit is None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.metrics.html" class="btn btn-neutral float-right" title="Metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="api.miners.html" class="btn btn-neutral float-left" title="Miners" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefano Dalla Palma
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

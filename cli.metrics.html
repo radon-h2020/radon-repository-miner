@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Metrics extraction using Command-Line &mdash; radon-repository-miner 0.8.13 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="APIs Reference" href="apis.html" />
+    <link rel="prev" title="Mining using Command-Line" href="cli.mining.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> radon-repository-miner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="cli.html">CLI Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cli.mining.html">Mining using Command-Line</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Metrics extraction using Command-Line</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#using-docker">Using Docker</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#on-local-machine">On local machine</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="apis.html">APIs Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Help Needed</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radon-repository-miner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="cli.html">CLI Reference</a> &raquo;</li>
+        
+      <li>Metrics extraction using Command-Line</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/cli.metrics.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="metrics-extraction-using-command-line">
+<h1>Metrics extraction using Command-Line<a class="headerlink" href="#metrics-extraction-using-command-line" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>usage: repo-miner extract-metrics [-h] [--verbose] path_to_repo src {ansible,tosca} {product,process,delta,all} {release,commit} dest
+
+positional arguments:
+  path_to_repo          the absolute path to a cloned repository or the url to a remote repository
+  src                   the json report generated from a previous run of &#39;repo-miner mine&#39;
+  {ansible,tosca}       extract metrics for Ansible or Tosca
+  {product,process,delta,all}
+                        the metrics to extract
+  {release,commit}      extract metrics at each release or commit
+  dest                  destination folder to save the resulting csv
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --verbose        show log
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This command generate a <cite>metrics.csv</cite> file in folder <cite>dest</cite>.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If passing a remote <code class="docutils literal notranslate"><span class="pre">path_to_repo</span></code>, such as <code class="docutils literal notranslate"><span class="pre">https://github.com/radon-h2020/radon-repository-miner.git</span></code>, you <strong>MUST</strong> add the following to your environment variables:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">TMP_REPOSITORIES_DIR=&lt;path/to/tmp/repositories/&gt;</span></code> to temporary clone the remote repository for the analysis. Please, note that the repository will be cloned in this folder but not deleted. The latter step is left to the user, when and if needed.</p></li>
+</ul>
+</div>
+<p>The following metrics can be extracted per each release:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">product</span></code>: <strong>product metrics</strong> measure structural characteristics of code scripts (such as <em>lines of code</em>, <em>number of conditions</em>, <em>number of tasks</em>, etc.), and are extracted using <a class="reference external" href="https://github.com/radon-h2020/radon-ansible-metrics">radon-ansible-metrics</a> and <a class="reference external" href="https://github.com/radon-h2020/radon-tosca-metrics">radon-tosca-metrics</a> for Ansible and Tosca, respectively.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">process</span></code>: <strong>process metrics</strong> measure aspects of the development process rather than the characteristic of code (such as the <em>number of commits</em>, <em>number of files committed together</em>, <em>added and removed lines</em>, etc.), and are extracted by using <a class="reference external" href="https://pydriller.readthedocs.io/en/latest/processmetrics.html">pydriller</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delta</span></code>: <strong>delta metrics</strong> are calculated as the difference of each metric between two successive releases or commits.</p></li>
+</ul>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Follow the mine example in the previous section to generate the <code class="docutils literal notranslate"><span class="pre">failure-prone-files.json</span></code>.</p>
+<p>Afterwards, extract metrics as follow.</p>
+<div class="section" id="using-docker">
+<h3>Using Docker<a class="headerlink" href="#using-docker" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p><strong>Extract metrics</strong></p>
+<blockquote>
+<div><div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>docker run -v /tmp/repo-miner:/app repo-miner:latest repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose
+</pre></div>
+</div>
+<p>or (passing the url to repository)</p>
+<div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>docker run -v /tmp/repo-miner:/app repo-miner:latest repo-miner extract-metrics https://github.com/adriagalin/ansible.motd.git ./failure_prone_files.json ansible all release . --verbose
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><strong>Access reports</strong></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">/tmp/repo-miner</span></code></p>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="on-local-machine">
+<h3>On local machine<a class="headerlink" href="#on-local-machine" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p><strong>Move (or stay) in the working directory</strong></p>
+<blockquote>
+<div><p><cite>cd radon-example</cite></p>
+</div></blockquote>
+</li>
+<li><p><strong>Extract metrics</strong></p></li>
+</ol>
+<div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>repo-miner extract-metrics repo-miner-env/tmp/ansible.motd ./failure_prone_files.json ansible all release . --verbose
+</pre></div>
+</div>
+<ol class="arabic" start="3">
+<li><p><strong>Access results</strong></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">.</span></code></p>
+</div></blockquote>
+</li>
+</ol>
+<p>You can now see that <code class="docutils literal notranslate"><span class="pre">metrics.csv</span></code> has been added to the folder:</p>
+<p>Either way, you will get a similar output:</p>
+<div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>Extracting metrics from repo-miner-env/tmp/ansible.motd using report ./failure_prone_files.json [started at: 17:34]
+Setting up ansible metrics extractor
+Extracting all metrics
+Metrics saved at ./metrics.csv [completed at: 17:35]
+</pre></div>
+</div>
+<p>The results directory should contain the following files:</p>
+<div class="highlight-RST notranslate"><div class="highlight"><pre><span></span>failure-prone-files.html failure-prone-files.json metrics.csv
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="apis.html" class="btn btn-neutral float-right" title="APIs Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="cli.mining.html" class="btn btn-neutral float-left" title="Mining using Command-Line" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefano Dalla Palma
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,916 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Miners &mdash; radon-repository-miner 0.8.13 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Bug-Fixing Commits Classifiers" href="api.fixing.commits.classifiers.html" />
+    <link rel="prev" title="APIs Reference" href="apis.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> radon-repository-miner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="apis.html">APIs Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Miners</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#base-miner">Base Miner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ansible-miner">Ansible Miner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tosca-miner">Tosca Miner</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.fixing.commits.classifiers.html">Bug-Fixing Commits Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.metrics.html">Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Help Needed</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radon-repository-miner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="apis.html">APIs Reference</a> &raquo;</li>
+        
+      <li>Miners</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.miners.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="miners">
+<h1>Miners<a class="headerlink" href="#miners" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="base-miner">
+<h2>Base Miner<a class="headerlink" href="#base-miner" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="repominer.mining.base.BaseMiner">
+<em class="property">class </em><code class="sig-prename descclassname">repominer.mining.base.</code><code class="sig-name descname">BaseMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">branch</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'master'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.BaseMiner" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the base class to miner a software repositories.</p>
+<p>It allows for mining bug-fixing commits, fixed files, and bug-introducing commits.
+It can be extended to instantiate the miner in the context of specific languages (e.g., Ansible and Tosca).</p>
+<dl class="py method">
+<dt id="repominer.mining.base.BaseMiner.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">branch</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'master'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.base.BaseMiner.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class constructor.
+Initialize a new BaseMiner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url_to_repo</strong> (<em>str</em>) – the url to a remote Github or Gitlab repository</p></li>
+<li><p><strong>branch</strong> (<em>str</em>) – the branch to analyze. Default ‘master’</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="repominer.mining.base.BaseMiner.host">
+<code class="sig-name descname">host</code><a class="headerlink" href="#repominer.mining.base.BaseMiner.host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Source Code Versioning host (‘github’ or ‘gitlab’).
+The value is automatically extracted from parameter <code class="docutils literal notranslate"><span class="pre">url_to_repo</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.base.BaseMiner.repository">
+<code class="sig-name descname">repository</code><a class="headerlink" href="#repominer.mining.base.BaseMiner.repository" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repository full name (e.g., radon-h2020/radon-repository-miner).
+The value is automatically extracted from parameter <code class="docutils literal notranslate"><span class="pre">url_to_repo</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.base.BaseMiner.branch">
+<code class="sig-name descname">branch</code><a class="headerlink" href="#repominer.mining.base.BaseMiner.branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repository’s branch to analyze.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.base.BaseMiner.commit_hashes">
+<code class="sig-name descname">commit_hashes</code><a class="headerlink" href="#repominer.mining.base.BaseMiner.commit_hashes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of commit hash on the repository’s branch, ordered by creation date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.base.BaseMiner.exclude_commits">
+<code class="sig-name descname">exclude_commits</code><a class="headerlink" href="#repominer.mining.base.BaseMiner.exclude_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of commit hash to exclude from mining.</p>
+<p>Mining bug-fixing commits might lead several false positives, i.e., commits that do not actually fix bugs.
+If you are certain that some commits do not fix bugs, before mining, you can specify their hash as follows:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">exclude_commits</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;521515108c4fee9a4bd1147fc42936768297e3b6&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Set[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.base.BaseMiner.exclude_fixed_files">
+<code class="sig-name descname">exclude_fixed_files</code><a class="headerlink" href="#repominer.mining.base.BaseMiner.exclude_fixed_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of fixed files to exclude from mining.
+Fixed files are files modified in a bug-fixing commit.</p>
+<p>When fixing a bug, several files might be modified but not all of them contributed to fix the bug.
+For example, someone could fix a bug in a file, and at the same time modify another file not involved
+in the fix, such as a README.md.</p>
+<p>If you are certain that some files in a give commit are not involved in fixing bugs, you can tell the miner
+to ignore them as follow:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.files</span> <span class="kn">import</span> <span class="n">FixedFile</span>
+<span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">exclude_fixed_files</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">FixedFile</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;CHANGELOG.md&#39;</span><span class="p">,</span>
+              <span class="n">fic</span><span class="o">=</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">,</span>
+              <span class="n">bic</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+    <span class="n">FixedFile</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;repominer/cli.py&#39;</span><span class="p">,</span>
+              <span class="n">fic</span><span class="o">=</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">,</span>
+              <span class="n">bic</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.base.BaseMiner.fixing_commits">
+<code class="sig-name descname">fixing_commits</code><a class="headerlink" href="#repominer.mining.base.BaseMiner.fixing_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of bug-fixing commit hashes.</p>
+<p>Bug-fixings commits are identified by the methods <code class="docutils literal notranslate"><span class="pre">get_fixing_commits_from_closed_issues</span></code> and
+<code class="docutils literal notranslate"><span class="pre">get_fixing_commits_from_commit_messages</span></code>.</p>
+<p>Although, if you are certain that some commits fix bugs, e.g., because of a previous manual analysis,
+you can specify them in advance to speed up the mining as follows:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">fixing_commits</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This is useful when you have to run the miner again on future commits, and you already have results from the
+past runs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.base.BaseMiner.fixed_files">
+<code class="sig-name descname">fixed_files</code><a class="headerlink" href="#repominer.mining.base.BaseMiner.fixed_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of FixedFiles objects.
+Fixed files are files modified in bug-fixing commits.</p>
+<p>They are identified by the method <code class="docutils literal notranslate"><span class="pre">get_fixed_files</span></code>.
+Unlike <code class="docutils literal notranslate"><span class="pre">fixing_commits</span></code>, it cannot be used to inlude fixed file, as it resets at every <code class="docutils literal notranslate"><span class="pre">get_fixed_files</span></code>
+call.
+This is due to the algorithm used to identify them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[FixedFile]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.BaseMiner.discard_undesired_fixing_commits">
+<code class="sig-name descname">discard_undesired_fixing_commits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commits</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#repominer.mining.base.BaseMiner.discard_undesired_fixing_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discard undesired commits.</p>
+<p>Given a list of commit hash, this method discard those that are deemed undesired.
+Undesired commits depends on the problem being formulated. For example, if the user is mining fixing-commits for
+Ansible, an undesired commit might be one modifying not-Ansible files.</p>
+<p>Note, the update occurs in-place. That is, the original list is updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>commits</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of commit hash</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.BaseMiner.get_fixed_files">
+<code class="sig-name descname">get_fixed_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>repominer.files.FixedFile<span class="p">]</span><a class="headerlink" href="#repominer.mining.base.BaseMiner.get_fixed_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of FixedFile objects.</p>
+<p>A FixeFile is a file modified in a bug-fixing commit that consists of a filename, hash of the commit that fixed
+it, and hash of the commit that introduced the bug.</p>
+<p>It uses the SZZ algorithm implemented in PyDriller to identify the oldest commit that introduced the bug,
+referred to as bug-introducing commit.</p>
+<p><cite>Note:</cite> before calling this method, it is necessary that you run at least one between
+<cite>get_fixing_commits_from_closed_issues</cite> and <cite>get_fixing_commits_from_commit_messages</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of FixedFile objects</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List[FixedFile]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.BaseMiner.get_fixing_commits_from_closed_issues">
+<code class="sig-name descname">get_fixing_commits_from_closed_issues</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labels</span><span class="p">:</span> <span class="n">Set<span class="p">[</span>str<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#repominer.mining.base.BaseMiner.get_fixing_commits_from_closed_issues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of bug-fixing commit hash.</p>
+<p>This method returns the commits linked to issues closed and related to bugs (i.e., with labels bug, bugfix, etc.).
+GitHub and GitLab issue trackers link commits and corresponding issue reports, along with labels that are used
+to organize issues.
+The search of bug-related issues is based on the following defaults labels:</p>
+<p><code class="docutils literal notranslate"><span class="pre">'bug',</span> <span class="pre">'Bug',</span> <span class="pre">'bug</span> <span class="pre">:bug:',</span> <span class="pre">'Bug</span> <span class="pre">-</span> <span class="pre">Medium',</span> <span class="pre">'Bug</span> <span class="pre">-</span> <span class="pre">Low',</span> <span class="pre">'Bug</span> <span class="pre">-</span> <span class="pre">Critical',</span> <span class="pre">'ansible_bug',</span></code>
+<code class="docutils literal notranslate"><span class="pre">'Type:</span> <span class="pre">Bug',</span> <span class="pre">'Type:</span> <span class="pre">bug',</span> <span class="pre">'Type/Bug',</span> <span class="pre">'type:</span> <span class="pre">bug</span> <span class="pre">🐛',</span> <span class="pre">'type:bug',</span> <span class="pre">'type:</span> <span class="pre">bug',</span> <span class="pre">'type/bug',</span></code>
+<code class="docutils literal notranslate"><span class="pre">'kind/bug',</span> <span class="pre">'kind/bugs',</span> <span class="pre">'bug/bugfix',</span> <span class="pre">'bugfix',</span> <span class="pre">'critical-bug',</span> <span class="pre">'01</span> <span class="pre">type:</span> <span class="pre">bug',</span> <span class="pre">'bug_report',</span></code>
+<code class="docutils literal notranslate"><span class="pre">'minor-bug'</span></code></p>
+<p>Although, the user can specify different labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> (<em>Set</em><em>[</em><em>str</em><em>]</em>) – Set of bug-related labels (e.g., bug, bugfix, type: bug). If none is passed, the default labels are used.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The list of bug-fixing commits hashes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.BaseMiner.get_fixing_commits_from_commit_messages">
+<code class="sig-name descname">get_fixing_commits_from_commit_messages</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">regex</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#repominer.mining.base.BaseMiner.get_fixing_commits_from_commit_messages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of bug-fixing commit hash.</p>
+<p>This method returns the commits whose message indicates defective scripts.
+Specifically, when analyzing the commits messages, it first removes all words ending with bug or fix
+(apart of bugfix), since those terms can be affixes of other words as “debug” and “prefix”.
+A commit message is tagged as bug-fixing if it matches the following regular expression:</p>
+<p><code class="docutils literal notranslate"><span class="pre">(bug|fix|error|crash|problem|fail|defect|patch)</span></code></p>
+<p>Although, the user can specify a different regex.</p>
+<p><cite>Note:</cite> Beside returning the list of bug-fixing commits, it also updates the attribute <code class="docutils literal notranslate"><span class="pre">fixing_commits</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>regex</strong> (<em>str</em>) – A regular expression to match against commits message to identify bug-fixing commits.
+If none is passed, the default regex is used.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The list of bug-fixing commits hashes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.BaseMiner.ignore_file">
+<code class="sig-name descname">ignore_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_file</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">content</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#repominer.mining.base.BaseMiner.ignore_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignore a file.</p>
+<p>When looking for fixed files in <code class="docutils literal notranslate"><span class="pre">get_fixed_files</span></code>, you might want to consider only files with some characteristics,
+and ignore all the others.
+For example, when instantiating an <code class="docutils literal notranslate"><span class="pre">ToscaMiner</span></code>, this method ignore all the non-Ansible files, based on their
+filepath and content. That is, only files terminating with .yml, .yaml, or .tosca, or which content contains the
+keyword <code class="docutils literal notranslate"><span class="pre">tosca_definitions_version</span></code> are kept.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_file</strong> (<em>str</em>) – The filepath (e.g., repominer/mining/base.py).</p></li>
+<li><p><strong>content</strong> (<em>str</em>) – The file content.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the file must be ignore. False, otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.BaseMiner.label">
+<code class="sig-name descname">label</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Generator<span class="p">[</span>repominer.files.FailureProneFile<span class="p">, </span>None<span class="p">, </span>None<span class="p">]</span><a class="headerlink" href="#repominer.mining.base.BaseMiner.label" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each FixedFile object, yield a FailureProneFile object for each commit between the FixedFile’s
+bug-introducing-commit and its fixing-commit.</p>
+<p><cite>Note:</cite> make sure to run the method <code class="docutils literal notranslate"><span class="pre">get_fixed_files</span></code> before.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Yields</dt>
+<dd class="field-odd"><p><em>FailureProneFile</em> – A FailureProneFile object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.base.BaseMiner.sort_commits">
+<code class="sig-name descname">sort_commits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commits</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#repominer.mining.base.BaseMiner.sort_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort a list of commits in chronological order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>commits</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of commits hash to sort.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ansible-miner">
+<h2>Ansible Miner<a class="headerlink" href="#ansible-miner" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="repominer.mining.ansible.AnsibleMiner">
+<em class="property">class </em><code class="sig-prename descclassname">repominer.mining.ansible.</code><code class="sig-name descname">AnsibleMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">branch</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'master'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#repominer.mining.base.BaseMiner" title="repominer.mining.base.BaseMiner"><code class="xref py py-class docutils literal notranslate"><span class="pre">repominer.mining.base.BaseMiner</span></code></a></p>
+<p>This class extends BaseMiner to mine Ansible-based repositories</p>
+<dl class="py method">
+<dt id="repominer.mining.ansible.AnsibleMiner.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">branch</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'master'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class constructor.
+Initialize a new BaseMiner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url_to_repo</strong> (<em>str</em>) – the url to a remote Github or Gitlab repository</p></li>
+<li><p><strong>branch</strong> (<em>str</em>) – the branch to analyze. Default ‘master’</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="repominer.mining.ansible.AnsibleMiner.host">
+<code class="sig-name descname">host</code><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Source Code Versioning host (‘github’ or ‘gitlab’).
+The value is automatically extracted from parameter <code class="docutils literal notranslate"><span class="pre">url_to_repo</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.ansible.AnsibleMiner.repository">
+<code class="sig-name descname">repository</code><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.repository" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repository full name (e.g., radon-h2020/radon-repository-miner).
+The value is automatically extracted from parameter <code class="docutils literal notranslate"><span class="pre">url_to_repo</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.ansible.AnsibleMiner.branch">
+<code class="sig-name descname">branch</code><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repository’s branch to analyze.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.ansible.AnsibleMiner.commit_hashes">
+<code class="sig-name descname">commit_hashes</code><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.commit_hashes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of commit hash on the repository’s branch, ordered by creation date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.ansible.AnsibleMiner.exclude_commits">
+<code class="sig-name descname">exclude_commits</code><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.exclude_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of commit hash to exclude from mining.</p>
+<p>Mining bug-fixing commits might lead several false positives, i.e., commits that do not actually fix bugs.
+If you are certain that some commits do not fix bugs, before mining, you can specify their hash as follows:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">exclude_commits</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;521515108c4fee9a4bd1147fc42936768297e3b6&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Set[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.ansible.AnsibleMiner.exclude_fixed_files">
+<code class="sig-name descname">exclude_fixed_files</code><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.exclude_fixed_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of fixed files to exclude from mining.
+Fixed files are files modified in a bug-fixing commit.</p>
+<p>When fixing a bug, several files might be modified but not all of them contributed to fix the bug.
+For example, someone could fix a bug in a file, and at the same time modify another file not involved
+in the fix, such as a README.md.</p>
+<p>If you are certain that some files in a give commit are not involved in fixing bugs, you can tell the miner
+to ignore them as follow:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.files</span> <span class="kn">import</span> <span class="n">FixedFile</span>
+<span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">exclude_fixed_files</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">FixedFile</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;CHANGELOG.md&#39;</span><span class="p">,</span>
+              <span class="n">fic</span><span class="o">=</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">,</span>
+              <span class="n">bic</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+    <span class="n">FixedFile</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;repominer/cli.py&#39;</span><span class="p">,</span>
+              <span class="n">fic</span><span class="o">=</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">,</span>
+              <span class="n">bic</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.ansible.AnsibleMiner.fixing_commits">
+<code class="sig-name descname">fixing_commits</code><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.fixing_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of bug-fixing commit hashes.</p>
+<p>Bug-fixings commits are identified by the methods <code class="docutils literal notranslate"><span class="pre">get_fixing_commits_from_closed_issues</span></code> and
+<code class="docutils literal notranslate"><span class="pre">get_fixing_commits_from_commit_messages</span></code>.</p>
+<p>Although, if you are certain that some commits fix bugs, e.g., because of a previous manual analysis,
+you can specify them in advance to speed up the mining as follows:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">fixing_commits</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This is useful when you have to run the miner again on future commits, and you already have results from the
+past runs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.ansible.AnsibleMiner.fixed_files">
+<code class="sig-name descname">fixed_files</code><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.fixed_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of FixedFiles objects.
+Fixed files are files modified in bug-fixing commits.</p>
+<p>They are identified by the method <code class="docutils literal notranslate"><span class="pre">get_fixed_files</span></code>.
+Unlike <code class="docutils literal notranslate"><span class="pre">fixing_commits</span></code>, it cannot be used to inlude fixed file, as it resets at every <code class="docutils literal notranslate"><span class="pre">get_fixed_files</span></code>
+call.
+This is due to the algorithm used to identify them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[FixedFile]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.ansible.AnsibleMiner.discard_undesired_fixing_commits">
+<code class="sig-name descname">discard_undesired_fixing_commits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commits</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.discard_undesired_fixing_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of commits, discard commits that do not modify at least one Ansible file.</p>
+<p>Note, the update occurs in-place. That is, the original list is updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>commits</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of commit hash</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.ansible.AnsibleMiner.ignore_file">
+<code class="sig-name descname">ignore_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_file</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">content</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.ansible.AnsibleMiner.ignore_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignore non-Ansible files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_file</strong> (<em>str</em>) – The filepath (e.g., repominer/mining/base.py).</p></li>
+<li><p><strong>content</strong> (<em>str</em>) – The file content.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the file is not an Ansible file, and must be ignored. False, otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="tosca-miner">
+<h2>Tosca Miner<a class="headerlink" href="#tosca-miner" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="repominer.mining.tosca.ToscaMiner">
+<em class="property">class </em><code class="sig-prename descclassname">repominer.mining.tosca.</code><code class="sig-name descname">ToscaMiner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">branch</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'master'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#repominer.mining.base.BaseMiner" title="repominer.mining.base.BaseMiner"><code class="xref py py-class docutils literal notranslate"><span class="pre">repominer.mining.base.BaseMiner</span></code></a></p>
+<p>This class extends the BaseMiner to mine TOSCA-based repositories</p>
+<dl class="py method">
+<dt id="repominer.mining.tosca.ToscaMiner.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">branch</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'master'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class constructor.
+Initialize a new BaseMiner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url_to_repo</strong> (<em>str</em>) – the url to a remote Github or Gitlab repository</p></li>
+<li><p><strong>branch</strong> (<em>str</em>) – the branch to analyze. Default ‘master’</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="repominer.mining.tosca.ToscaMiner.host">
+<code class="sig-name descname">host</code><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Source Code Versioning host (‘github’ or ‘gitlab’).
+The value is automatically extracted from parameter <code class="docutils literal notranslate"><span class="pre">url_to_repo</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.tosca.ToscaMiner.repository">
+<code class="sig-name descname">repository</code><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.repository" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repository full name (e.g., radon-h2020/radon-repository-miner).
+The value is automatically extracted from parameter <code class="docutils literal notranslate"><span class="pre">url_to_repo</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.tosca.ToscaMiner.branch">
+<code class="sig-name descname">branch</code><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.branch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Repository’s branch to analyze.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.tosca.ToscaMiner.commit_hashes">
+<code class="sig-name descname">commit_hashes</code><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.commit_hashes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of commit hash on the repository’s branch, ordered by creation date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.tosca.ToscaMiner.exclude_commits">
+<code class="sig-name descname">exclude_commits</code><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.exclude_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of commit hash to exclude from mining.</p>
+<p>Mining bug-fixing commits might lead several false positives, i.e., commits that do not actually fix bugs.
+If you are certain that some commits do not fix bugs, before mining, you can specify their hash as follows:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">exclude_commits</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;521515108c4fee9a4bd1147fc42936768297e3b6&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Set[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.tosca.ToscaMiner.exclude_fixed_files">
+<code class="sig-name descname">exclude_fixed_files</code><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.exclude_fixed_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set of fixed files to exclude from mining.
+Fixed files are files modified in a bug-fixing commit.</p>
+<p>When fixing a bug, several files might be modified but not all of them contributed to fix the bug.
+For example, someone could fix a bug in a file, and at the same time modify another file not involved
+in the fix, such as a README.md.</p>
+<p>If you are certain that some files in a give commit are not involved in fixing bugs, you can tell the miner
+to ignore them as follow:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.files</span> <span class="kn">import</span> <span class="n">FixedFile</span>
+<span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">exclude_fixed_files</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">FixedFile</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;CHANGELOG.md&#39;</span><span class="p">,</span>
+              <span class="n">fic</span><span class="o">=</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">,</span>
+              <span class="n">bic</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+    <span class="n">FixedFile</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="s1">&#39;repominer/cli.py&#39;</span><span class="p">,</span>
+              <span class="n">fic</span><span class="o">=</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">,</span>
+              <span class="n">bic</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.tosca.ToscaMiner.fixing_commits">
+<code class="sig-name descname">fixing_commits</code><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.fixing_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of bug-fixing commit hashes.</p>
+<p>Bug-fixings commits are identified by the methods <code class="docutils literal notranslate"><span class="pre">get_fixing_commits_from_closed_issues</span></code> and
+<code class="docutils literal notranslate"><span class="pre">get_fixing_commits_from_commit_messages</span></code>.</p>
+<p>Although, if you are certain that some commits fix bugs, e.g., because of a previous manual analysis,
+you can specify them in advance to speed up the mining as follows:</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">repominer.mining.base</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">BaseMiner</span><span class="p">(</span><span class="s1">&#39;https://github.com/radon-h2020/radon-repository-miner&#39;</span><span class="p">)</span>
+<span class="n">miner</span><span class="o">.</span><span class="n">fixing_commits</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;f350e05696db1c5f78320483e0e44e7aea410449&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This is useful when you have to run the miner again on future commits, and you already have results from the
+past runs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="repominer.mining.tosca.ToscaMiner.fixed_files">
+<code class="sig-name descname">fixed_files</code><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.fixed_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of FixedFiles objects.
+Fixed files are files modified in bug-fixing commits.</p>
+<p>They are identified by the method <code class="docutils literal notranslate"><span class="pre">get_fixed_files</span></code>.
+Unlike <code class="docutils literal notranslate"><span class="pre">fixing_commits</span></code>, it cannot be used to inlude fixed file, as it resets at every <code class="docutils literal notranslate"><span class="pre">get_fixed_files</span></code>
+call.
+This is due to the algorithm used to identify them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[FixedFile]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.tosca.ToscaMiner.discard_undesired_fixing_commits">
+<code class="sig-name descname">discard_undesired_fixing_commits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">commits</span><span class="p">:</span> <span class="n">List<span class="p">[</span>str<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.discard_undesired_fixing_commits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a list of commits, discard commits that do not modify at least one Tosca file.</p>
+<p>Note, the update occurs in-place. That is, the original list is updated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>commits</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of commit hash</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.mining.tosca.ToscaMiner.ignore_file">
+<code class="sig-name descname">ignore_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_file</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">content</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.mining.tosca.ToscaMiner.ignore_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ignore non-TOSCA files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_file</strong> (<em>str</em>) – The filepath (e.g., repominer/mining/base.py).</p></li>
+<li><p><strong>content</strong> (<em>str</em>) – The file content.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the file is not a TOSCA file, and must be ignored. False, otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.fixing.commits.classifiers.html" class="btn btn-neutral float-right" title="Bug-Fixing Commits Classifiers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="apis.html" class="btn btn-neutral float-left" title="APIs Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefano Dalla Palma
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

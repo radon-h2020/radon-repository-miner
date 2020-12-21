@@ -1,0 +1,441 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Metrics &mdash; radon-repository-miner 0.8.13 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Help Needed" href="help.html" />
+    <link rel="prev" title="Bug-Fixing Commits Classifiers" href="api.fixing.commits.classifiers.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> radon-repository-miner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="apis.html">APIs Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.miners.html">Miners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.fixing.commits.classifiers.html">Bug-Fixing Commits Classifiers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#base-metrics-extractor">Base Metrics Extractor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ansible-metrics-extractor">Ansible Metrics Extractor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tosca-metrics-extractor">Tosca Metrics Extractor</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Help Needed</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">radon-repository-miner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="apis.html">APIs Reference</a> &raquo;</li>
+        
+      <li>Metrics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.metrics.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="metrics">
+<h1>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="base-metrics-extractor">
+<h2>Base Metrics Extractor<a class="headerlink" href="#base-metrics-extractor" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="repominer.metrics.base.BaseMetricsExtractor">
+<em class="property">class </em><code class="sig-prename descclassname">repominer.metrics.base.</code><code class="sig-name descname">BaseMetricsExtractor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">at</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'release'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.metrics.base.BaseMetricsExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the base class to extract metrics from IaC scripts.
+It is extended by concrete classes to extract metrics for specific languages (e.g., Ansible and Tosca).</p>
+<dl class="py method">
+<dt id="repominer.metrics.base.BaseMetricsExtractor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">at</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'release'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.metrics.base.BaseMetricsExtractor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The clss constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_repo</strong> (<em>str</em>) – The path to the repository.</p></li>
+<li><p><strong>at</strong> (<em>str</em>) – When to extract metrics: at each release or each commit.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="repominer.metrics.base.BaseMetricsExtractor.dataset">
+<code class="sig-name descname">dataset</code><a class="headerlink" href="#repominer.metrics.base.BaseMetricsExtractor.dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>The metrics dataset, populated after <code class="docutils literal notranslate"><span class="pre">extract()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <cite>at</cite> is not one of the following: release, commit.</p></li>
+<li><p><strong>NotImplementedError</strong> – The commit option is not implemented yet.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.metrics.base.BaseMetricsExtractor.extract">
+<code class="sig-name descname">extract</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">labeled_files</span><span class="p">:</span> <span class="n">List<span class="p">[</span>repominer.files.FailureProneFile<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">product</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">process</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">delta</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.metrics.base.BaseMetricsExtractor.extract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract metrics from labeled files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labeled_files</strong> (<em>List</em><em>[</em><em>FailureProneFile</em><em>]</em>) – The list of FailureProneFile objects that are used to label a script as failure-prone (1) or clean (0).</p></li>
+<li><p><strong>product</strong> (<em>bool</em>) – Whether to extract product metrics.</p></li>
+<li><p><strong>process</strong> (<em>bool</em>) – Whether to extract process metrics.</p></li>
+<li><p><strong>delta</strong> (<em>bool</em>) – Whether to extract delta metrics between two successive releases (or commits).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.metrics.base.BaseMetricsExtractor.get_files">
+<code class="sig-name descname">get_files</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Set<span class="p">[</span>str<span class="p">]</span><a class="headerlink" href="#repominer.metrics.base.BaseMetricsExtractor.get_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all the files in the repository</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The set of filepath relative to the root of repository</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Set[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.metrics.base.BaseMetricsExtractor.get_process_metrics">
+<code class="sig-name descname">get_process_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">from_commit</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">to_commit</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#repominer.metrics.base.BaseMetricsExtractor.get_process_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract process metrics for an evolution period.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>from_commit</strong> (<em>str</em>) – Hash of release start</p></li>
+<li><p><strong>to_commit</strong> (<em>str</em>) – Hash of release end</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.metrics.base.BaseMetricsExtractor.get_product_metrics">
+<code class="sig-name descname">get_product_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">script</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; Dict<span class="p">[</span>str<span class="p">, </span>Any<span class="p">]</span><a class="headerlink" href="#repominer.metrics.base.BaseMetricsExtractor.get_product_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract source code metrics from a script.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>script</strong> (<em>str</em>) – The content of the script to extract metrics from.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary of &lt;metric, value&gt;.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.metrics.base.BaseMetricsExtractor.to_csv">
+<code class="sig-name descname">to_csv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filepath</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.metrics.base.BaseMetricsExtractor.to_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the metrics as csv
+The file is saved asa</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filepath</strong> (<em>str</em>) – The path to the csv.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ansible-metrics-extractor">
+<h2>Ansible Metrics Extractor<a class="headerlink" href="#ansible-metrics-extractor" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="repominer.metrics.ansible.AnsibleMetricsExtractor">
+<em class="property">class </em><code class="sig-prename descclassname">repominer.metrics.ansible.</code><code class="sig-name descname">AnsibleMetricsExtractor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">at</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.metrics.ansible.AnsibleMetricsExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#repominer.metrics.base.BaseMetricsExtractor" title="repominer.metrics.base.BaseMetricsExtractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">repominer.metrics.base.BaseMetricsExtractor</span></code></a></p>
+<dl class="py method">
+<dt id="repominer.metrics.ansible.AnsibleMetricsExtractor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">at</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.metrics.ansible.AnsibleMetricsExtractor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The clss constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_repo</strong> (<em>str</em>) – The path to the repository.</p></li>
+<li><p><strong>at</strong> (<em>str</em>) – When to extract metrics: at each release or each commit.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="repominer.metrics.ansible.AnsibleMetricsExtractor.dataset">
+<code class="sig-name descname">dataset</code><a class="headerlink" href="#repominer.metrics.ansible.AnsibleMetricsExtractor.dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>The metrics dataset, populated after <code class="docutils literal notranslate"><span class="pre">extract()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <cite>at</cite> is not one of the following: release, commit.</p></li>
+<li><p><strong>NotImplementedError</strong> – The commit option is not implemented yet.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.metrics.ansible.AnsibleMetricsExtractor.get_product_metrics">
+<code class="sig-name descname">get_product_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">script</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#repominer.metrics.ansible.AnsibleMetricsExtractor.get_product_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract product metrics from a script.
+:param script: the script from which to run AnsibleMetrics on
+:return: a dictionary {string: float} with metrics. If an error occurs, return an empty dictionary</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="tosca-metrics-extractor">
+<h2>Tosca Metrics Extractor<a class="headerlink" href="#tosca-metrics-extractor" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="repominer.metrics.tosca.ToscaMetricsExtractor">
+<em class="property">class </em><code class="sig-prename descclassname">repominer.metrics.tosca.</code><code class="sig-name descname">ToscaMetricsExtractor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">at</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.metrics.tosca.ToscaMetricsExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#repominer.metrics.base.BaseMetricsExtractor" title="repominer.metrics.base.BaseMetricsExtractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">repominer.metrics.base.BaseMetricsExtractor</span></code></a></p>
+<dl class="py method">
+<dt id="repominer.metrics.tosca.ToscaMetricsExtractor.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path_to_repo</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">at</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#repominer.metrics.tosca.ToscaMetricsExtractor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The clss constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path_to_repo</strong> (<em>str</em>) – The path to the repository.</p></li>
+<li><p><strong>at</strong> (<em>str</em>) – When to extract metrics: at each release or each commit.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="repominer.metrics.tosca.ToscaMetricsExtractor.dataset">
+<code class="sig-name descname">dataset</code><a class="headerlink" href="#repominer.metrics.tosca.ToscaMetricsExtractor.dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>The metrics dataset, populated after <code class="docutils literal notranslate"><span class="pre">extract()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <cite>at</cite> is not one of the following: release, commit.</p></li>
+<li><p><strong>NotImplementedError</strong> – The commit option is not implemented yet.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="repominer.metrics.tosca.ToscaMetricsExtractor.get_product_metrics">
+<code class="sig-name descname">get_product_metrics</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">script</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#repominer.metrics.tosca.ToscaMetricsExtractor.get_product_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract product metrics from a script</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="help.html" class="btn btn-neutral float-right" title="Help Needed" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="api.fixing.commits.classifiers.html" class="btn btn-neutral float-left" title="Bug-Fixing Commits Classifiers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Stefano Dalla Palma
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
