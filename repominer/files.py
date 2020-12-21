@@ -1,4 +1,5 @@
 import json
+from dataclasses import dataclass
 
 
 class FixedFileEncoder(json.JSONEncoder):
@@ -24,21 +25,24 @@ class FixedFileDecoder(json.JSONDecoder):
                              bic=o["bic"])
 
 
+@dataclass()
 class FixedFile:
-    """
-    This class is responsible to implement the methods for storing information about fixing files (i.e., files belonging
-    to fixing commits)
+    """ This class stores information about fixed files (i.e., files modified by fixing commits)
+
+    Attributes
+    ----------
+    filepath : str
+        The file of the path at the bug-fixing commit
+    fic : str
+        The bug-fixing commit sha
+    bic : str
+        The bug-introducing commit sha
+
     """
 
-    def __init__(self, filepath: str, fic: str, bic: str):
-        """
-        :param filepath: the file of the path at the fixing-commit
-        :param fic: the fixing-commit sha
-        :param bic: the bug-inducing-commit sha
-        """
-        self.filepath = filepath  # Name at FIXING-COMMIT
-        self.fic = fic
-        self.bic = bic
+    filepath: str
+    fic: str
+    bic: str
 
     def __eq__(self, other):
         if isinstance(other, FixedFile):
@@ -70,24 +74,24 @@ class FailureProneFileDecoder(json.JSONDecoder):
                                     fixing_commit=o["fixing_commit"])
 
 
+@dataclass
 class FailureProneFile:
-    """
-    This class is responsible to implement the methods for storing information about labeled files
+    """ This class stores information about failure prone files
+
+    Attributes
+    ----------
+    filepath : str
+        The filepath relative to the repository's root
+    commit : str
+        The commit sha
+    fixing_commit : str
+        The bug-fixing commit sha
+
     """
 
-    def __init__(self,
-                 filepath: str,
-                 commit: str,
-                 fixing_commit: str):
-        """
-        :param filepath: the filepath from the root of the repository
-        :param commit: the commit hash
-        :param fixing_commit: the commit fixing this file
-        """
-
-        self.filepath = filepath
-        self.commit = commit
-        self.fixing_commit = fixing_commit
+    filepath: str
+    commit: str
+    fixing_commit: str
 
     def __eq__(self, other):
         if isinstance(other, FailureProneFile):

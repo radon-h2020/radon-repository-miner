@@ -13,23 +13,20 @@ CONFIG_DATA_MODULES = DATABASE_MODULES + FILE_MODULES + IDENTITY_MODULES + NETWO
 
 
 class AnsibleMiner(BaseMiner):
+    """ This class extends BaseMiner to mine Ansible-based repositories
     """
-    This class extends BaseMiner to mine Ansible-based repositories
-    """
-
-    def __init__(self, url_to_repo: str, branch: str = 'master'):
-        """
-        Initialize a new AnsibleMiner for a software repository.
-
-        :param url_to_repo: the path to the repository to analyze;
-        :param branch: the branch to analyze. Default 'master';
-        """
-        super().__init__(url_to_repo, branch)
 
     def discard_undesired_fixing_commits(self, commits: List[str]):
         """
-        Discard commits that do not touch Ansible files.
-        :commits: the original list of commits
+        Given a list of commits, discard commits that do not modify at least one Ansible file.
+
+        Note, the update occurs in-place. That is, the original list is updated.
+
+        Parameters
+        ----------
+        commits : List[str]
+            List of commit hash
+
         """
         # get a sorted list of commits in ascending order of date
         self.sort_commits(commits)
@@ -46,10 +43,29 @@ class AnsibleMiner(BaseMiner):
                     commits.remove(commit.hash)
 
     def ignore_file(self, path_to_file: str, content: str = None):
+        """
+        Ignore non-Ansible files.
+
+        Parameters
+        ----------
+        path_to_file: str
+            The filepath (e.g., repominer/mining/base.py).
+
+        content: str
+            The file content.
+
+        Returns
+        -------
+        bool
+            True if the file is not an Ansible file, and must be ignored. False, otherwise.
+
+        """
         return not filters.is_ansible_file(path_to_file)
 
 
 class AnsibleFixingCommitClassifier(FixingCommitClassifier):
+    """ This class extends a FixingCommitClassifier to classify bug-fixing commits of Ansible files.
+    """
 
     def data_changed(self) -> bool:
         for modification in self.commit.modifications:
