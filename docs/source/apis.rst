@@ -6,3 +6,4 @@ APIs Reference
 
    api.miners
    api.fixing.commits.classifiers
+   api.metrics

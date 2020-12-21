@@ -15,15 +15,24 @@ from pydriller.metrics.process.lines_count import LinesCount
 
 from repominer.files import FailureProneFile
 
-full_name_pattern = re.compile(r'git(hub|lab){1}\.com/([\w\W]+)$')
+from typing import Any, Dict, Set, Union
+
+full_name_pattern = re.compile(r'git(hub|lab)\.com/([\w\W]+)$')
 
 
-def get_content(path: str) -> str:
-    """
-    Get the content of a file as plain text.
+def get_content(path: str) -> Union[str, None]:
+    """ Get the content of a file as plain text.
 
-    :param path: str : the path to the file.
-    :return: the content of the file, if exists; None otherwise.
+    Parameters
+    ----------
+    path : str
+        The path to the file.
+
+    Return
+    ------
+    str
+        The file's content, if exists; None otherwise.
+
     """
     if not os.path.isfile(path):
         return None
@@ -35,13 +44,52 @@ def get_content(path: str) -> str:
         return None
 
 
-def is_remote(repo: str) -> bool:
-    return repo.startswith("git@") or repo.startswith("https://")
+def is_remote(path_to_repo: str) -> bool:
+    """ Check if the path links to a remote or local repository.
+
+    Parameters
+    ----------
+    path_to_repo : str
+        The path to the repository.
+
+    Return
+    ------
+    bool
+        True if a remote path; False otherwise.
+
+    """
+    return path_to_repo.startswith("git@") or path_to_repo.startswith("https://")
 
 
 class BaseMetricsExtractor:
+    """ This is the base class to extract metrics from IaC scripts.
+    It is extended by concrete classes to extract metrics for specific languages (e.g., Ansible and Tosca).
+
+    """
 
     def __init__(self, path_to_repo: str, at: str = 'release'):
+        """ The clss constructor.
+
+        Parameters
+        ----------
+        path_to_repo : str
+            The path to the repository.
+        at : str
+            When to extract metrics: at each release or each commit.
+
+        Attributes
+        ----------
+        dataset: pandas.DataFrame
+            The metrics dataset, populated after ``extract()``.
+
+        Raises
+        ------
+        ValueError
+            If `at` is not one of the following: release, commit.
+        NotImplementedError
+            The commit option is not implemented yet.
+
+        """
 
         if at not in ('release', 'commit'):
             raise ValueError(f'{at} is not valid! Try with \'release\' or \'commit\'.')
@@ -72,10 +120,14 @@ class BaseMetricsExtractor:
         self.releases = [commit.hash for commit in self.repo_miner.traverse_commits()]
         self.dataset = pd.DataFrame()
 
-    def get_files(self) -> set:
-        """
-        Return all the files in the repository
-        :return: a set of strings representing the path of the files in the repository
+    def get_files(self) -> Set[str]:
+        """ Return all the files in the repository
+
+        Return
+        ------
+        Set[str]
+            The set of filepath relative to the root of repository
+
         """
 
         files = set()
@@ -93,17 +145,32 @@ class BaseMetricsExtractor:
 
         return files
 
-    def get_product_metrics(self, script: str) -> dict:
-        """
-        Extract product metrics from a script
+    def get_product_metrics(self, script: str) -> Dict[str, Any]:
+        """ Extract source code metrics from a script.
+
+        Parameters
+        ----------
+        script : str
+            The content of the script to extract metrics from.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A dictionary of <metric, value>.
+
         """
         return dict()
 
     def get_process_metrics(self, from_commit: str, to_commit: str) -> dict:
-        """
-        Extract and return process metrics from a commit.
-        :param from_commit: str - hash of release start
-        :param to_commit: str - hash of release end
+        """ Extract process metrics for an evolution period.
+
+        Parameters
+        ----------
+        from_commit : str
+            Hash of release start
+        to_commit : str
+            Hash of release end
+
         """
         change_set = ChangeSet(self.path_to_repo, from_commit=from_commit, to_commit=to_commit)
         code_churn = CodeChurn(self.path_to_repo, from_commit=from_commit, to_commit=to_commit)
@@ -137,7 +204,20 @@ class BaseMetricsExtractor:
                 product: bool = True,
                 process: bool = True,
                 delta: bool = False):
+        """ Extract metrics from labeled files.
 
+        Parameters
+        ----------
+        labeled_files : List[FailureProneFile]
+            The list of FailureProneFile objects that are used to label a script as failure-prone (1) or clean (0).
+        product: bool
+            Whether to extract product metrics.
+        process: bool
+            Whether to extract process metrics.
+        delta: bool
+            Whether to extract delta metrics between two successive releases (or commits).
+
+        """
         git_repo = GitRepository(self.path_to_repo)
 
         metrics_previous_release = dict()  # Values for iac metrics in the last release
@@ -231,10 +311,15 @@ class BaseMetricsExtractor:
     def ignore_file(self, path_to_file: str, content: str = None):
         return False
 
-    def to_csv(self, path_to_folder):
+    def to_csv(self, filepath):
+        """ Save the metrics as csv
+        The file is saved asa
+
+        Parameters
+        ----------
+        filepath : str
+            The path to the csv.
+
         """
-        Save the metrics as csv
-        :param path_to_folder: path to the folder where to save the csv
-        """
-        with open(os.path.join(path_to_folder), 'w') as out:
+        with open(filepath, 'w') as out:
             self.dataset.to_csv(out, mode='w', index=False)

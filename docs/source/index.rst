@@ -22,10 +22,18 @@ Python
 
 .. code-block:: python
 
+    from repominer.metrics.ansible import AnsibleMetricsExtractor
     from repominer.mining.ansible import AnsibleMiner
 
-    miner = AnsibleMiner()
-    # TODO...
+    miner = AnsibleMiner('https://github.com/owner/repository')
+    miner.get_fixing_commits_from_closed_issues()
+    miner.get_fixing_commits_from_commits_message()
+    miner.get_fixing_files()
+    failure_prone_files = miner.label()
+
+    metrics_extractor = AnsibleMetricsExtractor()
+    metrics_extractor.extract(failure_prone_files)
+    print(metrics_extractor.dataset.head())
 
 
 Command-Line
