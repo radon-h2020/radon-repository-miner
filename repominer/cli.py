@@ -75,7 +75,7 @@ def set_mine_parser(subparsers):
 
     parser.add_argument(action='store',
                         dest='repository',
-                        help='the repository full name: <onwer/name> (e.g., radon-h2020/radon-repository-miner)')
+                        help='the repository full name: <owner/name> (e.g., radon-h2020/radon-repository-miner)')
 
     parser.add_argument(action='store',
                         dest='dest',
