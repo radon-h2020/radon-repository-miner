@@ -25,7 +25,7 @@ class FixedFileDecoder(json.JSONDecoder):
                              bic=o["bic"])
 
 
-@dataclass()
+@dataclass
 class FixedFile:
     """ This class stores information about fixed files (i.e., files modified by fixing commits)
 
