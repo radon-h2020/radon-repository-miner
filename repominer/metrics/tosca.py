@@ -1,4 +1,3 @@
-from io import StringIO
 from toscametrics import metrics_extractor
 from .base import BaseMetricsExtractor
 from repominer.filters import is_tosca_file
@@ -14,7 +13,7 @@ class ToscaMetricsExtractor(BaseMetricsExtractor):
         Extract product metrics from a script
         """
         try:
-            return metrics_extractor.extract_all(StringIO(script))
+            return metrics_extractor.extract_all(script)
         except ValueError:
             return {}
 
