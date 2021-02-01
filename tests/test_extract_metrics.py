@@ -55,7 +55,7 @@ class ExtractMetricsTestCase(unittest.TestCase):
         assert 'commit' in self.tosca_extractor.dataset.columns
         assert 'committed_at' in self.tosca_extractor.dataset.columns
         assert 'failure_prone' in self.tosca_extractor.dataset.columns
-        assert self.tosca_extractor.dataset.shape[1] == 61
+        assert self.tosca_extractor.dataset.shape[1] == 27
 
     def test_remote_ansible_extract(self):
         self.remote_ansible_extractor.extract(labeled_files=self.ansible_labeled_files, product=True, process=True,
