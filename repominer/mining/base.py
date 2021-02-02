@@ -2,8 +2,8 @@ import os
 import nltk
 import re
 
-from abc import ABCMeta, abstractmethod
-from typing import Generator, List, Set
+from deprecated import deprecated
+from typing import Dict, Generator, List, Set
 
 from pydriller.domain.commit import Commit, ModificationType
 from pydriller.repository_mining import GitRepository, RepositoryMining
@@ -23,7 +23,6 @@ try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
     nltk.download('stopwords')
-
 
 # Constants
 BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical', 'ansible_bug',
@@ -168,10 +167,13 @@ class BaseMiner:
 
         # Get all the repository commits sorted by commit date
         self.commit_hashes = [c.hash for c in
-                              RepositoryMining(path_to_repo=self.path_to_repo if os.path.isdir(self.path_to_repo) else url_to_repo,
-                                               clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
-                                               only_in_branch=self.branch,
-                                               order='date-order').traverse_commits()]
+                              RepositoryMining(
+                                  path_to_repo=self.path_to_repo if os.path.isdir(self.path_to_repo) else url_to_repo,
+                                  clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
+                                  only_in_branch=self.branch,
+                                  order='date-order').traverse_commits()]
+
+        self.FixingCommitClassifier = FixingCommitClassifier
 
     def discard_undesired_fixing_commits(self, commits: List[str]) -> None:
         """
@@ -191,6 +193,8 @@ class BaseMiner:
         """
         pass
 
+    @deprecated(version='0.8.13', reason="This function will be removed in the next release. Use get_fixing_commits "
+                                         "instead.")
     def get_fixing_commits_from_closed_issues(self, labels: Set[str] = None) -> List[str]:
         """
         Return a list of bug-fixing commit hash.
@@ -254,6 +258,8 @@ class BaseMiner:
 
         return commits
 
+    @deprecated(version='0.8.13', reason="This function will be removed in the next release. Use get_fixing_commits "
+                                         "instead.")
     def get_fixing_commits_from_commit_messages(self, regex: str = None) -> List[str]:
         """
         Return a list of bug-fixing commit hash.
@@ -314,6 +320,72 @@ class BaseMiner:
 
         return commits
 
+    def get_fixing_commits(self) -> Dict[str, List[str]]:
+        """
+        Return a list of bug-fixing commit hash, categorized as fixing "conditionals", "configuration data",
+        "dependencies", "documentation", "idempotency", "security", "service", "syntax".
+
+        This method returns the commits whose message indicates defective scripts.
+        `Note:` Beside returning the list of bug-fixing commits, it also updates the attribute ``fixing_commits``.
+
+        Returns
+        -------
+        List[str]
+            A dictionary of bug-fixing commits hashes and boolean values for every fixing labels.
+            {'hash1': {
+                   'SERVICE': true/false,
+                   'SYNTAX': true/false,
+                   ...
+                }
+                ...
+            }
+        """
+
+        commits_labels = {}
+        commits = []
+
+        for commit in RepositoryMining(self.path_to_repo, only_in_branch=self.branch).traverse_commits():
+
+            if (commit.hash in self.exclude_commits) or (commit.hash in self.fixing_commits):
+                continue
+
+            fcc = self.FixingCommitClassifier(commit)
+
+            if fcc.fixes_dependency():
+                commits_labels.setdefault(commit.hash, []).append('DEPENDENCY')
+            if fcc.fixes_documentation():
+                commits_labels.setdefault(commit.hash, []).append('DOCUMENTATION')
+            if fcc.fixes_syntax():
+                commits_labels.setdefault(commit.hash, []).append('SYNTAX')
+            if fcc.fixes_service():
+                commits_labels.setdefault(commit.hash, []).append('SERVICE')
+            if fcc.fixes_security():
+                commits_labels.setdefault(commit.hash, []).append('SECURITY')
+            if fcc.fixes_conditional():
+                commits_labels.setdefault(commit.hash, []).append('CONDITIONAL')
+            if fcc.fixes_configuration_data():
+                commits_labels.setdefault(commit.hash, []).append('CONFIGURATION_DATA')
+            if fcc.fixes_idempotency():
+                commits_labels.setdefault(commit.hash, []).append('IDEMPOTENCY')
+            if commit.hash in commits_labels:
+                commits.append(commit.hash)
+
+        if commits:
+            # Discard commits that do not touch IaC files
+            self.discard_undesired_fixing_commits(commits)
+
+            # Update the list of fixing commits
+            self.fixing_commits.extend(commits)
+
+            # Sort fixing_commits in ascending order of date
+            self.sort_commits(self.fixing_commits)
+
+            for sha, _ in list(commits_labels.items()):
+                if sha not in commits:  # It means it was an undesired commit
+                    del commits_labels[sha]
+
+        return commits_labels
+
     def get_fixed_files(self) -> List[FixedFile]:
         """
         Return a list of FixedFile objects.
@@ -344,12 +416,19 @@ class BaseMiner:
         renamed_files = dict()
         git_repo = GitRepository(self.path_to_repo)
 
+        if len(self.fixing_commits) == 1:
+            repository_mining = RepositoryMining(self.path_to_repo,
+                                                 single=self.fixing_commits[0],
+                                                 only_in_branch=self.branch)
+        else:
+            repository_mining = RepositoryMining(self.path_to_repo,
+                                                 from_commit=self.fixing_commits[-1],  # Last fixing-commit by date
+                                                 to_commit=self.fixing_commits[0],  # First fixing-commit by date
+                                                 order='reverse',
+                                                 only_in_branch=self.branch)
+
         # Traverse commits from the latest to the first fixing-commit
-        for commit in RepositoryMining(self.path_to_repo,
-                                       from_commit=self.fixing_commits[-1],  # Last fixing-commit by date
-                                       to_commit=self.fixing_commits[0],  # First fixing-commit by date
-                                       order='reverse',
-                                       only_in_branch=self.branch).traverse_commits():
+        for commit in repository_mining.traverse_commits():
 
             for modified_file in commit.modifications:
 
@@ -507,7 +586,7 @@ class BaseMiner:
         commits.extend(sorted_commits)
 
 
-class FixingCommitClassifier(metaclass=ABCMeta):
+class FixingCommitClassifier:
     """
     This class implements rules to detect fixing commits categories related to IaC defects, as defined in
     http://chrisparnin.me/pdf/GangOfEight.pdf.
@@ -565,17 +644,14 @@ class FixingCommitClassifier(metaclass=ABCMeta):
 
         return False
 
-    @abstractmethod
     def data_changed(self) -> bool:
-        pass
+        return False
 
-    @abstractmethod
     def include_changed(self) -> bool:
-        pass
+        return False
 
-    @abstractmethod
     def service_changed(self) -> bool:
-        pass
+        return False
 
     def fixes_conditional(self):
         """
@@ -639,7 +715,8 @@ class FixingCommitClassifier(metaclass=ABCMeta):
         for sentence in self.sentences:
             sentence = ' '.join(sentence)
             sentence_dep = ' '.join(utils.get_head_dependents(sentence))
-            if rules.has_defect_pattern(sentence) and (rules.has_dependency_pattern(sentence_dep) or is_include_changed):
+            if rules.has_defect_pattern(sentence) and (
+                    rules.has_dependency_pattern(sentence_dep) or is_include_changed):
                 return True
 
         return False
@@ -660,7 +737,8 @@ class FixingCommitClassifier(metaclass=ABCMeta):
         for sentence in self.sentences:
             sentence = ' '.join(sentence)
             sentence_dep = ' '.join(utils.get_head_dependents(sentence))
-            if rules.has_defect_pattern(sentence) and (rules.has_documentation_pattern(sentence_dep) or is_comment_changed):
+            if rules.has_defect_pattern(sentence) and (
+                    rules.has_documentation_pattern(sentence_dep) or is_comment_changed):
                 return True
 
         return False
