@@ -16,6 +16,10 @@ class AnsibleMiner(BaseMiner):
     """ This class extends BaseMiner to mine Ansible-based repositories
     """
 
+    def __init__(self, url_to_repo: str, branch: str = 'master'):
+        super(self.__class__, self).__init__(url_to_repo, branch)
+        self.FixingCommitClassifier = AnsibleFixingCommitClassifier
+
     def discard_undesired_fixing_commits(self, commits: List[str]):
         """
         Given a list of commits, discard commits that do not modify at least one Ansible file.
@@ -41,6 +45,9 @@ class AnsibleMiner(BaseMiner):
                     modified_file.new_path) for modified_file in commit.modifications):
                 if commit.hash in commits:
                     commits.remove(commit.hash)
+
+    def get_fixing_commit_classifier(self):
+        return AnsibleFixingCommitClassifier
 
     def ignore_file(self, path_to_file: str, content: str = None):
         """
