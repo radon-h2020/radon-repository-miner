@@ -15,8 +15,13 @@ RUN apt-get install git -y
 COPY . /app
 WORKDIR /app
 
-# Install application (latest)
+# Install dependencies
 RUN pip install -r requirements.txt
+
+# Download SpaCy statistical model en_core_web_sm
+RUN python -m spacy download en_core_web_sm
+
+# Install repominer
 RUN pip install .
 
 # Environment variable for temporary repositories
