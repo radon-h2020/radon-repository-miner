@@ -12,7 +12,7 @@ from repominer.metrics.tosca import ToscaMetricsExtractor
 from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 
-VERSION = '0.8.12'
+VERSION = '0.9.0'
 
 
 def valid_dir_or_url(x: str) -> str:
