@@ -214,23 +214,17 @@ class MinerCLI:
                 self.miner.fixing_commits = commits
 
         if self.args.verbose:
-            print('Identifying fixing-commits from closed issues related to bugs')
+            print('Identifying fixing-commits')
 
-        from_issues = self.miner.get_fixing_commits_from_closed_issues(labels=None)
-
-        if self.args.verbose:
-            print('Identifying fixing-commits from commit messages')
-
-        from_msg = self.miner.get_fixing_commits_from_commit_messages(regex=None)
+        fixing_commits = self.miner.get_fixing_commits()
 
         if self.args.verbose:
-            print(f'Saving {len(self.miner.fixing_commits)} fixing-commits ({len(from_issues)} from closed issue, '
-                  f'{len(from_msg)} from commit messages) [{datetime.now().hour}:{datetime.now().minute}]')
+            print(f'Saving {len(fixing_commits)} fixing-commits [{datetime.now().hour}:{datetime.now().minute}]')
 
         filename_json = os.path.join(self.args.dest, 'fixing-commits.json')
 
         with io.open(filename_json, "w") as f:
-            json.dump(self.miner.fixing_commits, f)
+            json.dump(fixing_commits, f)
 
         if self.args.verbose:
             print(f'JSON created at {filename_json}')
@@ -243,8 +237,7 @@ class MinerCLI:
                 self.miner.exclude_fixed_files = files
 
         if self.args.verbose:
-            language = 'Ansible' if isinstance(self.miner, AnsibleMiner) else 'Tosca'
-            print(f'Identifying {language} files modified in fixing-commits')
+            print(f'Identifying {self.args.language} files modified in fixing-commits')
 
         fixed_files = self.miner.get_fixed_files()
 
