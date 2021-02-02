@@ -9,7 +9,6 @@ from datetime import datetime
 from repominer.files import FixedFileEncoder, FixedFileDecoder, FailureProneFileEncoder, FailureProneFileDecoder
 from repominer.metrics.ansible import AnsibleMetricsExtractor
 from repominer.metrics.tosca import ToscaMetricsExtractor
-from repominer.mining.base import BaseMiner
 from repominer.mining.ansible import AnsibleMiner
 from repominer.mining.tosca import ToscaMiner
 
@@ -170,115 +169,119 @@ def get_parser():
     return parser
 
 
-def mine_fixing_commits(miner: BaseMiner, verbose: bool, dest: str, exclude_commits: str = None, include_commits: str = None):
+class MinerCLI:
 
-    if exclude_commits:
-        with open(exclude_commits, 'r') as f:
-            commits = json.load(f)
-            miner.exclude_commits = set(commits)
+    def __init__(self, args: Namespace):
+        self.args = args
 
-    if include_commits:
-        with open(include_commits, 'r') as f:
-            commits = json.load(f)
-            miner.fixing_commits = commits
+        if args.host == 'github':
+            url_to_repo = f'https://github.com/{args.repository}'
+        elif args.host == 'gitlab':
+            url_to_repo = f'https://gitlab.com/{args.repository}'
+        else:
+            raise ValueError(f'Host {args.host} not supported. Please select github or gitlab')
 
-    if verbose:
-        print('Identifying fixing-commits from closed issues related to bugs')
+        if args.language == 'ansible':
+            self.miner = AnsibleMiner(url_to_repo=url_to_repo, branch=args.branch)
+        else:
+            self.miner = ToscaMiner(url_to_repo=url_to_repo, branch=args.branch)
 
-    from_issues = miner.get_fixing_commits_from_closed_issues(labels=None)
+    def mine(self):
 
-    if verbose:
-        print('Identifying fixing-commits from commit messages')
+        if self.args.verbose:
+            print(f'Mining {self.args.repository} [started at: {datetime.now().hour}:{datetime.now().minute}]')
 
-    from_msg = miner.get_fixing_commits_from_commit_messages(regex=None)
+        self.mine_fixing_commits()
 
-    if verbose:
-        print(f'Saving {len(miner.fixing_commits)} fixing-commits ({len(from_issues)} from closed issue, {len(from_msg)} from commit messages) [{datetime.now().hour}:{datetime.now().minute}]')
+        if self.args.info_to_mine in ('fixed-files', 'failure-prone-files'):
+            self.mine_fixed_files()
 
-    filename_json = os.path.join(dest, 'fixing-commits.json')
+        if self.args.info_to_mine == 'failure-prone-files':
+            self.mine_failure_prone_files()
 
-    with io.open(filename_json, "w") as f:
-        json.dump(miner.fixing_commits, f)
+        exit(0)
 
-    if verbose:
-        print(f'JSON created at {filename_json}')
+    def mine_fixing_commits(self):
 
+        if self.args.exclude_commits:
+            with open(self.args.exclude_commits, 'r') as f:
+                commits = json.load(f)
+                self.miner.exclude_commits = set(commits)
 
-def mine_fixed_files(miner: BaseMiner, verbose: bool, dest: str, exclude_files: str = None):
+        if self.args.include_commits:
+            with open(self.args.include_commits, 'r') as f:
+                commits = json.load(f)
+                self.miner.fixing_commits = commits
 
-    if exclude_files:
-        with open(exclude_files, 'r') as f:
-            files = json.load(f, cls=FixedFileDecoder)
-            miner.exclude_fixed_files = files
+        if self.args.verbose:
+            print('Identifying fixing-commits from closed issues related to bugs')
 
-    if verbose:
-        language = 'Ansible' if isinstance(miner, AnsibleMiner) else 'Tosca'
-        print(f'Identifying {language} files modified in fixing-commits')
+        from_issues = self.miner.get_fixing_commits_from_closed_issues(labels=None)
 
-    fixed_files = miner.get_fixed_files()
+        if self.args.verbose:
+            print('Identifying fixing-commits from commit messages')
 
-    if verbose:
-        print(f'Saving {len(fixed_files)} fixed-files [{datetime.now().hour}:{datetime.now().minute}]')
+        from_msg = self.miner.get_fixing_commits_from_commit_messages(regex=None)
 
-    filename_json = os.path.join(dest, 'fixed-files.json')
-    json_files = []
-    for file in fixed_files:
-        json_files.append(FixedFileEncoder().default(file))
+        if self.args.verbose:
+            print(f'Saving {len(self.miner.fixing_commits)} fixing-commits ({len(from_issues)} from closed issue, '
+                  f'{len(from_msg)} from commit messages) [{datetime.now().hour}:{datetime.now().minute}]')
 
-    with io.open(filename_json, "w") as f:
-        json.dump(json_files, f)
+        filename_json = os.path.join(self.args.dest, 'fixing-commits.json')
 
-    if verbose:
-        print(f'JSON created at {filename_json}')
+        with io.open(filename_json, "w") as f:
+            json.dump(self.miner.fixing_commits, f)
 
+        if self.args.verbose:
+            print(f'JSON created at {filename_json}')
 
-def mine_failure_prone_files(miner: BaseMiner, verbose: bool, dest: str):
-    if verbose:
-        print('Identifying and labeling failure-prone files')
+    def mine_fixed_files(self):
 
-    failure_prone_files = [copy.deepcopy(file) for file in miner.label()]
+        if self.args.exclude_files:
+            with open(self.args.exclude_files, 'r') as f:
+                files = json.load(f, cls=FixedFileDecoder)
+                self.miner.exclude_fixed_files = files
 
-    if verbose:
-        print('Saving failure-prone files')
+        if self.args.verbose:
+            language = 'Ansible' if isinstance(self.miner, AnsibleMiner) else 'Tosca'
+            print(f'Identifying {language} files modified in fixing-commits')
 
-    filename_json = os.path.join(dest, 'failure-prone-files.json')
+        fixed_files = self.miner.get_fixed_files()
 
-    json_files = []
-    for file in failure_prone_files:
-        json_files.append(FailureProneFileEncoder().default(file))
+        if self.args.verbose:
+            print(f'Saving {len(fixed_files)} fixed-files [{datetime.now().hour}:{datetime.now().minute}]')
 
-    with open(filename_json, "w") as f:
-        json.dump(json_files, f)
+        filename_json = os.path.join(self.args.dest, 'fixed-files.json')
+        json_files = []
+        for file in fixed_files:
+            json_files.append(FixedFileEncoder().default(file))
 
-    if verbose:
-        print(f'JSON created at {filename_json}')
+        with io.open(filename_json, "w") as f:
+            json.dump(json_files, f)
 
+        if self.args.verbose:
+            print(f'JSON created at {filename_json}')
 
-def mine(args: Namespace):
-    url_to_repo = None
+    def mine_failure_prone_files(self):
+        if self.args.verbose:
+            print('Identifying and labeling failure-prone files')
 
-    if args.host == 'github':
-        url_to_repo = f'https://github.com/{args.repository}'
-    elif args.host == 'gitlab':
-        url_to_repo = f'https://gitlab.com/{args.repository}'
+        failure_prone_files = [copy.deepcopy(file) for file in self.miner.label()]
 
-    if args.verbose:
-        print(f'Mining {args.repository} [started at: {datetime.now().hour}:{datetime.now().minute}]')
+        if self.args.verbose:
+            print('Saving failure-prone files')
 
-    if args.language == 'ansible':
-        miner = AnsibleMiner(url_to_repo=url_to_repo, branch=args.branch)
-    else:
-        miner = ToscaMiner(url_to_repo=url_to_repo, branch=args.branch)
+        filename_json = os.path.join(self.args.dest, 'failure-prone-files.json')
 
-    mine_fixing_commits(miner, args.verbose, args.dest, args.exclude_commits, args.include_commits)
+        json_files = []
+        for file in failure_prone_files:
+            json_files.append(FailureProneFileEncoder().default(file))
 
-    if args.info_to_mine in ('fixed-files', 'failure-prone-files'):
-        mine_fixed_files(miner, args.verbose, args.dest, args.exclude_files)
+        with open(filename_json, "w") as f:
+            json.dump(json_files, f)
 
-    if args.info_to_mine == 'failure-prone-files':
-        mine_failure_prone_files(miner, args.verbose, args.dest)
-
-    exit(0)
+        if self.args.verbose:
+            print(f'JSON created at {filename_json}')
 
 
 def extract_metrics(args: Namespace):
@@ -317,6 +320,6 @@ def extract_metrics(args: Namespace):
 def main():
     args = get_parser().parse_args()
     if args.command == 'mine':
-        mine(args)
+        MinerCLI(args).mine()
     elif args.command == 'extract-metrics':
         extract_metrics(args)
