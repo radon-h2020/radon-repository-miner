@@ -239,6 +239,7 @@ class BaseMetricsExtractor:
 
             # Else
             git_repo.checkout(commit.hash)
+            process_metrics = {}
 
             if process:
                 # Extract process metrics
