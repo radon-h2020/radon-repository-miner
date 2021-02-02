@@ -17,7 +17,7 @@ WORKDIR /app
 
 # Install application (latest)
 RUN pip install -r requirements.txt
-RUN pip install repository-miner
+RUN pip install .
 
 # Environment variable for temporary repositories
 ENV TMP_REPOSITORIES_DIR=/tmp/
