@@ -1,4 +1,5 @@
 ansiblemetrics~=0.3.10
+Deprecated~=1.2.11
 nltk~=3.5
 pandas~=1.1.4
 pydriller~=1.15.4
