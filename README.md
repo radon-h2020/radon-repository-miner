@@ -1,11 +1,9 @@
 ![Build](https://github.com/radon-h2020/radon-repository-miner/workflows/Build/badge.svg)
 ![Documentation](https://github.com/radon-h2020/radon-repository-miner/workflows/Documentation/badge.svg)
 ![lgtm](https://img.shields.io/lgtm/grade/python/github/radon-h2020/radon-repository-miner)
-![Total alerts](https://img.shields.io/lgtm/alerts/github/radon-h2020/radon-repository-miner)
 ![pypi-version](https://img.shields.io/pypi/v/repository-miner)
 ![pypi-status](https://img.shields.io/pypi/status/repository-miner)
 ![release-date](https://img.shields.io/github/release-date/radon-h2020/radon-repository-miner)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![python-version](https://img.shields.io/pypi/pyversions/repository-miner)
 
 # radon-repository-miner
