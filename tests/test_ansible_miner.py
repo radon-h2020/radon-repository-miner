@@ -33,13 +33,8 @@ class AnsibleMinerTestCase(unittest.TestCase):
                                            '86c9a39a318240f51961b956e20c1261031966dd'}
         self.repo_miner.exclude_fixed_files = list()
 
-    def test_get_fixing_commits_from_closed_issues(self):
-        hashes = self.repo_miner.get_fixing_commits_from_closed_issues(labels={'bug'})
-        assert not hashes
-
-    def test_get_fixing_commits_from_commit_messages(self):
-        hashes = self.repo_miner.get_fixing_commits_from_commit_messages(regex=r'(bug|fix|error|crash|problem|fail'
-                                                                               r'|defect|patch)')
+    def test_get_fixing_commits(self):
+        hashes = self.repo_miner.get_fixing_commits().keys()
         assert self.repo_miner.fixing_commits == ['72377bb59a484ac7c6c6954ce6bf796eb6143f86',
                                                   'be34c67e75c2788742f3e87313a0b646af1006db',
                                                   'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703']
@@ -48,11 +43,10 @@ class AnsibleMinerTestCase(unittest.TestCase):
                                'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703',
                                '72377bb59a484ac7c6c6954ce6bf796eb6143f86'}
 
-    def test_get_fixing_commits_from_commit_messages_with_exclude_commits(self):
+    def test_get_fixing_commits_with_exclude_commits(self):
         self.repo_miner.exclude_commits.add('f9ac8bbc68dedb742e5825c5cf47bca8e6f71703')
 
-        hashes = self.repo_miner.get_fixing_commits_from_commit_messages(regex=r'(bug|fix|error|crash|problem|fail'
-                                                                               r'|defect|patch)')
+        hashes = self.repo_miner.get_fixing_commits().keys()
 
         assert self.repo_miner.fixing_commits == ['72377bb59a484ac7c6c6954ce6bf796eb6143f86',
                                                   'be34c67e75c2788742f3e87313a0b646af1006db']
@@ -73,8 +67,7 @@ class AnsibleMinerTestCase(unittest.TestCase):
                                        'be34c67e75c2788742f3e87313a0b646af1006db'}
 
     def test_get_fixed_files(self):
-        self.repo_miner.get_fixing_commits_from_commit_messages(
-            regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
+        self.repo_miner.get_fixing_commits()
         fixed_files = self.repo_miner.get_fixed_files()
 
         assert fixed_files
@@ -95,8 +88,7 @@ class AnsibleMinerTestCase(unittest.TestCase):
     def test_get_fixed_files_with_exclude_commits(self):
         self.repo_miner.exclude_commits.add('f9ac8bbc68dedb742e5825c5cf47bca8e6f71703')
 
-        self.repo_miner.get_fixing_commits_from_commit_messages(
-            regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
+        self.repo_miner.get_fixing_commits()
         fixed_files = self.repo_miner.get_fixed_files()
 
         assert fixed_files
@@ -117,7 +109,7 @@ class AnsibleMinerTestCase(unittest.TestCase):
                       bic='e3a4420937cd9061a6525d541d525ac2167d7322')
         ]
 
-        self.repo_miner.get_fixing_commits_from_commit_messages(r'(bug|fix|error|crash|problem|fail|defect|patch)')
+        self.repo_miner.get_fixing_commits()
         fixed_files = self.repo_miner.get_fixed_files()
 
         assert fixed_files
@@ -133,8 +125,7 @@ class AnsibleMinerTestCase(unittest.TestCase):
 
     def test_mining_pipeline(self):
         self.repo_miner.fixing_commits = list()  # reset list of fixing-commits
-        self.repo_miner.get_fixing_commits_from_commit_messages(
-            regex=r'(bug|fix|error|crash|problem|fail|defect|patch)')
+        self.repo_miner.get_fixing_commits()
         self.repo_miner.get_fixed_files()
         failure_prone_files = [failure_prone_file for failure_prone_file in self.repo_miner.label()]
 

@@ -64,7 +64,7 @@ class CLIMineFixedFilesTestCase(unittest.TestCase):
 
         with open(os.path.join(self.path_to_tmp_dir, 'fixed-files.json'), 'r') as f:
             fixed_files = json.load(f)
-            assert len(fixed_files) == 8
+            assert len(fixed_files) == 7
 
     def test_mine_fixed_files_with_exclude(self):
         result = os.system(
@@ -76,7 +76,7 @@ class CLIMineFixedFilesTestCase(unittest.TestCase):
 
         with open(os.path.join(self.path_to_tmp_dir, 'fixed-files.json'), 'r') as f:
             fixed_files = json.load(f)
-            assert len(fixed_files) == 2
+            assert len(fixed_files) == 1
 
 
 if __name__ == '__main__':
