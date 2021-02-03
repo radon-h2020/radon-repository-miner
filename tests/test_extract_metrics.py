@@ -47,6 +47,8 @@ class ExtractMetricsTestCase(unittest.TestCase):
         assert 'committed_at' in self.ansible_extractor.dataset.columns
         assert 'failure_prone' in self.ansible_extractor.dataset.columns
         assert self.ansible_extractor.dataset.shape[1] == 66
+        assert self.ansible_extractor.dataset.failure_prone.to_list().count(0) > 0
+        assert self.ansible_extractor.dataset.failure_prone.to_list().count(1) > 1
 
     def test_tosca_extract(self):
         self.tosca_extractor.extract(self.tosca_labeled_files, product=True, process=True, delta=False)
@@ -66,6 +68,8 @@ class ExtractMetricsTestCase(unittest.TestCase):
         assert 'committed_at' in self.ansible_extractor.dataset.columns
         assert 'failure_prone' in self.ansible_extractor.dataset.columns
         assert self.ansible_extractor.dataset.shape[1] == 66
+        assert self.ansible_extractor.dataset.failure_prone.to_list().count(0) > 0
+        assert self.ansible_extractor.dataset.failure_prone.to_list().count(1) > 1
 
 
 if __name__ == '__main__':
