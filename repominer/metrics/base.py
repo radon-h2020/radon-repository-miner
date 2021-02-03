@@ -68,7 +68,7 @@ class BaseMetricsExtractor:
     """
 
     def __init__(self, path_to_repo: str, at: str = 'release'):
-        """ The clss constructor.
+        """ The class constructor.
 
         Parameters
         ----------
