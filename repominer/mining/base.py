@@ -10,7 +10,6 @@ from pydriller.repository_mining import GitRepository, RepositoryMining
 
 from repominer import utils
 from repominer.files import FixedFile, FailureProneFile
-from repominer.hosts import GithubHost, GitlabHost
 from repominer.mining import rules
 
 # Important: downloading resources for NLTK
@@ -61,10 +60,6 @@ class BaseMiner:
 
         Attributes
         ----------
-        host : str
-            Source Code Versioning host ('github' or 'gitlab').
-            The value is automatically extracted from parameter ``url_to_repo``.
-
         repository : str
             Repository full name (e.g., radon-h2020/radon-repository-miner).
             The value is automatically extracted from parameter ``url_to_repo``.
@@ -154,7 +149,6 @@ class BaseMiner:
         """
 
         match = full_name_pattern.search(url_to_repo.replace('.git', ''))
-        self.host = match.groups()[0]
         self.repository = match.groups()[1]
         self.branch = branch
 
@@ -192,133 +186,6 @@ class BaseMiner:
 
         """
         pass
-
-    @deprecated(version='0.8.13', reason="This function will be removed in the next release. Use get_fixing_commits "
-                                         "instead.")
-    def get_fixing_commits_from_closed_issues(self, labels: Set[str] = None) -> List[str]:
-        """
-        Return a list of bug-fixing commit hash.
-
-        This method returns the commits linked to issues closed and related to bugs (i.e., with labels bug, bugfix, etc.).
-        GitHub and GitLab issue trackers link commits and corresponding issue reports, along with labels that are used
-        to organize issues.
-        The search of bug-related issues is based on the following defaults labels:
-
-        ``'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical', 'ansible_bug',``
-        ``'Type: Bug', 'Type: bug', 'Type/Bug', 'type: bug 🐛', 'type:bug', 'type: bug', 'type/bug',``
-        ``'kind/bug', 'kind/bugs', 'bug/bugfix', 'bugfix', 'critical-bug', '01 type: bug', 'bug_report',``
-        ``'minor-bug'``
-
-        Although, the user can specify different labels.
-
-        Parameters
-        ----------
-        labels : Set[str]
-            Set of bug-related labels (e.g., bug, bugfix, type: bug). If none is passed, the default labels are used.
-
-        Returns
-        -------
-        List[str]
-            The list of bug-fixing commits hashes
-
-        """
-
-        if self.host == 'github':
-            host = GithubHost(self.repository)
-        elif self.host == 'gitlab':
-            host = GitlabHost(self.repository)
-        else:
-            raise ValueError("Parameter host must be one among ('github', 'gitlab')")
-
-        if not labels:
-            labels = BUG_RELATED_LABELS
-
-        # Get the repository labels (self.get_labels()) and keep only those matching the input labels, if any
-        labels = labels.intersection(host.get_labels())
-
-        # Get fixing commits
-        commits = []
-        for label in labels:
-            for issue in host.get_closed_issues(label):
-                commit = host.get_commit_closing_issue(issue)
-                if (commit in self.exclude_commits) or (commit in self.fixing_commits):
-                    continue
-                elif commit:
-                    commits.append(commit)
-
-        if commits:
-            # Discard commits that do not touch IaC files
-            self.discard_undesired_fixing_commits(commits)
-
-            # Update the list of fixing commits
-            self.fixing_commits.extend(commits)
-
-            # Sort fixing_commits in ascending order of date
-            self.sort_commits(self.fixing_commits)
-
-        return commits
-
-    @deprecated(version='0.8.13', reason="This function will be removed in the next release. Use get_fixing_commits "
-                                         "instead.")
-    def get_fixing_commits_from_commit_messages(self, regex: str = None) -> List[str]:
-        """
-        Return a list of bug-fixing commit hash.
-
-        This method returns the commits whose message indicates defective scripts.
-        Specifically, when analyzing the commits messages, it first removes all words ending with bug or fix
-        (apart of bugfix), since those terms can be affixes of other words as "debug" and "prefix".
-        A commit message is tagged as bug-fixing if it matches the following regular expression:
-
-        ``(bug|fix|error|crash|problem|fail|defect|patch)``
-
-        Although, the user can specify a different regex.
-
-        `Note:` Beside returning the list of bug-fixing commits, it also updates the attribute ``fixing_commits``.
-
-        Parameters
-        ----------
-        regex : str
-            A regular expression to match against commits message to identify bug-fixing commits.
-            If none is passed, the default regex is used.
-
-        Returns
-        -------
-        List[str]
-            The list of bug-fixing commits hashes
-        """
-
-        if not regex:
-            regex = FIXING_COMMITS_REGEX
-
-        commits = list()
-
-        for commit in RepositoryMining(self.path_to_repo, only_in_branch=self.branch).traverse_commits():
-
-            if (commit.hash in self.exclude_commits) or (commit.hash in self.fixing_commits):
-                continue
-
-            # Remove words ending with 'bug' or 'fix' (e.g., 'debug' and 'prefix') from the commit message
-            p = re.compile(r'(\w+(bug|fix)\w)*', re.IGNORECASE)
-            msg = commit.msg
-            match = p.match(msg)
-            if match:
-                msg = re.sub(match.group(), '', msg)
-
-            # Match the regular expression to the message
-            if re.match(regex, msg.lower()):
-                commits.append(commit.hash)
-
-        if commits:
-            # Discard commits that do not touch IaC files
-            self.discard_undesired_fixing_commits(commits)
-
-            # Update the list of fixing commits
-            self.fixing_commits.extend(commits)
-
-            # Sort fixing_commits in ascending order of date
-            self.sort_commits(self.fixing_commits)
-
-        return commits
 
     def get_fixing_commits(self) -> Dict[str, List[str]]:
         """
