@@ -5,6 +5,9 @@ import os
 import shutil
 import unittest
 
+from argparse import Namespace
+from repominer.cli import MinerCLI
+
 
 class CLIMineFailureProneFilesTestCase(unittest.TestCase):
 
@@ -20,11 +23,20 @@ class CLIMineFailureProneFilesTestCase(unittest.TestCase):
         del os.environ["TMP_REPOSITORIES_DIR"]
 
     def test_mine(self):
-        result = os.system('repo-miner mine failure-prone-files github ansible adriagalin/ansible.motd {}'.format(self.path_to_tmp_dir))
-        assert result == 0
-        assert 'fixing-commits.json' in os.listdir(self.path_to_tmp_dir)
-        assert 'fixed-files.json' in os.listdir(self.path_to_tmp_dir)
-        assert 'failure-prone-files.json' in os.listdir(self.path_to_tmp_dir)
+        args = Namespace(info_to_mine='failure-prone-files',
+                         host='github',
+                         repository='adriagalin/ansible.motd',
+                         language='ansible',
+                         dest=self.path_to_tmp_dir,
+                         verbose=False)
+
+        try:
+            MinerCLI(args).mine()
+        except SystemExit as exc:
+            assert exc.code == 0
+            assert 'fixing-commits.json' in os.listdir(self.path_to_tmp_dir)
+            assert 'fixed-files.json' in os.listdir(self.path_to_tmp_dir)
+            assert 'failure-prone-files.json' in os.listdir(self.path_to_tmp_dir)
 
 
 if __name__ == '__main__':

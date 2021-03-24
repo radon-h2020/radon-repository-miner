@@ -6,6 +6,8 @@ import os
 import shutil
 import unittest
 
+from argparse import Namespace
+from repominer.cli import MinerCLI
 from repominer.files import FixedFile, FixedFileEncoder
 
 
@@ -57,27 +59,37 @@ class CLIMineFixedFilesTestCase(unittest.TestCase):
         del os.environ["TMP_REPOSITORIES_DIR"]
 
     def test_mine_fixed_files(self):
-        result = os.system(
-            'repo-miner mine fixed-files github tosca UoW-CPC/COLARepo {}'.format(self.path_to_tmp_dir))
+        args = Namespace(host='github',
+                         repository='UoW-CPC/COLARepo',
+                         language='tosca',
+                         dest=self.path_to_tmp_dir,
+                         verbose=False)
 
-        assert result == 0
-
-        with open(os.path.join(self.path_to_tmp_dir, 'fixed-files.json'), 'r') as f:
-            fixed_files = json.load(f)
-            assert len(fixed_files) == 7
+        try:
+            MinerCLI(args).mine_fixed_files()
+        except SystemExit as exc:
+            assert exc.code == 0
+            
+            with open(os.path.join(self.path_to_tmp_dir, 'fixed-files.json'), 'r') as f:
+                fixed_files = json.load(f)
+                assert len(fixed_files) == 7
 
     def test_mine_fixed_files_with_exclude(self):
-        result = os.system(
-            'repo-miner mine fixed-files github tosca UoW-CPC/COLARepo {0} --exclude-files {1}'.format(
-                self.path_to_tmp_dir,
-                self.exclude_fixed_files_file))
+        args = Namespace(host='github',
+                         repository='UoW-CPC/COLARepo',
+                         language='tosca',
+                         dest=self.path_to_tmp_dir,
+                         exclude_files=self.exclude_fixed_files_file,
+                         verbose=False)
 
-        assert result == 0
-
-        with open(os.path.join(self.path_to_tmp_dir, 'fixed-files.json'), 'r') as f:
-            fixed_files = json.load(f)
-            assert len(fixed_files) == 1
-
+        try:
+            MinerCLI(args).mine_fixed_files()
+        except SystemExit as exc:
+            assert exc.code == 0
+            
+            with open(os.path.join(self.path_to_tmp_dir, 'fixed-files.json'), 'r') as f:
+                fixed_files = json.load(f)
+                assert len(fixed_files) == 1
 
 if __name__ == '__main__':
     unittest.main()

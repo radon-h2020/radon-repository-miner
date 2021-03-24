@@ -174,17 +174,21 @@ class MinerCLI:
     def __init__(self, args: Namespace):
         self.args = args
 
-        if args.host == 'github':
+        if not hasattr(args, 'host') or args.host not in ('github', 'gitlab'):
+            print(f'Please, select github or gitlab')
+            exit(1)
+        elif args.host == 'github':
             url_to_repo = f'https://github.com/{args.repository}'
         elif args.host == 'gitlab':
             url_to_repo = f'https://gitlab.com/{args.repository}'
-        else:
-            raise ValueError(f'Host {args.host} not supported. Please select github or gitlab')
 
-        if args.language == 'ansible':
-            self.miner = AnsibleMiner(url_to_repo=url_to_repo, branch=args.branch)
-        else:
-            self.miner = ToscaMiner(url_to_repo=url_to_repo, branch=args.branch)
+        if not hasattr(args, 'language') or args.language not in ('ansible', 'tosca'):
+            print(f'Please, select ansible or tosca')
+            exit(2)
+        elif args.language == 'ansible':
+            self.miner = AnsibleMiner(url_to_repo=url_to_repo, branch=args.branch if hasattr(args, 'branch') else None)
+        elif args.language == 'tosca':
+            self.miner = ToscaMiner(url_to_repo=url_to_repo, branch=args.branch if hasattr(args, 'branch') else None)
 
     def mine(self):
 
@@ -203,12 +207,12 @@ class MinerCLI:
 
     def mine_fixing_commits(self):
 
-        if self.args.exclude_commits:
+        if hasattr(self.args, 'exclude_commits') and self.args.exclude_commits:
             with open(self.args.exclude_commits, 'r') as f:
                 commits = json.load(f)
                 self.miner.exclude_commits = set(commits)
 
-        if self.args.include_commits:
+        if hasattr(self.args, 'include_commits') and self.args.include_commits:
             with open(self.args.include_commits, 'r') as f:
                 commits = json.load(f)
                 self.miner.fixing_commits = commits
@@ -231,7 +235,7 @@ class MinerCLI:
 
     def mine_fixed_files(self):
 
-        if self.args.exclude_files:
+        if hasattr(self.args, 'exclude_files') and  self.args.exclude_files:
             with open(self.args.exclude_files, 'r') as f:
                 files = json.load(f, cls=FixedFileDecoder)
                 self.miner.exclude_fixed_files = files

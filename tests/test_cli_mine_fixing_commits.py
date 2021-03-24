@@ -6,6 +6,8 @@ import os
 import shutil
 import unittest
 
+from argparse import Namespace
+from repominer.cli import MinerCLI
 
 class CLIMineFixingCommitsTestCase(unittest.TestCase):
 
@@ -31,26 +33,39 @@ class CLIMineFixingCommitsTestCase(unittest.TestCase):
         del os.environ["TMP_REPOSITORIES_DIR"]
 
     def test_mine_fixing_commits(self):
-        result = os.system(
-            'repo-miner mine fixing-commits github ansible adriagalin/ansible.motd {}'.format(self.path_to_tmp_dir))
-        assert result == 0
 
-        with open(os.path.join(self.path_to_tmp_dir, 'fixing-commits.json'), 'r') as f:
-            fixing_commits = json.load(f)
-            assert set(fixing_commits) == {'e283a1f673b1bd583f2a40645671179e46c9048f',
-                                           'be34c67e75c2788742f3e87313a0b646af1006db',
-                                           'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703',
-                                           '72377bb59a484ac7c6c6954ce6bf796eb6143f86'}
+        args = Namespace(host='github',
+                         repository='adriagalin/ansible.motd',
+                         language='ansible',
+                         dest=self.path_to_tmp_dir,
+                         verbose=False)
+
+        try:
+            MinerCLI(args).mine_fixing_commits()
+        except SystemExit as exc:
+            assert exc.code == 0
+            with open(os.path.join(self.path_to_tmp_dir, 'fixing-commits.json'), 'r') as f:
+                fixing_commits = json.load(f)
+                assert set(fixing_commits) == {'e283a1f673b1bd583f2a40645671179e46c9048f',
+                                            'be34c67e75c2788742f3e87313a0b646af1006db',
+                                            'f9ac8bbc68dedb742e5825c5cf47bca8e6f71703',
+                                            '72377bb59a484ac7c6c6954ce6bf796eb6143f86'}
 
     def test_mine_fixing_commits_with_exclude(self):
-        result = os.system(
-            'repo-miner mine fixing-commits github ansible adriagalin/ansible.motd {0} --exclude-commits {1}'.format(self.path_to_tmp_dir,
-                                                                                                                     self.exclude_commits_file))
-        assert result == 0
+        args = Namespace(host='github',
+                         repository='adriagalin/ansible.motd',
+                         language='ansible',
+                         dest=self.path_to_tmp_dir,
+                         exclude_commits=self.exclude_commits_file,
+                         verbose=False)
 
-        with open(os.path.join(self.path_to_tmp_dir, 'fixing-commits.json'), 'r') as f:
-            fixing_commits = json.load(f)
-            assert set(fixing_commits) == {'72377bb59a484ac7c6c6954ce6bf796eb6143f86'}
+        try:
+            MinerCLI(args).mine_fixing_commits()
+        except SystemExit as exc:
+            assert exc.code == 0
+            with open(os.path.join(self.path_to_tmp_dir, 'fixing-commits.json'), 'r') as f:
+                fixing_commits = json.load(f)
+                assert set(fixing_commits) == {'72377bb59a484ac7c6c6954ce6bf796eb6143f86'}
 
 
 if __name__ == '__main__':
