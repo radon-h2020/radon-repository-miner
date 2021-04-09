@@ -51,21 +51,15 @@ Examples
 Using Docker
 ************
 
-1. **Setup environment variables**
-
-    ``export GITHUB_ACCESS_TOKEN=***************``
-
-    ``export GITLAB_ACCESS_TOKEN=***************``
-
-2. **Pull the Docker image**
+1. **Pull the Docker image**
 
     ``docker pull radonconsortium/repo-miner:latest``
 
-3. **Create a folder to share results**
+2. **Create a folder to share results**
 
     ``mkdir /tmp/repo-miner``
 
-4. **Mine**
+3. **Mine**
 
     *(using github)*
 
