@@ -38,11 +38,7 @@ Mining using Command-Line
 
 .. warning::
 
-    To properly use this command you **MUST** add the following to your environment variables:
-
-    * ``GITHUB_ACCESS_TOKEN=<paste your token here>`` if you are using the ``github`` argument. See `how to create a personal access token <https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token>`_.
-
-    * ``GITLAB_ACCESS_TOKEN=<paste your token here>`` if you are using the ``gitlab`` argument. See `how to create a personal access token <https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html>`_.
+    To properly use this command you **MUST** add the following to your environment variable:
 
     * ``TMP_REPOSITORIES_DIR=<path/to/tmp/repositories/>`` to temporary clone the remote repository for analysis. Please, note that the repository will be cloned in this folder but not deleted. The latter step is left to the user, when and if needed. **Note:** this variable is not needed if using the Docker image.
 
@@ -55,21 +51,15 @@ Examples
 Using Docker
 ************
 
-1. **Setup environment variables**
-
-    ``export GITHUB_ACCESS_TOKEN=***************``
-
-    ``export GITLAB_ACCESS_TOKEN=***************``
-
-2. **Pull the Docker image**
+1. **Pull the Docker image**
 
     ``docker pull radonconsortium/repo-miner:latest``
 
-3. **Create a folder to share results**
+2. **Create a folder to share results**
 
     ``mkdir /tmp/repo-miner``
 
-4. **Mine**
+3. **Mine**
 
     *(using github)*
 
