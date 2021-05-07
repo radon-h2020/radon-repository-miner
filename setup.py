@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as reqs_file:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-VERSION = '0.9.1'
+VERSION = '0.9.2'
 
 setup(name='repository-miner',
       version=VERSION,
@@ -36,5 +36,5 @@ setup(name='repository-miner',
           "Topic :: Software Development :: Libraries :: Python Modules",
           "Operating System :: POSIX :: Linux"
       ],
-      insall_requires=requirements
+      install_requires=requirements
 )
