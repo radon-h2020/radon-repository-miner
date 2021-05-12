@@ -2,7 +2,6 @@ import os
 import nltk
 import re
 
-from deprecated import deprecated
 from typing import Dict, Generator, List, Set
 
 from pydriller.domain.commit import Commit, ModificationType

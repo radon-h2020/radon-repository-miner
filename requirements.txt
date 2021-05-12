@@ -1,12 +1,8 @@
 ansiblemetrics~=0.3.10
-coverage~=5.5
 dataclasses~=0.6
-Deprecated~=1.2.11
 nltk~=3.5
 pandas~=1.1.4
 pydriller~=1.15.4
-pygithub~=1.54
-python-gitlab~=2.5.0
-pyyaml~=5.3.1
+pyyaml~=5.4
 spacy~=2.3.4
 tosca-metrics~=0.0.7
