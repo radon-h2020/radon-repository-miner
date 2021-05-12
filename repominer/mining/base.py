@@ -44,7 +44,8 @@ class BaseMiner:
 
     def __init__(self,
                  url_to_repo: str,
-                 branch: str = 'master'):
+                 branch: str = 'master',
+                 clone_repo_to: str = None):
         """
         The class constructor.
         Initialize a new BaseMiner.
@@ -66,6 +67,10 @@ class BaseMiner:
 
         branch : str
             Repository's branch to analyze.
+
+        clone_repo_to : str
+            Path to clone the repository to. If None is passed, it is taken from the environment
+            variable TMP_REPOSITORIES_DIR
 
         commit_hashes : List[str]
             List of commit hash on the repository's branch, ordered by creation date.
@@ -157,13 +162,16 @@ class BaseMiner:
         self.fixing_commits = list()
         self.fixed_files = list()
 
-        self.path_to_repo = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), self.repository.split('/')[1])
+        if not clone_repo_to:
+            clone_repo_to = os.getenv('TMP_REPOSITORIES_DIR')
+
+        self.path_to_repo = os.path.join(clone_repo_to, self.repository.split('/')[1])
 
         # Get all the repository commits sorted by commit date
         self.commit_hashes = [c.hash for c in
                               RepositoryMining(
                                   path_to_repo=self.path_to_repo if os.path.isdir(self.path_to_repo) else url_to_repo,
-                                  clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR'),
+                                  clone_repo_to=clone_repo_to,
                                   only_in_branch=self.branch,
                                   order='date-order').traverse_commits()]
 

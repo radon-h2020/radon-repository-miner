@@ -67,15 +67,20 @@ class BaseMetricsExtractor:
 
     """
 
-    def __init__(self, path_to_repo: str, at: str = 'release'):
+    def __init__(self, path_to_repo: str, at: str = 'release', clone_repo_to: str = None):
         """ The class constructor.
 
         Parameters
         ----------
         path_to_repo : str
             The path to the repository.
+
         at : str
             When to extract metrics: at each release or each commit.
+
+        clone_repo_to : str
+            Path to clone the repository to. If None is passed, it is taken from the environment
+            variable TMP_REPOSITORIES_DIR
 
         Attributes
         ----------
@@ -105,12 +110,15 @@ class BaseMetricsExtractor:
         elif is_remote(path_to_repo):
             match = full_name_pattern.search(path_to_repo.replace('.git', ''))
             repo_name = match.groups()[1].split('/')[1]
-            path_to_clone = os.path.join(os.getenv('TMP_REPOSITORIES_DIR'), repo_name)
+
+            if not clone_repo_to:
+                clone_repo_to = os.getenv('TMP_REPOSITORIES_DIR')
+
+            path_to_clone = os.path.join(clone_repo_to, repo_name)
             self.path_to_repo = path_to_clone
 
             self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
-                                               clone_repo_to=os.getenv('TMP_REPOSITORIES_DIR') if not os.path.isdir(
-                                                   path_to_clone) else None,
+                                               clone_repo_to=clone_repo_to if not os.path.isdir(path_to_clone) else None,
                                                only_releases=True if at == 'release' else False,
                                                order='date-order')
 
