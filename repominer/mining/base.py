@@ -410,6 +410,8 @@ class BaseMiner:
         for file in self.fixed_files:
             labeling.setdefault(file.filepath, list()).append(file)
 
+        self.sort_commits(self.fixing_commits)
+
         for commit in RepositoryMining(self.path_to_repo,
                                        from_commit=self.fixing_commits[-1],
                                        to_commit=self.commit_hashes[0],
