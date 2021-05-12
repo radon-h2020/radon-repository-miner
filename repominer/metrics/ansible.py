@@ -5,8 +5,8 @@ from repominer.filters import is_ansible_file
 
 class AnsibleMetricsExtractor(BaseMetricsExtractor):
 
-    def __init__(self, path_to_repo: str, at: str):
-        super().__init__(path_to_repo, at)
+    def __init__(self, path_to_repo: str, at: str, clone_repo_to: str = None):
+        super().__init__(path_to_repo, at, clone_repo_to)
 
     def get_product_metrics(self, script: str) -> dict:
         """
