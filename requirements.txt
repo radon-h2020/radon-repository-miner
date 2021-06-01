@@ -1,8 +1,8 @@
-ansiblemetrics~=0.3.11
+ansiblemetrics~=0.3.12
 dataclasses~=0.6
 nltk~=3.5
 pandas~=1.1.4
-pydriller~=1.15.4
+pydriller~=2.0
 pyyaml~=5.4
 spacy~=2.3.4
 tosca-metrics~=0.0.8
