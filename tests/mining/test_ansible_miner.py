@@ -24,7 +24,7 @@ class AnsibleMinerInit(unittest.TestCase):
 
         cls.miner.get_fixing_commits()
         cls.miner.get_fixed_files()
-        cls.failure_prone_files = copy.deepcopy([file for file in cls.miner.label()])
+        cls.failure_prone_files = list(file for file in cls.miner.label())
 
     @classmethod
     def tearDownClass(cls):
