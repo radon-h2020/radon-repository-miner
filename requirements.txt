@@ -1,4 +1,4 @@
-ansiblemetrics~=0.3.12
+ansiblemetrics
 dataclasses~=0.6
 nltk~=3.5
 pandas~=1.1.4
