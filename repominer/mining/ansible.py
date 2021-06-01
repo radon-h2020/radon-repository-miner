@@ -53,9 +53,6 @@ class AnsibleMiner(BaseMiner):
             if i == len(commit.modified_files) and commit.hash in commits:
                 commits.remove(commit.hash)
 
-    def get_fixing_commit_classifier(self):
-        return AnsibleFixingCommitClassifier
-
     def ignore_file(self, path_to_file: str, content: str = None):
         """
         Ignore non-Ansible files.
