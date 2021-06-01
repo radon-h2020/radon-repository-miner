@@ -81,7 +81,7 @@ class AnsibleFixingCommitClassifier(FixingCommitClassifier):
     """ This class extends a FixingCommitClassifier to classify bug-fixing commits of Ansible files.
     """
 
-    def data_changed(self) -> bool:
+    def is_data_changed(self) -> bool:
         for modified_file in self.commit.modified_files:
             if modified_file.change_type != ModificationType.MODIFY or not filters.is_ansible_file(
                     modified_file.new_path):
@@ -103,7 +103,7 @@ class AnsibleFixingCommitClassifier(FixingCommitClassifier):
 
         return False
 
-    def include_changed(self) -> bool:
+    def is_include_changed(self) -> bool:
         for modified_file in self.commit.modified_files:
             if modified_file.change_type != ModificationType.MODIFY or not filters.is_ansible_file(
                     modified_file.new_path):
@@ -120,6 +120,12 @@ class AnsibleFixingCommitClassifier(FixingCommitClassifier):
                     'include', 'include_role', 'include_tasks', 'include_vars', 'import_playbook', 'import_tasks',
                     'import_role')]
 
+                if self.commit.hash == '859185c33e97d053e3bc61020ddc7ee51cb19fd8':
+                    print(includes_before)
+                    print('-'*100)
+                    print(includes_current)
+                    print(includes_before != includes_current)
+
                 return includes_before != includes_current
 
             except yaml.YAMLError:
@@ -127,7 +133,7 @@ class AnsibleFixingCommitClassifier(FixingCommitClassifier):
 
         return False
 
-    def service_changed(self) -> bool:
+    def is_service_changed(self) -> bool:
         for modified_file in self.commit.modified_files:
             if modified_file.change_type != ModificationType.MODIFY or not filters.is_ansible_file(
                     modified_file.new_path):

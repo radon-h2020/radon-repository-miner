@@ -494,7 +494,7 @@ class FixingCommitClassifier:
 
             self.sentences.append(tokens)
 
-    def comment_changed(self) -> bool:
+    def is_comment_changed(self) -> bool:
         """
         Return True if the commit fixes a comment.
 
@@ -515,13 +515,13 @@ class FixingCommitClassifier:
 
         return False
 
-    def data_changed(self) -> bool:
+    def is_data_changed(self) -> bool:
         return False
 
-    def include_changed(self) -> bool:
+    def is_include_changed(self) -> bool:
         return False
 
-    def service_changed(self) -> bool:
+    def is_service_changed(self) -> bool:
         return False
 
     def fixes_conditional(self):
@@ -553,8 +553,6 @@ class FixingCommitClassifier:
 
         """
 
-        is_data_changed = self.data_changed()
-
         for sentence in self.sentences:
             sentence = ' '.join(sentence)
             sentence_dep = ' '.join(utils.get_head_dependents(sentence))
@@ -565,7 +563,7 @@ class FixingCommitClassifier:
                          or rules.has_network_configuration_pattern(sentence_dep)
                          or rules.has_user_configuration_pattern(sentence_dep)
                          or rules.has_cache_configuration_pattern(sentence_dep)
-                         or is_data_changed):
+                         or self.is_data_changed()):
                 return True
 
         return False
@@ -581,13 +579,12 @@ class FixingCommitClassifier:
             True if the commit fixes a dependency. False, otherwise.
 
         """
-        is_include_changed = self.include_changed()
 
         for sentence in self.sentences:
             sentence = ' '.join(sentence)
             sentence_dep = ' '.join(utils.get_head_dependents(sentence))
             if rules.has_defect_pattern(sentence) and (
-                    rules.has_dependency_pattern(sentence_dep) or is_include_changed):
+                    rules.has_dependency_pattern(sentence_dep) or self.is_include_changed()):
                 return True
 
         return False
@@ -603,13 +600,11 @@ class FixingCommitClassifier:
 
         """
 
-        is_comment_changed = self.comment_changed()
-
         for sentence in self.sentences:
             sentence = ' '.join(sentence)
             sentence_dep = ' '.join(utils.get_head_dependents(sentence))
             if rules.has_defect_pattern(sentence) and (
-                    rules.has_documentation_pattern(sentence_dep) or is_comment_changed):
+                    rules.has_documentation_pattern(sentence_dep) or self.is_comment_changed()):
                 return True
 
         return False
@@ -663,12 +658,10 @@ class FixingCommitClassifier:
 
         """
 
-        is_service_changed = self.service_changed()
-
         for sentence in self.sentences:
             sentence = ' '.join(sentence)
             sentence_dep = ' '.join(utils.get_head_dependents(sentence))
-            if rules.has_defect_pattern(sentence) and (rules.has_service_pattern(sentence_dep) or is_service_changed):
+            if rules.has_defect_pattern(sentence) and (rules.has_service_pattern(sentence_dep) or self.is_service_changed()):
                 return True
 
         return False
