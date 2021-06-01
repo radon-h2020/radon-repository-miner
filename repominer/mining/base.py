@@ -147,8 +147,12 @@ class BaseMiner:
 
         """
 
-        match = full_name_pattern.search(url_to_repo.replace('.git', ''))
-        self.repository = match.groups()[1]
+        full_name_match = full_name_pattern.search(url_to_repo.replace('.git', ''))
+
+        if not clone_repo_to:
+            clone_repo_to = os.getenv('TMP_REPOSITORIES_DIR')
+
+        self.path_to_repo = os.path.join(clone_repo_to, full_name_match.groups()[1].split('/')[1])
         self.branch = branch
 
         self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
@@ -156,18 +160,14 @@ class BaseMiner:
         self.fixing_commits = list()
         self.fixed_files = list()
 
-        if not clone_repo_to:
-            clone_repo_to = os.getenv('TMP_REPOSITORIES_DIR')
-
-        self.path_to_repo = os.path.join(clone_repo_to, self.repository.split('/')[1])
-
         # Get all the repository commits sorted by commit date
         self.commit_hashes = [c.hash for c in
                               Repository(
                                   path_to_repo=self.path_to_repo if os.path.isdir(self.path_to_repo) else url_to_repo,
                                   clone_repo_to=clone_repo_to,
                                   only_in_branch=self.branch,
-                                  order='date-order').traverse_commits()]
+                                  order='date-order',
+                                  num_workers=1).traverse_commits()]
 
         self.FixingCommitClassifier = FixingCommitClassifier
 
@@ -213,7 +213,7 @@ class BaseMiner:
         commits_labels = {}
         commits = []
 
-        for commit in Repository(self.path_to_repo, only_in_branch=self.branch).traverse_commits():
+        for commit in Repository(self.path_to_repo, only_in_branch=self.branch, num_workers=8).traverse_commits():
 
             if (commit.hash in self.exclude_commits) or (commit.hash in self.fixing_commits):
                 continue
@@ -286,15 +286,15 @@ class BaseMiner:
         git_repo = Git(self.path_to_repo)
 
         if len(self.fixing_commits) == 1:
-            repository_mining = Repository(self.path_to_repo,
-                                           single=self.fixing_commits[0],
-                                           only_in_branch=self.branch)
+            repository_mining = Repository(self.path_to_repo, single=self.fixing_commits[0], only_in_branch=self.branch,
+                                           num_workers=8)
         else:
             repository_mining = Repository(self.path_to_repo,
                                            from_commit=self.fixing_commits[-1],  # Last fixing-commit by date
                                            to_commit=self.fixing_commits[0],  # First fixing-commit by date
                                            order='reverse',
-                                           only_in_branch=self.branch)
+                                           only_in_branch=self.branch,
+                                           num_workers=8)
 
         # Traverse commits from the latest to the first fixing-commit
         for commit in repository_mining.traverse_commits():
@@ -406,10 +406,8 @@ class BaseMiner:
 
         self.sort_commits(self.fixing_commits)
 
-        for commit in Repository(self.path_to_repo,
-                                 from_commit=self.fixing_commits[-1],
-                                 to_commit=self.commit_hashes[0],
-                                 order='reverse').traverse_commits():
+        for commit in Repository(self.path_to_repo, from_commit=self.fixing_commits[-1], to_commit=self.commit_hashes[0],
+                                 order='reverse', num_workers=8).traverse_commits():
 
             for files in labeling.values():
                 for file in files:

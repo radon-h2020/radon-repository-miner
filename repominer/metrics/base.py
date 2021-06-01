@@ -106,7 +106,7 @@ class BaseMetricsExtractor:
             self.path_to_repo = path_to_repo
             self.repo_miner = Repository(path_to_repo=path_to_repo,
                                          only_releases=True if at == 'release' else False,
-                                         order='date-order')
+                                         order='date-order', num_workers=8)
         elif is_remote(path_to_repo):
             match = full_name_pattern.search(path_to_repo.replace('.git', ''))
             repo_name = match.groups()[1].split('/')[1]
@@ -120,7 +120,7 @@ class BaseMetricsExtractor:
             self.repo_miner = Repository(path_to_repo=path_to_repo,
                                          clone_repo_to=clone_repo_to if not os.path.isdir(path_to_clone) else None,
                                          only_releases=True if at == 'release' else False,
-                                         order='date-order')
+                                         order='date-order', num_workers=8)
 
         else:
             raise ValueError(f'{path_to_repo} does not seem a path or url to a Git repository.')
@@ -230,7 +230,7 @@ class BaseMetricsExtractor:
 
         metrics_previous_release = dict()  # Values for iac metrics in the last release
 
-        for commit in Repository(self.path_to_repo, order='date-order').traverse_commits():
+        for commit in Repository(self.path_to_repo, order='date-order', num_workers=8).traverse_commits():
 
             # To handle renaming in metrics_previous_release
             for modified_file in commit.modified_files:
