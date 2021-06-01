@@ -147,6 +147,13 @@ class BaseMiner:
         """
 
         full_name_match = full_name_pattern.search(url_to_repo.replace('.git', ''))
+
+        if not full_name_match:
+            raise ValueError('Insert a valid Git URL. For example: https://github.com/radon-h2020/radon-repository-miner.git')
+
+        if not os.path.isdir(clone_repo_to):
+            raise FileNotFoundError(f'{clone_repo_to} does not exist.')
+
         self.path_to_repo = os.path.join(clone_repo_to, full_name_match.groups()[1].split('/')[1])
         self.branch = branch
 
