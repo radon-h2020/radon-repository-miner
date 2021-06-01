@@ -15,15 +15,14 @@ class AnsibleMinerTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.path_to_tmp_dir = os.path.join(os.getcwd(), 'test_data', 'tmp')
         os.mkdir(cls.path_to_tmp_dir)
-        os.environ["TMP_REPOSITORIES_DIR"] = cls.path_to_tmp_dir
 
         cls.repo_miner = AnsibleMiner(url_to_repo='https://github.com/adriagalin/ansible.motd.git',
-                                      branch='master')
+                                      branch='master',
+                                      clone_repo_to=cls.path_to_tmp_dir)
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.path_to_tmp_dir)
-        del os.environ["TMP_REPOSITORIES_DIR"]
 
     def setUp(self) -> None:
         self.repo_miner.fixing_commits = list()

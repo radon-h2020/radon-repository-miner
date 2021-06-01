@@ -5,7 +5,7 @@ import re
 from typing import Dict, Generator, List, Set
 
 from pydriller.domain.commit import Commit, ModificationType
-from pydriller.repository_mining import GitRepository, RepositoryMining
+from pydriller.repository import Git, Repository
 
 from repominer import utils
 from repominer.files import FixedFile, FailureProneFile
@@ -57,6 +57,10 @@ class BaseMiner:
         branch : str
             the branch to analyze. Default 'master'
 
+        clone_repo_to : str
+            Path to clone the repository to. If None is passed, it is taken from the environment
+            variable TMP_REPOSITORIES_DIR
+
 
         Attributes
         ----------
@@ -66,10 +70,6 @@ class BaseMiner:
 
         branch : str
             Repository's branch to analyze.
-
-        clone_repo_to : str
-            Path to clone the repository to. If None is passed, it is taken from the environment
-            variable TMP_REPOSITORIES_DIR
 
         commit_hashes : List[str]
             List of commit hash on the repository's branch, ordered by creation date.
@@ -168,7 +168,7 @@ class BaseMiner:
 
         # Get all the repository commits sorted by commit date
         self.commit_hashes = [c.hash for c in
-                              RepositoryMining(
+                              Repository(
                                   path_to_repo=self.path_to_repo if os.path.isdir(self.path_to_repo) else url_to_repo,
                                   clone_repo_to=clone_repo_to,
                                   only_in_branch=self.branch,
@@ -218,7 +218,7 @@ class BaseMiner:
         commits_labels = {}
         commits = []
 
-        for commit in RepositoryMining(self.path_to_repo, only_in_branch=self.branch).traverse_commits():
+        for commit in Repository(self.path_to_repo, only_in_branch=self.branch).traverse_commits():
 
             if (commit.hash in self.exclude_commits) or (commit.hash in self.fixing_commits):
                 continue
@@ -288,23 +288,23 @@ class BaseMiner:
 
         self.fixed_files = list()
         renamed_files = dict()
-        git_repo = GitRepository(self.path_to_repo)
+        git_repo = Git(self.path_to_repo)
 
         if len(self.fixing_commits) == 1:
-            repository_mining = RepositoryMining(self.path_to_repo,
-                                                 single=self.fixing_commits[0],
-                                                 only_in_branch=self.branch)
+            repository_mining = Repository(self.path_to_repo,
+                                           single=self.fixing_commits[0],
+                                           only_in_branch=self.branch)
         else:
-            repository_mining = RepositoryMining(self.path_to_repo,
-                                                 from_commit=self.fixing_commits[-1],  # Last fixing-commit by date
-                                                 to_commit=self.fixing_commits[0],  # First fixing-commit by date
-                                                 order='reverse',
-                                                 only_in_branch=self.branch)
+            repository_mining = Repository(self.path_to_repo,
+                                           from_commit=self.fixing_commits[-1],  # Last fixing-commit by date
+                                           to_commit=self.fixing_commits[0],  # First fixing-commit by date
+                                           order='reverse',
+                                           only_in_branch=self.branch)
 
         # Traverse commits from the latest to the first fixing-commit
         for commit in repository_mining.traverse_commits():
 
-            for modified_file in commit.modifications:
+            for modified_file in commit.modified_files:
 
                 # Not interested in ADDED and DELETED files
                 if modified_file.change_type not in (ModificationType.MODIFY, ModificationType.RENAME):
@@ -411,10 +411,10 @@ class BaseMiner:
 
         self.sort_commits(self.fixing_commits)
 
-        for commit in RepositoryMining(self.path_to_repo,
-                                       from_commit=self.fixing_commits[-1],
-                                       to_commit=self.commit_hashes[0],
-                                       order='reverse').traverse_commits():
+        for commit in Repository(self.path_to_repo,
+                                 from_commit=self.fixing_commits[-1],
+                                 to_commit=self.commit_hashes[0],
+                                 order='reverse').traverse_commits():
 
             for files in labeling.values():
                 for file in files:
@@ -433,7 +433,7 @@ class BaseMiner:
                             labeling[file.filepath].remove(file)
 
             # Handle file renaming
-            for modified_file in commit.modifications:
+            for modified_file in commit.modified_files:
                 filepath = modified_file.new_path
 
                 for file in list(labeling.get(filepath, list())):
@@ -485,7 +485,7 @@ class FixingCommitClassifier:
         """
 
         if commit is None:
-            raise TypeError('Expected a pydriller.domain.commit.Commit object, not None.')
+            raise TypeError('Expected a pydriller.domain.commit.Commit object.')
 
         self.commit = commit
         self.sentences = []  # will be list of tokens list
@@ -509,7 +509,7 @@ class FixingCommitClassifier:
             True if the commit modifies a comment
 
         """
-        for modification in self.commit.modifications:
+        for modification in self.commit.modified_files:
             if modification.change_type != ModificationType.MODIFY:
                 continue
 

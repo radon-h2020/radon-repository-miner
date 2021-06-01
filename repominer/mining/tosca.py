@@ -1,4 +1,4 @@
-from pydriller.repository_mining import RepositoryMining
+from pydriller.repository import Repository
 from pydriller.domain.commit import ModificationType
 
 from typing import List
@@ -26,13 +26,14 @@ class ToscaMiner(BaseMiner):
         # get a sorted list of commits in ascending order of date
         self.sort_commits(commits)
 
-        for commit in RepositoryMining(self.path_to_repo,
-                                       from_commit=commits[0],  # first commit in commits
-                                       to_commit=commits[-1],  # last commit in commits
-                                       only_in_branch=self.branch).traverse_commits():
+        for commit in Repository(self.path_to_repo,
+                                 from_commit=commits[0],  # first commit in commits
+                                 to_commit=commits[-1],  # last commit in commits
+                                 only_in_branch=self.branch).traverse_commits():
 
             # if none of the modified files is a TOSCA file, then discard the commit
-            if not any(modified_file.change_type == ModificationType.MODIFY and filters.is_tosca_file(modified_file.new_path, modified_file.source_code) for modified_file in commit.modifications):
+            if not any(modified_file.change_type == ModificationType.MODIFY and filters.is_tosca_file(modified_file.new_path, modified_file.source_code)
+                       for modified_file in commit.modified_files):
                 if commit.hash in commits:
                     commits.remove(commit.hash)
 

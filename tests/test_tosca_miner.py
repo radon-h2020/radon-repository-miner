@@ -15,14 +15,14 @@ class ToscaMinerTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.path_to_tmp_dir = os.path.join(os.getcwd(), 'test_data', 'tmp')
         os.mkdir(cls.path_to_tmp_dir)
-        os.environ["TMP_REPOSITORIES_DIR"] = cls.path_to_tmp_dir
 
-        cls.repo_miner = ToscaMiner(url_to_repo='https://github.com/UoW-CPC/COLARepo.git', branch='master')
+        cls.repo_miner = ToscaMiner(url_to_repo='https://github.com/UoW-CPC/COLARepo.git',
+                                    branch='master',
+                                    clone_repo_to=cls.path_to_tmp_dir)
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.path_to_tmp_dir)
-        del os.environ["TMP_REPOSITORIES_DIR"]
 
     def setUp(self) -> None:
         self.repo_miner.fixing_commits = []  # reset list of fixing-commits
