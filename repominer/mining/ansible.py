@@ -16,8 +16,8 @@ class AnsibleMiner(BaseMiner):
     """ This class extends BaseMiner to mine Ansible-based repositories
     """
 
-    def __init__(self, url_to_repo: str, branch: str = 'master', clone_repo_to: str = None):
-        super(self.__class__, self).__init__(url_to_repo, branch, clone_repo_to)
+    def __init__(self, url_to_repo: str, clone_repo_to: str, branch: str = 'master'):
+        super(self.__class__, self).__init__(url_to_repo, clone_repo_to, branch)
         self.FixingCommitClassifier = AnsibleFixingCommitClassifier
 
     def discard_undesired_fixing_commits(self, commits: List[str]):
