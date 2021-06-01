@@ -17,15 +17,22 @@ class ExtractMetricsTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.path_to_tmp_dir = os.path.join(os.getcwd(), 'test_data', 'tmp')
         os.mkdir(cls.path_to_tmp_dir)
-        os.environ["TMP_REPOSITORIES_DIR"] = cls.path_to_tmp_dir
 
         path_to_ansible_repo = os.path.join(os.getcwd(), 'test_data', 'repositories', 'ansible.motd')
         path_to_tosca_repo = os.path.join(os.getcwd(), 'test_data', 'repositories', 'COLARepo')
         path_to_remote_ansible_repo = 'https://github.com/adriagalin/ansible.motd.git'
 
-        cls.ansible_extractor = AnsibleMetricsExtractor(path_to_repo=path_to_ansible_repo, at='release')
-        cls.tosca_extractor = ToscaMetricsExtractor(path_to_repo=path_to_tosca_repo, at='release')
-        cls.remote_ansible_extractor = AnsibleMetricsExtractor(path_to_repo=path_to_remote_ansible_repo, at='release')
+        cls.ansible_extractor = AnsibleMetricsExtractor(path_to_repo=path_to_ansible_repo,
+                                                        at='release',
+                                                        clone_repo_to=cls.path_to_tmp_dir)
+
+        cls.tosca_extractor = ToscaMetricsExtractor(path_to_repo=path_to_tosca_repo,
+                                                    at='release',
+                                                    clone_repo_to=cls.path_to_tmp_dir)
+
+        cls.remote_ansible_extractor = AnsibleMetricsExtractor(path_to_repo=path_to_remote_ansible_repo,
+                                                               at='release',
+                                                               clone_repo_to=cls.path_to_tmp_dir)
 
         with open(os.path.join(PATH_TO_TEST_DATA, 'ansible_report.json')) as f:
             cls.ansible_labeled_files = json.load(f, cls=FailureProneFileDecoder)
@@ -36,10 +43,11 @@ class ExtractMetricsTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.path_to_tmp_dir)
-        del os.environ["TMP_REPOSITORIES_DIR"]
 
     def test_ansible_extract(self):
-        self.ansible_extractor.extract(labeled_files=self.ansible_labeled_files, product=True, process=True,
+        self.ansible_extractor.extract(labeled_files=self.ansible_labeled_files,
+                                       product=True,
+                                       process=True,
                                        delta=False)
 
         assert 'filepath' in self.ansible_extractor.dataset.columns
@@ -60,7 +68,9 @@ class ExtractMetricsTestCase(unittest.TestCase):
         assert self.tosca_extractor.dataset.shape[1] == 27
 
     def test_remote_ansible_extract(self):
-        self.remote_ansible_extractor.extract(labeled_files=self.ansible_labeled_files, product=True, process=True,
+        self.remote_ansible_extractor.extract(labeled_files=self.ansible_labeled_files,
+                                              product=True,
+                                              process=True,
                                               delta=False)
 
         assert 'filepath' in self.ansible_extractor.dataset.columns

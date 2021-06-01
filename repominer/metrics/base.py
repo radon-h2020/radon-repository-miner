@@ -3,8 +3,8 @@ import pandas as pd
 import re
 
 from typing import List
-from pydriller.git_repository import GitRepository
-from pydriller.repository_mining import RepositoryMining
+from pydriller.git import Git
+from pydriller.repository import Repository
 from pydriller.metrics.process.change_set import ChangeSet
 from pydriller.metrics.process.code_churn import CodeChurn
 from pydriller.metrics.process.commits_count import CommitsCount
@@ -104,9 +104,9 @@ class BaseMetricsExtractor:
 
         if os.path.isdir(path_to_repo):
             self.path_to_repo = path_to_repo
-            self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
-                                               only_releases=True if at == 'release' else False,
-                                               order='date-order')
+            self.repo_miner = Repository(path_to_repo=path_to_repo,
+                                         only_releases=True if at == 'release' else False,
+                                         order='date-order')
         elif is_remote(path_to_repo):
             match = full_name_pattern.search(path_to_repo.replace('.git', ''))
             repo_name = match.groups()[1].split('/')[1]
@@ -117,10 +117,10 @@ class BaseMetricsExtractor:
             path_to_clone = os.path.join(clone_repo_to, repo_name)
             self.path_to_repo = path_to_clone
 
-            self.repo_miner = RepositoryMining(path_to_repo=path_to_repo,
-                                               clone_repo_to=clone_repo_to if not os.path.isdir(path_to_clone) else None,
-                                               only_releases=True if at == 'release' else False,
-                                               order='date-order')
+            self.repo_miner = Repository(path_to_repo=path_to_repo,
+                                         clone_repo_to=clone_repo_to if not os.path.isdir(path_to_clone) else None,
+                                         only_releases=True if at == 'release' else False,
+                                         order='date-order')
 
         else:
             raise ValueError(f'{path_to_repo} does not seem a path or url to a Git repository.')
@@ -181,7 +181,7 @@ class BaseMetricsExtractor:
 
         """
         change_set = ChangeSet(self.path_to_repo, from_commit=from_commit, to_commit=to_commit)
-        code_churn = CodeChurn(self.path_to_repo, from_commit=from_commit, to_commit=to_commit)
+        code_churn = CodeChurn(self.path_to_repo, from_commit=from_commit, to_commit=to_commit, ignore_added_files=True)
         commits_count = CommitsCount(self.path_to_repo, from_commit=from_commit, to_commit=to_commit)
         contributors_count = ContributorsCount(self.path_to_repo, from_commit=from_commit, to_commit=to_commit)
         highest_contributors_experience = ContributorsExperience(self.path_to_repo, from_commit=from_commit,
@@ -226,14 +226,14 @@ class BaseMetricsExtractor:
             Whether to extract delta metrics between two successive releases (or commits).
 
         """
-        git_repo = GitRepository(self.path_to_repo)
+        git_repo = Git(self.path_to_repo)
 
         metrics_previous_release = dict()  # Values for iac metrics in the last release
 
-        for commit in RepositoryMining(self.path_to_repo, order='date-order').traverse_commits():
+        for commit in Repository(self.path_to_repo, order='date-order').traverse_commits():
 
             # To handle renaming in metrics_previous_release
-            for modified_file in commit.modifications:
+            for modified_file in commit.modified_files:
 
                 old_path = modified_file.old_path
                 new_path = modified_file.new_path
