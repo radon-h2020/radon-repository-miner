@@ -147,7 +147,6 @@ class BaseMiner:
         """
 
         full_name_match = full_name_pattern.search(url_to_repo.replace('.git', ''))
-
         self.path_to_repo = os.path.join(clone_repo_to, full_name_match.groups()[1].split('/')[1])
         self.branch = branch
 
