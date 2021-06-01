@@ -59,5 +59,3 @@ def has_service_pattern(text: str) -> bool:
 def has_syntax_pattern(text: str) -> bool:
     string_pattern = ['compil', 'lint', 'warn', 'typo', 'spell', 'indent', 'regex', 'variabl', 'whitespac']
     return any(word in text.lower() for word in string_pattern)
-
-

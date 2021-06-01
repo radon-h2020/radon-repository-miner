@@ -175,7 +175,7 @@ class MinerCLI:
         self.args = args
 
         if not hasattr(args, 'host') or args.host not in ('github', 'gitlab'):
-            print(f'Please, select github or gitlab')
+            print('Please, select github or gitlab')
             exit(1)
         elif args.host == 'github':
             url_to_repo = f'https://github.com/{args.repository}'
@@ -183,7 +183,7 @@ class MinerCLI:
             url_to_repo = f'https://gitlab.com/{args.repository}'
 
         if not hasattr(args, 'language') or args.language not in ('ansible', 'tosca'):
-            print(f'Please, select ansible or tosca')
+            print('Please, select ansible or tosca')
             exit(2)
         elif args.language == 'ansible':
             self.miner = AnsibleMiner(url_to_repo=url_to_repo, branch=args.branch if hasattr(args, 'branch') else None)
@@ -235,7 +235,7 @@ class MinerCLI:
 
     def mine_fixed_files(self):
 
-        if hasattr(self.args, 'exclude_files') and  self.args.exclude_files:
+        if hasattr(self.args, 'exclude_files') and self.args.exclude_files:
             with open(self.args.exclude_files, 'r') as f:
                 files = json.load(f, cls=FixedFileDecoder)
                 self.miner.exclude_fixed_files = files

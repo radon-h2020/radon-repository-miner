@@ -2,7 +2,7 @@ import os
 import nltk
 import re
 
-from typing import Dict, Generator, List, Set
+from typing import Dict, Generator, List
 
 from pydriller.domain.commit import Commit, ModificationType
 from pydriller.repository import Git, Repository
@@ -23,22 +23,17 @@ except LookupError:
     nltk.download('stopwords')
 
 # Constants
-BUG_RELATED_LABELS = {'bug', 'Bug', 'bug :bug:', 'Bug - Medium', 'Bug - Low', 'Bug - Critical', 'ansible_bug',
-                      'Type: Bug', 'Type: bug', 'Type/Bug', 'type: bug 🐛', 'type:bug', 'type: bug', 'type/bug',
-                      'kind/bug', 'kind/bugs', 'bug/bugfix', 'bugfix', 'critical-bug', '01 type: bug', 'bug_report',
-                      'minor-bug'}
-
-FIXING_COMMITS_REGEX = r'(bug|fix|error|crash|problem|fail|defect|patch)'
-
 full_name_pattern = re.compile(r'(github|gitlab){1}\.com/([\w\W]+)$')
 
 
 class BaseMiner:
     """
-    This is the base class to miner a software repositories.
+    This is the base class to mine a software repository for:
 
-    It allows for mining bug-fixing commits, fixed files, and bug-introducing commits.
-    It can be extended to instantiate the miner in the context of specific languages (e.g., Ansible and Tosca).
+    * defect-fixing commits
+    * files fixed by defect-fixing commits (i.e., fixed-files)
+    * failure-prone files
+
     """
 
     def __init__(self,
@@ -509,12 +504,12 @@ class FixingCommitClassifier:
             True if the commit modifies a comment
 
         """
-        for modification in self.commit.modified_files:
-            if modification.change_type != ModificationType.MODIFY:
+        for modified_file in self.commit.modified_files:
+            if modified_file.change_type != ModificationType.MODIFY:
                 continue
 
-            diff = [line.strip() for _, line in modification.diff_parsed.get('added', {})]
-            diff.extend([line.strip() for _, line in modification.diff_parsed.get('deleted', {})])
+            diff = [line.strip() for _, line in modified_file.diff_parsed.get('added', {})]
+            diff.extend([line.strip() for _, line in modified_file.diff_parsed.get('deleted', {})])
             if any(line.startswith('#') for line in diff):
                 return True
 
@@ -564,13 +559,13 @@ class FixingCommitClassifier:
             sentence = ' '.join(sentence)
             sentence_dep = ' '.join(utils.get_head_dependents(sentence))
 
-            if rules.has_defect_pattern(sentence) and \
-                    (rules.has_storage_configuration_pattern(sentence_dep)
-                     or rules.has_file_configuration_pattern(sentence_dep)
-                     or rules.has_network_configuration_pattern(sentence_dep)
-                     or rules.has_user_configuration_pattern(sentence_dep)
-                     or rules.has_cache_configuration_pattern(sentence_dep)
-                     or is_data_changed):
+            if rules.has_defect_pattern(sentence) \
+                    and (rules.has_storage_configuration_pattern(sentence_dep)
+                         or rules.has_file_configuration_pattern(sentence_dep)
+                         or rules.has_network_configuration_pattern(sentence_dep)
+                         or rules.has_user_configuration_pattern(sentence_dep)
+                         or rules.has_cache_configuration_pattern(sentence_dep)
+                         or is_data_changed):
                 return True
 
         return False

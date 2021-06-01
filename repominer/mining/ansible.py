@@ -75,13 +75,13 @@ class AnsibleFixingCommitClassifier(FixingCommitClassifier):
     """
 
     def data_changed(self) -> bool:
-        for modification in self.commit.modified_files:
-            if modification.change_type != ModificationType.MODIFY or not filters.is_ansible_file(modification.new_path):
+        for modified_file in self.commit.modified_files:
+            if modified_file.change_type != ModificationType.MODIFY or not filters.is_ansible_file(modified_file.new_path):
                 continue
 
             try:
-                source_code_before = yaml.safe_load(modification.source_code_before)
-                source_code_current = yaml.safe_load(modification.source_code)
+                source_code_before = yaml.safe_load(modified_file.source_code_before)
+                source_code_current = yaml.safe_load(modified_file.source_code)
 
                 data_before = [value for key, value in utils.key_value_list(source_code_before) if key in CONFIG_DATA_MODULES]
                 data_current = [value for key, value in utils.key_value_list(source_code_current) if key in CONFIG_DATA_MODULES]
@@ -94,14 +94,13 @@ class AnsibleFixingCommitClassifier(FixingCommitClassifier):
         return False
 
     def include_changed(self) -> bool:
-        for modification in self.commit.modified_files:
-            if modification.change_type != ModificationType.MODIFY or not filters.is_ansible_file(
-                    modification.new_path):
+        for modified_file in self.commit.modified_files:
+            if modified_file.change_type != ModificationType.MODIFY or not filters.is_ansible_file(modified_file.new_path):
                 continue
 
             try:
-                source_code_before = yaml.safe_load(modification.source_code_before)
-                source_code_current = yaml.safe_load(modification.source_code)
+                source_code_before = yaml.safe_load(modified_file.source_code_before)
+                source_code_current = yaml.safe_load(modified_file.source_code)
 
                 includes_before = [value for key, value in utils.key_value_list(source_code_before) if key in (
                     'include', 'include_role', 'include_tasks', 'include_vars', 'import_playbook', 'import_tasks',
@@ -118,18 +117,16 @@ class AnsibleFixingCommitClassifier(FixingCommitClassifier):
         return False
 
     def service_changed(self) -> bool:
-        for modification in self.commit.modified_files:
-            if modification.change_type != ModificationType.MODIFY or not filters.is_ansible_file(
-                    modification.new_path):
+        for modified_file in self.commit.modified_files:
+            if modified_file.change_type != ModificationType.MODIFY or not filters.is_ansible_file(modified_file.new_path):
                 continue
 
             try:
-                source_code_before = yaml.safe_load(modification.source_code_before)
-                source_code_current = yaml.safe_load(modification.source_code)
+                source_code_before = yaml.safe_load(modified_file.source_code_before)
+                source_code_current = yaml.safe_load(modified_file.source_code)
 
                 services_before = [value for key, value in utils.key_value_list(source_code_before) if key == 'service']
-                services_current = [value for key, value in utils.key_value_list(source_code_current) if
-                                    key == 'service']
+                services_current = [value for key, value in utils.key_value_list(source_code_current) if key == 'service']
 
                 return services_before != services_current
 
