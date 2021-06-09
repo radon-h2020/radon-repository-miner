@@ -58,14 +58,14 @@ class ExtractMetricsTestCase(unittest.TestCase):
         assert self.ansible_extractor.dataset.failure_prone.to_list().count(0) > 0
         assert self.ansible_extractor.dataset.failure_prone.to_list().count(1) > 1
 
-    def test_tosca_extract(self):
-        self.tosca_extractor.extract(self.tosca_labeled_files, product=True, process=True, delta=False)
+#     def test_tosca_extract(self):
+#         self.tosca_extractor.extract(self.tosca_labeled_files, product=True, process=True, delta=False)
 
-        assert 'filepath' in self.tosca_extractor.dataset.columns
-        assert 'commit' in self.tosca_extractor.dataset.columns
-        assert 'committed_at' in self.tosca_extractor.dataset.columns
-        assert 'failure_prone' in self.tosca_extractor.dataset.columns
-        assert self.tosca_extractor.dataset.shape[1] == 27
+#         assert 'filepath' in self.tosca_extractor.dataset.columns
+#         assert 'commit' in self.tosca_extractor.dataset.columns
+#         assert 'committed_at' in self.tosca_extractor.dataset.columns
+#         assert 'failure_prone' in self.tosca_extractor.dataset.columns
+#         assert self.tosca_extractor.dataset.shape[1] == 27
 
     def test_remote_ansible_extract(self):
         self.remote_ansible_extractor.extract(labeled_files=self.ansible_labeled_files,
