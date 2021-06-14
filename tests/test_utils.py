@@ -14,3 +14,11 @@ class UtilsTestSuite(unittest.TestCase):
     @staticmethod
     def test_get_dependents_empty():
         assert not utils.get_head_dependents('')
+
+    @staticmethod
+    def test_key_value_list_continue():
+        dict1 = {'key': None}
+        dict2 = {None: 'value'}
+
+        assert len(utils.key_value_list(dict1)) == 0
+        assert len(utils.key_value_list(dict2)) == 0
