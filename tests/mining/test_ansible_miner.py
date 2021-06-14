@@ -37,7 +37,8 @@ class AnsibleMinerInit(unittest.TestCase):
              '9cbfa528b26f1d222b1b7954eef41f55d2026f4b',
              '9cae22d8c88d04bd19e51623ed41e8805651aaed',
              'e14240d8ca0ffd3ca8f093f39111d048819ab909',
-             '755efda3359954588c8486272b17979b3a6512a2']  # Latest commit
+             '755efda3359954588c8486272b17979b3a6512a2',
+             'd07ed2f58c7cbabee89dbc60a62036f22c23394a']  # Latest commit
         )
 
     def test_discard_undesired_fixing_commits(self):
