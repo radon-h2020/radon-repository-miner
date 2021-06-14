@@ -1,3 +1,6 @@
+import re
+
+
 def is_ansible_file(path: str) -> bool:
     """
     Check whether the path is an Ansible file
@@ -17,6 +20,6 @@ def is_tosca_file(path: str, content: str = None) -> bool:
     :return: True if the path links to a TOSCA file. False, otherwise
     """
     if content:
-        return 'tosca_definitions_version' in content
+        return re.match(r'^tosca_definitions_version\s*:.+', content) is not None
 
     return path and ('test' not in path) and any(path.endswith(ext) for ext in ['.tosca', '.tosca.yaml', '.tosca.yml'])
