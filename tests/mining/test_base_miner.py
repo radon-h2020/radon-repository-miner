@@ -58,6 +58,34 @@ class TestBaseMiner(unittest.TestCase):
 
         self.assertFalse(miner.ignore_file(path_to_file=''))
 
+    def test_get_fixed_files_empty(self):
+        miner = BaseMiner(
+            url_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing.git',
+            clone_repo_to=os.path.join(os.getcwd(), 'test_data', 'tmp')
+        )
+
+        self.assertListEqual([], miner.get_fixed_files())
+
+    def test_get_fixed_files_with_one_commit(self):
+        """To test if branch in condition: if len(self.fixing_commits) == 1"""
+        miner = BaseMiner(
+            url_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing.git',
+            clone_repo_to=os.path.join(os.getcwd(), 'test_data', 'tmp')
+        )
+
+        miner.fixing_commits = ['3de3d8c2bbccf62ef5698cf33ad258aae5316432']
+        self.assertListEqual([], miner.get_fixed_files())
+
+    def test_get_fixed_files_with_more_than_one_commits(self):
+        """To test else branch in condition: if len(self.fixing_commits) == 1"""
+        miner = BaseMiner(
+            url_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing.git',
+            clone_repo_to=os.path.join(os.getcwd(), 'test_data', 'tmp')
+        )
+
+        miner.fixing_commits = ['3de3d8c2bbccf62ef5698cf33ad258aae5316432', 'c029d7520456e5468d66b56fe176146680520b20']
+        self.assertListEqual([], miner.get_fixed_files())
+
 
 if __name__ == '__main__':
     unittest.main()
