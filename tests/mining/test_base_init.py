@@ -4,15 +4,14 @@ import unittest
 
 from repominer.mining.base import BaseMiner
 
-class BaseMinerInit(unittest.TestCase):
 
+class BaseMinerInit(unittest.TestCase):
     path_to_tmp_dir = None
 
     @classmethod
     def setUpClass(cls):
         cls.path_to_tmp_dir = os.path.join(os.getcwd(), 'test_data', 'tmp')
         os.mkdir(cls.path_to_tmp_dir)
-
 
     @classmethod
     def tearDownClass(cls):

@@ -1,4 +1,3 @@
-import copy
 import unittest
 
 from repominer.mining.ansible import AnsibleFixingCommitClassifier
