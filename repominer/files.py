@@ -11,8 +11,6 @@ class FixedFileEncoder(json.JSONEncoder):
                 "bic": o.bic
             }
 
-        return json.JSONEncoder.default(self, o)
-
 
 class FixedFileDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
@@ -59,8 +57,6 @@ class FailureProneFileEncoder(json.JSONEncoder):
                 "commit": o.commit,
                 "fixing_commit": o.fixing_commit
             }
-
-        return json.JSONEncoder.default(self, o)
 
 
 class FailureProneFileDecoder(json.JSONDecoder):
