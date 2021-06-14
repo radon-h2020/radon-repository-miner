@@ -289,14 +289,14 @@ class BaseMiner:
 
         if len(self.fixing_commits) == 1:
             repository_mining = Repository(self.path_to_repo, single=self.fixing_commits[0], only_in_branch=self.branch,
-                                           num_workers=8)
+                                           num_workers=1)
         else:
             repository_mining = Repository(self.path_to_repo,
                                            from_commit=self.fixing_commits[-1],  # Last fixing-commit by date
                                            to_commit=self.fixing_commits[0],  # First fixing-commit by date
                                            order='reverse',
                                            only_in_branch=self.branch,
-                                           num_workers=8)
+                                           num_workers=1)
 
         # Traverse commits from the latest to the first fixing-commit
         for commit in repository_mining.traverse_commits():
@@ -409,7 +409,7 @@ class BaseMiner:
         self.sort_commits(self.fixing_commits)
 
         for commit in Repository(self.path_to_repo, from_commit=self.fixing_commits[-1], to_commit=self.commit_hashes[0],
-                                 order='reverse', num_workers=8).traverse_commits():
+                                 order='reverse', num_workers=1).traverse_commits():
 
             for files in labeling.values():
                 for file in files:
