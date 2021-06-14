@@ -3,6 +3,7 @@ import shutil
 import unittest
 
 from repominer.mining.base import BaseMiner
+from repominer.files import FixedFile
 
 
 class TestBaseMiner(unittest.TestCase):
@@ -85,6 +86,26 @@ class TestBaseMiner(unittest.TestCase):
 
         miner.fixing_commits = ['3de3d8c2bbccf62ef5698cf33ad258aae5316432', 'c029d7520456e5468d66b56fe176146680520b20']
         self.assertListEqual([], miner.get_fixed_files())
+
+    def test_label__return(self):
+        """To test the condition:
+            if not (self.fixing_commits or self.fixed_files):
+                return
+        """
+        miner = BaseMiner(
+            url_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing.git',
+            clone_repo_to=os.path.join(os.getcwd(), 'test_data', 'tmp')
+        )
+
+        miner.fixing_commits = ['3de3d8c2bbccf62ef5698cf33ad258aae5316432']
+        miner.fixed_files = []
+        for item in miner.label():
+            self.assertIsNone(item)
+
+        miner.fixing_commits = []
+        miner.fixed_files = [FixedFile(filepath='filepath', fic='', bic='')]
+        for item in miner.label():
+            self.assertIsNone(item)
 
 
 if __name__ == '__main__':

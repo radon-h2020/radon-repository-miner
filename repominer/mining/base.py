@@ -399,7 +399,7 @@ class BaseMiner:
 
         """
 
-        if not (self.fixing_commits or self.fixed_files):
+        if not (self.fixing_commits and self.fixed_files):
             return
 
         labeling = dict()
