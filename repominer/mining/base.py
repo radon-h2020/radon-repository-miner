@@ -39,7 +39,7 @@ class BaseMiner:
     def __init__(self,
                  url_to_repo: str,
                  clone_repo_to: str,
-                 branch: str = 'master'):
+                 branch: str = None):
         """
         The class constructor.
         Initialize a new BaseMiner.
