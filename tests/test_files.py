@@ -37,6 +37,14 @@ class TestFilesTestSuite(unittest.TestCase):
             "bic": ff1.bic
         }
 
+    def test_fixed_file_encoder_none(self):
+        """Pass a FailureProneFile instance instead of a FixedFile instance to FixedFileEncoder to test the instance is
+        correct
+        """
+        lf1 = FailureProneFile(filepath='file1.yml', commit='123', fixing_commit='456')
+        encoded = FixedFileEncoder().default(lf1)
+        assert encoded is None
+
     def test_fixed_file_decoder(self):
         ff1 = {
             "filepath": 'file1.yml',
@@ -46,6 +54,17 @@ class TestFilesTestSuite(unittest.TestCase):
 
         decoded = FixedFileDecoder().to_object(ff1)
         assert type(decoded) == FixedFile
+
+    def test_fixed_file_decoder_none(self):
+        """Pass a list to the FixedFileDecoder to test the input type is correct"""
+        ff1 = {
+            "filepath": 'file1.yml',
+            "fic": '123',
+            "bic": 'failure-prone'
+        }
+
+        decoded = FixedFileDecoder().to_object([ff1])
+        assert decoded is None
 
     # Tests for FailureProneFile class
 
@@ -82,6 +101,14 @@ class TestFilesTestSuite(unittest.TestCase):
             "fixing_commit": lf1.fixing_commit
         }
 
+    def test_failure_prone_file_encoder_none(self):
+        """Pass a FixedFile instance instead of a FailureProneFile instance to FailureProneFileEncoder to test the
+        instance is correct
+        """
+        ff1 = FixedFile(filepath='file2.yml', fic='123', bic='456')
+        encoded = FailureProneFileEncoder().default(ff1)
+        assert encoded is None
+
     def test_failure_prone_file_decoder(self):
         lf1 = {
             "filepath": 'file1.yml',
@@ -91,6 +118,17 @@ class TestFilesTestSuite(unittest.TestCase):
 
         decoded = FailureProneFileDecoder().to_object(lf1)
         assert type(decoded) == FailureProneFile
+
+    def test_failure_prone_file_decoder_none(self):
+        """Pass a list to the FailureProneFileDecoder to test the input type is correct"""
+        lf1 = {
+            "filepath": 'file1.yml',
+            "commit": '123',
+            "fixing_commit": 'failure-prone'
+        }
+
+        decoded = FailureProneFileDecoder().to_object([lf1])
+        assert decoded is None
 
 
 if __name__ == '__main__':
