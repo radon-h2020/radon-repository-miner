@@ -68,35 +68,6 @@ class BaseMiner:
         commit_hashes : List[str]
             List of commit hash on the repository's branch, ordered by creation date.
 
-        exclude_fixed_files : List[str]
-            Set of fixed files to exclude from mining.
-            Fixed files are files modified in a bug-fixing commit.
-
-            When fixing a bug, several files might be modified but not all of them contributed to fix the bug.
-            For example, someone could fix a bug in a file, and at the same time modify another file not involved
-            in the fix, such as a README.md.
-
-            If you are certain that some files in a give commit are not involved in fixing bugs, you can tell the miner
-            to ignore them as follow:
-
-            Example
-            -------
-            .. highlight:: python
-            .. code-block:: python
-
-                from repominer.files import FixedFile
-                from repominer.mining.base import BaseMiner
-
-                miner = BaseMiner('https://github.com/radon-h2020/radon-repository-miner')
-                miner.exclude_fixed_files = [
-                    FixedFile(filepath='CHANGELOG.md',
-                              fic='f350e05696db1c5f78320483e0e44e7aea410449',
-                              bic=None),
-                    FixedFile(filepath='repominer/cli.py',
-                              fic='f350e05696db1c5f78320483e0e44e7aea410449',
-                              bic=None)
-                ]
-
         fixing_commits : List[str]
             List of bug-fixing commit hashes.
 
@@ -141,7 +112,6 @@ class BaseMiner:
         self.path_to_repo = os.path.join(clone_repo_to, full_name_match.groups()[1].split('/')[1])
         self.branch = branch
 
-        self.exclude_fixed_files = list()  # This is to set up files in fixing-commits known to be false-positive
         self.fixing_commits = list()
         self.fixed_files = list()
 
@@ -287,11 +257,12 @@ class BaseMiner:
                 # If RENAMED then handle renaming
                 if modified_file.change_type == ModificationType.RENAME:
 
-                    if modified_file.new_path in renamed_files:
-                        renamed_files[modified_file.old_path] = renamed_files[modified_file.new_path]
-
-                    elif commit.hash in self.fixing_commits:
-                        renamed_files[modified_file.old_path] = modified_file.new_path
+                    # if modified_file.new_path in renamed_files:
+                    #     renamed_files[modified_file.old_path] = renamed_files[modified_file.new_path]
+                    # else:
+                    renamed_files[modified_file.old_path] = renamed_files.get(modified_file.new_path, modified_file.new_path)
+                    # elif commit.hash in self.fixing_commits:
+                    #     renamed_files[modified_file.old_path] = modified_file.new_path
 
                 # This is to ensure that renamed files are tracked. Then, if the commit is not a fixing-commit then
                 # go to the next (previous commit in chronological order)
@@ -300,10 +271,6 @@ class BaseMiner:
 
                 # Not interested in type of files
                 if self.ignore_file(modified_file.new_path, modified_file.source_code):
-                    continue
-
-                if any(file.filepath == modified_file.new_path and file.fic == commit.hash for file in
-                       self.exclude_fixed_files):
                     continue
 
                 # Identify bug-inducing commits. Dict[modified_file, Set[commit_hashes]]
@@ -330,6 +297,8 @@ class BaseMiner:
                     # Else it means the current fix is between the existing fix bic and fic.
                     # If the current BIC is older than the existing bic, then update the bic.
                     if self.commit_hashes.index(current_fix.fic) < self.commit_hashes.index(existing_fix.bic):
+                        del renamed_files[modified_file.new_path]
+                        current_fix.filepath = modified_file.new_path
                         self.fixed_files.append(current_fix)
                     elif self.commit_hashes.index(current_fix.bic) < self.commit_hashes.index(existing_fix.bic):
                         existing_fix.bic = current_fix.bic

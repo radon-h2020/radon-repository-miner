@@ -49,7 +49,11 @@ class AnsibleMinerInit(unittest.TestCase):
              '92b9975e1b4449b9ea8f1be5e401fdd99a37b576',
              '4428cdf62d124df67fa87c29ace3db6906504ea4',
              'ba54ae7f42cfd11e0e1b61bb1de175052d53742b',
-             '64f813de2a78fd17d898072a0d118234c1235fad']  # Latest commit
+             '64f813de2a78fd17d898072a0d118234c1235fad',
+             'fa1523351a14b6f0543cd49a131ed8aaed594fdb',
+             '83595c66d71c54b7c20f85522055386eb4b42b6e',
+             '68195f290a09d119d2e334ed6a8add79ecf2ce5b'
+             ]  # Latest commit
         )
 
     def test_discard_undesired_fixing_commits(self):
@@ -101,6 +105,8 @@ class AnsibleMinerInit(unittest.TestCase):
             '73377dbdd160cc69898caa0e97975f12172bba41',
             '07d2c6720718e498598e64f24a14b992b29bdf61',
             '4428cdf62d124df67fa87c29ace3db6906504ea4',
+            'fa1523351a14b6f0543cd49a131ed8aaed594fdb',
+            '68195f290a09d119d2e334ed6a8add79ecf2ce5b',
         ])
 
         self.assertDictEqual(
@@ -112,29 +118,41 @@ class AnsibleMinerInit(unittest.TestCase):
                 '73377dbdd160cc69898caa0e97975f12172bba41': ['CONFIGURATION_DATA', 'SYNTAX'],
                 '07d2c6720718e498598e64f24a14b992b29bdf61': ['CONFIGURATION_DATA'],
                 '4428cdf62d124df67fa87c29ace3db6906504ea4': ['IDEMPOTENCY'],
+                'fa1523351a14b6f0543cd49a131ed8aaed594fdb': ['IDEMPOTENCY'],
+                '68195f290a09d119d2e334ed6a8add79ecf2ce5b': ['IDEMPOTENCY', 'SYNTAX']
             }
         )
         # Do sth with commit_labels
 
-    # def test_get_fixed_files(self):
-    #
-    #     self.miner.get_fixing_commits()
-    #     self.miner.get_fixed_files()
-    #
-    #     fixed_file = FixedFile(filepath='tasks/task1.yml',
-    #                            fic='755efda3359954588c8486272b17979b3a6512a2',
-    #                            bic='9cae22d8c88d04bd19e51623ed41e8805651aaed')
-    #
-    #
-    #     # fixed_file = FixedFile(filepath='tasks/task2.yml',
-    #     #                        fic='',
-    #     #                        bic='e5b2e85fb4e9c761cfe0c92b7f09ae95526a0e08')
-    #     #
-    #     # fixed_file = FixedFile(filepath='tasks/task2.yml',
-    #     #                        fic='',
-    #     #                        bic='')
-    #
-    #     self.assertEqual(self.miner.fixed_files, [fixed_file])
+    def test_get_fixed_files(self):
+
+        self.miner.fixing_commits = [
+            '755efda3359954588c8486272b17979b3a6512a2',
+            'e7df3e45e2e27a0dc16806a834b50d0856d350fe',
+            '70257245257cd899b6f26870e8db11f5b66a4676',
+            '73377dbdd160cc69898caa0e97975f12172bba41',
+            '07d2c6720718e498598e64f24a14b992b29bdf61',
+            '4428cdf62d124df67fa87c29ace3db6906504ea4',
+            '64f813de2a78fd17d898072a0d118234c1235fad', # To test branch that check ignore_file()
+            'fa1523351a14b6f0543cd49a131ed8aaed594fdb',
+            '68195f290a09d119d2e334ed6a8add79ecf2ce5b'
+        ]
+
+        self.miner.get_fixed_files()
+
+        ff1 = FixedFile(filepath='tasks/task2-renamed.yml',
+                        fic='68195f290a09d119d2e334ed6a8add79ecf2ce5b',
+                        bic='92b9975e1b4449b9ea8f1be5e401fdd99a37b576')
+
+        ff2 = FixedFile(filepath='tasks/task2.yml',
+                        fic='07d2c6720718e498598e64f24a14b992b29bdf61',
+                        bic='a3d029beb2ce2e4f01dfe49e09f17bae9c92025f')
+
+        ff3 = FixedFile(filepath='tasks/task1.yml',
+                        fic='70257245257cd899b6f26870e8db11f5b66a4676',
+                        bic='9cae22d8c88d04bd19e51623ed41e8805651aaed')
+
+        self.assertEqual(self.miner.fixed_files, [ff1, ff2, ff3])
 
     # def test_label(self):
     #     # Passes for commits up to: d07ed2f58c7cbabee89dbc60a62036f22c23394a
