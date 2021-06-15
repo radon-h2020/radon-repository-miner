@@ -67,6 +67,28 @@ class TestBaseMiner(unittest.TestCase):
 
         self.assertListEqual([], miner.get_fixed_files())
 
+    def test_get_fixing_commits__continue(self):
+        """To test if branch in condition:
+            if commit.hash in self.fixing_commits:
+                continue
+        """
+        miner = BaseMiner(
+            url_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing.git',
+            clone_repo_to=os.path.join(os.getcwd(), 'test_data', 'tmp')
+        )
+
+        commits = [
+            '3de3d8c2bbccf62ef5698cf33ad258aae5316432',
+            'fa91aedc17a7dfb08a60f189c86a9d86dac72b41',
+            'ea49aab402a7cb64e9382e764f202d9e6c8f4cbe',
+            'c029d7520456e5468d66b56fe176146680520b20',
+            'd39fdb44e98869835fe59a86d20d05a9e82d5282',
+        ]
+
+        miner.fixing_commits = commits
+        miner.get_fixing_commits()
+        self.assertListEqual(miner.fixing_commits, commits)
+
     def test_get_fixed_files_with_one_commit(self):
         """To test if branch in condition: if len(self.fixing_commits) == 1"""
         miner = BaseMiner(

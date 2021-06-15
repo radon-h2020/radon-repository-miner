@@ -68,22 +68,6 @@ class BaseMiner:
         commit_hashes : List[str]
             List of commit hash on the repository's branch, ordered by creation date.
 
-        exclude_commits : Set[str]
-            Set of commit hash to exclude from mining.
-
-            Mining bug-fixing commits might lead several false positives, i.e., commits that do not actually fix bugs.
-            If you are certain that some commits do not fix bugs, before mining, you can specify their hash as follows:
-
-            Example
-            -------
-            .. highlight:: python
-            .. code-block:: python
-
-                from repominer.mining.base import BaseMiner
-
-                miner = BaseMiner('https://github.com/radon-h2020/radon-repository-miner')
-                miner.exclude_commits = {'521515108c4fee9a4bd1147fc42936768297e3b6'}
-
         exclude_fixed_files : List[str]
             Set of fixed files to exclude from mining.
             Fixed files are files modified in a bug-fixing commit.
@@ -157,7 +141,6 @@ class BaseMiner:
         self.path_to_repo = os.path.join(clone_repo_to, full_name_match.groups()[1].split('/')[1])
         self.branch = branch
 
-        self.exclude_commits = set()  # This is to set up commits known to be non-fixing in advance
         self.exclude_fixed_files = list()  # This is to set up files in fixing-commits known to be false-positive
         self.fixing_commits = list()
         self.fixed_files = list()
@@ -217,7 +200,7 @@ class BaseMiner:
 
         for commit in Repository(self.path_to_repo, only_in_branch=self.branch, num_workers=8).traverse_commits():
 
-            if (commit.hash in self.exclude_commits) or (commit.hash in self.fixing_commits):
+            if commit.hash in self.fixing_commits:
                 continue
 
             fcc = self.FixingCommitClassifier(commit)
