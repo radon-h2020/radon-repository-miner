@@ -83,7 +83,7 @@ class AnsibleMinerTestSuite(unittest.TestCase):
             '73377dbdd160cc69898caa0e97975f12172bba41',
             '07d2c6720718e498598e64f24a14b992b29bdf61',
             '4428cdf62d124df67fa87c29ace3db6906504ea4',
-            '64f813de2a78fd17d898072a0d118234c1235fad', # To test branch that check ignore_file()
+            '64f813de2a78fd17d898072a0d118234c1235fad',  # To test branch that check ignore_file()
             'fa1523351a14b6f0543cd49a131ed8aaed594fdb',
             '68195f290a09d119d2e334ed6a8add79ecf2ce5b'
         ]

@@ -1,7 +1,5 @@
 import unittest
 
-import yaml
-
 from repominer.mining.ansible import AnsibleFixingCommitClassifier
 from pydriller.repository import Repository
 
