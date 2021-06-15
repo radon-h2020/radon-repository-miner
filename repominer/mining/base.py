@@ -205,22 +205,23 @@ class BaseMiner:
 
             fcc = self.FixingCommitClassifier(commit)
 
-            if fcc.fixes_dependency():
-                commits_labels.setdefault(commit.hash, []).append('DEPENDENCY')
-            if fcc.fixes_documentation():
-                commits_labels.setdefault(commit.hash, []).append('DOCUMENTATION')
-            if fcc.fixes_syntax():
-                commits_labels.setdefault(commit.hash, []).append('SYNTAX')
-            if fcc.fixes_service():
-                commits_labels.setdefault(commit.hash, []).append('SERVICE')
-            if fcc.fixes_security():
-                commits_labels.setdefault(commit.hash, []).append('SECURITY')
             if fcc.fixes_conditional():
                 commits_labels.setdefault(commit.hash, []).append('CONDITIONAL')
             if fcc.fixes_configuration_data():
                 commits_labels.setdefault(commit.hash, []).append('CONFIGURATION_DATA')
+            if fcc.fixes_dependency():
+                commits_labels.setdefault(commit.hash, []).append('DEPENDENCY')
+            if fcc.fixes_documentation():
+                commits_labels.setdefault(commit.hash, []).append('DOCUMENTATION')
             if fcc.fixes_idempotency():
                 commits_labels.setdefault(commit.hash, []).append('IDEMPOTENCY')
+            if fcc.fixes_security():
+                commits_labels.setdefault(commit.hash, []).append('SECURITY')
+            if fcc.fixes_service():
+                commits_labels.setdefault(commit.hash, []).append('SERVICE')
+            if fcc.fixes_syntax():
+                commits_labels.setdefault(commit.hash, []).append('SYNTAX')
+
             if commit.hash in commits_labels:
                 commits.append(commit.hash)
 
