@@ -186,13 +186,7 @@ class BaseMiner:
         -------
         List[str]
             A dictionary of bug-fixing commits hashes and boolean values for every fixing labels.
-            {'hash1': {
-                   'SERVICE': true/false,
-                   'SYNTAX': true/false,
-                   ...
-                }
-                ...
-            }
+            {'hash1': ['SERVICE', 'SYNTAX', ...]}
         """
 
         commits_labels = {}
@@ -235,7 +229,7 @@ class BaseMiner:
             # Sort fixing_commits in ascending order of date
             self.sort_commits(self.fixing_commits)
 
-            for sha, _ in list(commits_labels.items()):
+            for sha in list(commits_labels.keys()):
                 if sha not in commits:  # It means it was an undesired commit
                     del commits_labels[sha]
 
