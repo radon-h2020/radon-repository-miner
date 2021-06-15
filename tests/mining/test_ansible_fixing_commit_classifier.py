@@ -6,7 +6,6 @@ from repominer.mining.ansible import AnsibleFixingCommitClassifier
 from pydriller.repository import Repository
 
 URL_TO_REPO = 'https://github.com/stefanodallapalma/radon-repository-miner-testing'
-# BRANCH = 'origin/test-ansible-commit-classifier'
 BRANCH = 'origin/test-ansible-miner'
 
 
