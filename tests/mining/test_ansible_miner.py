@@ -25,33 +25,6 @@ class AnsibleMinerTestSuite(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.path_to_tmp_dir)
 
-    def test_commit_hashes(self):
-
-        self.assertEqual(
-            self.miner.commit_hashes,
-            ['3de3d8c2bbccf62ef5698cf33ad258aae5316432',  # Initial commit
-             '9cbfa528b26f1d222b1b7954eef41f55d2026f4b',
-             '9cae22d8c88d04bd19e51623ed41e8805651aaed',
-             'e14240d8ca0ffd3ca8f093f39111d048819ab909',
-             '755efda3359954588c8486272b17979b3a6512a2',
-             'd07ed2f58c7cbabee89dbc60a62036f22c23394a',
-             'e7df3e45e2e27a0dc16806a834b50d0856d350fe',
-             '70257245257cd899b6f26870e8db11f5b66a4676',
-             'a3d029beb2ce2e4f01dfe49e09f17bae9c92025f',
-             'e5b2e85fb4e9c761cfe0c92b7f09ae95526a0e08',
-             '104f7fd66686e41a8cdd1161e975356530fcd58a',
-             '73377dbdd160cc69898caa0e97975f12172bba41',
-             '07d2c6720718e498598e64f24a14b992b29bdf61',
-             '92b9975e1b4449b9ea8f1be5e401fdd99a37b576',
-             '4428cdf62d124df67fa87c29ace3db6906504ea4',
-             'ba54ae7f42cfd11e0e1b61bb1de175052d53742b',
-             '64f813de2a78fd17d898072a0d118234c1235fad',
-             'fa1523351a14b6f0543cd49a131ed8aaed594fdb',
-             '83595c66d71c54b7c20f85522055386eb4b42b6e',
-             '68195f290a09d119d2e334ed6a8add79ecf2ce5b'
-             ]  # Latest commit
-        )
-
     def test_discard_undesired_fixing_commits(self):
         commits = ['3de3d8c2bbccf62ef5698cf33ad258aae5316432',  # No Ansible files modified
                    '9cbfa528b26f1d222b1b7954eef41f55d2026f4b',  # Ansible file ADDED (does not count!)
@@ -65,25 +38,6 @@ class AnsibleMinerTestSuite(unittest.TestCase):
             commits,
             ['9cae22d8c88d04bd19e51623ed41e8805651aaed',
              '755efda3359954588c8486272b17979b3a6512a2']
-        )
-
-    def test_sort_commits(self):
-        commits = ['9cbfa528b26f1d222b1b7954eef41f55d2026f4b',   # 2nd
-                   '755efda3359954588c8486272b17979b3a6512a2',  # 5th
-                   '3de3d8c2bbccf62ef5698cf33ad258aae5316432',  # 1st
-                   'e14240d8ca0ffd3ca8f093f39111d048819ab909',  # 4th
-                   '9cae22d8c88d04bd19e51623ed41e8805651aaed']  # 3rd
-
-        self.miner.sort_commits(commits)
-
-        self.assertEqual(
-            commits,
-            ['3de3d8c2bbccf62ef5698cf33ad258aae5316432',  # 1st
-             '9cbfa528b26f1d222b1b7954eef41f55d2026f4b',  # 2nd
-             '9cae22d8c88d04bd19e51623ed41e8805651aaed',  # 3rd
-             'e14240d8ca0ffd3ca8f093f39111d048819ab909',  # 4th
-             '755efda3359954588c8486272b17979b3a6512a2']  # 5th
-
         )
 
     def test_ignore_file(self):
