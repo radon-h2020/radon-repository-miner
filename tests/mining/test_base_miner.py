@@ -65,7 +65,8 @@ class TestBaseMiner(unittest.TestCase):
             clone_repo_to=os.path.join(os.getcwd(), 'test_data', 'tmp')
         )
 
-        self.assertListEqual([], miner.get_fixed_files())
+        miner.get_fixed_files()
+        self.assertListEqual([], miner.fixed_files)
 
     def test_get_fixing_commits__continue(self):
         """To test if branch in condition:
@@ -97,7 +98,8 @@ class TestBaseMiner(unittest.TestCase):
         )
 
         miner.fixing_commits = ['3de3d8c2bbccf62ef5698cf33ad258aae5316432']
-        self.assertListEqual([], miner.get_fixed_files())
+        miner.get_fixed_files()
+        self.assertListEqual([], miner.fixed_files)
 
     def test_get_fixed_files_with_more_than_one_commits(self):
         """To test else branch in condition: if len(self.fixing_commits) == 1"""
@@ -107,7 +109,8 @@ class TestBaseMiner(unittest.TestCase):
         )
 
         miner.fixing_commits = ['3de3d8c2bbccf62ef5698cf33ad258aae5316432', 'c029d7520456e5468d66b56fe176146680520b20']
-        self.assertListEqual([], miner.get_fixed_files())
+        miner.get_fixed_files()
+        self.assertListEqual([], miner.fixed_files)
 
     def test_label__return(self):
         """To test the condition:

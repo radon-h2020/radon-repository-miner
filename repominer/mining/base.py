@@ -235,11 +235,11 @@ class BaseMiner:
 
         return commits_labels
 
-    def get_fixed_files(self) -> List[FixedFile]:
+    def get_fixed_files(self) -> None:
         """
-        Return a list of FixedFile objects.
+        Populate the list of FixedFile objects.
 
-        A FixeFile is a file modified in a bug-fixing commit that consists of a filename, hash of the commit that fixed
+        A FixedFile is a file modified in a bug-fixing commit that consists of a filename, hash of the commit that fixed
         it, and hash of the commit that introduced the bug.
 
         It uses the SZZ algorithm implemented in PyDriller to identify the oldest commit that introduced the bug,
@@ -251,13 +251,12 @@ class BaseMiner:
 
         Returns
         -------
-        List[FixedFile]
-            List of FixedFile objects
+        None
 
         """
 
         if not self.fixing_commits:
-            return list()
+            return
 
         self.sort_commits(self.fixing_commits)
 
@@ -334,8 +333,6 @@ class BaseMiner:
                         self.fixed_files.append(current_fix)
                     elif self.commit_hashes.index(current_fix.bic) < self.commit_hashes.index(existing_fix.bic):
                         existing_fix.bic = current_fix.bic
-
-        return self.fixed_files.copy()
 
     def ignore_file(self, path_to_file: str, content: str = None) -> bool:
         """
