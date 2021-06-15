@@ -6,7 +6,7 @@ from repominer.mining.ansible import AnsibleMiner
 from repominer.files import FixedFile, FailureProneFile
 
 
-class AnsibleMinerInit(unittest.TestCase):
+class AnsibleMinerTestSuite(unittest.TestCase):
 
     path_to_tmp_dir = None
 
@@ -20,10 +20,6 @@ class AnsibleMinerInit(unittest.TestCase):
             clone_repo_to=os.path.join(os.getcwd(), 'test_data', 'tmp'),
             branch='origin/test-ansible-miner'
         )
-
-        # cls.miner.get_fixing_commits()
-        # cls.miner.get_fixed_files()
-        # cls.failure_prone_files = list(file for file in cls.miner.label())
 
     @classmethod
     def tearDownClass(cls):
@@ -154,16 +150,98 @@ class AnsibleMinerInit(unittest.TestCase):
 
         self.assertEqual(self.miner.fixed_files, [ff1, ff2, ff3])
 
-    # def test_label(self):
-    #     # Passes for commits up to: d07ed2f58c7cbabee89dbc60a62036f22c23394a
-    #     self.assertEqual(self.failure_prone_files, [
-    #         FailureProneFile(filepath='tasks/task1.yml',
-    #                          commit='e14240d8ca0ffd3ca8f093f39111d048819ab909',
-    #                          fixing_commit='755efda3359954588c8486272b17979b3a6512a2'),
-    #         FailureProneFile(filepath='tasks/task1.yml',
-    #                          commit='9cae22d8c88d04bd19e51623ed41e8805651aaed',
-    #                          fixing_commit='755efda3359954588c8486272b17979b3a6512a2'),
-    #     ])
+    def test_label__no_commits(self):
+        self.miner.fixing_commits = []
+        self.miner.fixed_files = [
+            FixedFile(filepath='tasks/task2-renamed.yml',
+                      fic='68195f290a09d119d2e334ed6a8add79ecf2ce5b',
+                      bic='92b9975e1b4449b9ea8f1be5e401fdd99a37b576')
+        ]
+
+        failure_prone_files = list(file for file in self.miner.label())
+        self.assertEqual(failure_prone_files, [])
+
+    def test_label__no_files(self):
+        self.miner.fixing_commits = ['68195f290a09d119d2e334ed6a8add79ecf2ce5b']
+        self.miner.fixed_files = []
+
+        failure_prone_files = list(file for file in self.miner.label())
+        self.assertEqual(failure_prone_files, [])
+
+    def test_label(self):
+
+        self.miner.fixing_commits = [
+            '755efda3359954588c8486272b17979b3a6512a2',
+            'e7df3e45e2e27a0dc16806a834b50d0856d350fe',
+            '70257245257cd899b6f26870e8db11f5b66a4676',
+            '73377dbdd160cc69898caa0e97975f12172bba41',
+            '07d2c6720718e498598e64f24a14b992b29bdf61',
+            '4428cdf62d124df67fa87c29ace3db6906504ea4',
+            'fa1523351a14b6f0543cd49a131ed8aaed594fdb',
+            '68195f290a09d119d2e334ed6a8add79ecf2ce5b'
+        ]
+
+        self.miner.fixed_files = [
+            FixedFile(filepath='tasks/task2-renamed.yml',
+                      fic='68195f290a09d119d2e334ed6a8add79ecf2ce5b',
+                      bic='92b9975e1b4449b9ea8f1be5e401fdd99a37b576'),
+            FixedFile(filepath='tasks/task2.yml',
+                      fic='07d2c6720718e498598e64f24a14b992b29bdf61',
+                      bic='a3d029beb2ce2e4f01dfe49e09f17bae9c92025f'),
+            FixedFile(filepath='tasks/task1.yml',
+                      fic='70257245257cd899b6f26870e8db11f5b66a4676',
+                      bic='9cae22d8c88d04bd19e51623ed41e8805651aaed')
+        ]
+
+        failure_prone_files = list([file for file in self.miner.label()])
+
+        self.assertEqual(failure_prone_files, [
+            FailureProneFile(filepath='tasks/task2-renamed.yml',
+                             commit='83595c66d71c54b7c20f85522055386eb4b42b6e',
+                             fixing_commit='68195f290a09d119d2e334ed6a8add79ecf2ce5b'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='fa1523351a14b6f0543cd49a131ed8aaed594fdb',
+                             fixing_commit='68195f290a09d119d2e334ed6a8add79ecf2ce5b'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='64f813de2a78fd17d898072a0d118234c1235fad',
+                             fixing_commit='68195f290a09d119d2e334ed6a8add79ecf2ce5b'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='ba54ae7f42cfd11e0e1b61bb1de175052d53742b',
+                             fixing_commit='68195f290a09d119d2e334ed6a8add79ecf2ce5b'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='4428cdf62d124df67fa87c29ace3db6906504ea4',
+                             fixing_commit='68195f290a09d119d2e334ed6a8add79ecf2ce5b'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='92b9975e1b4449b9ea8f1be5e401fdd99a37b576',
+                             fixing_commit='68195f290a09d119d2e334ed6a8add79ecf2ce5b'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='73377dbdd160cc69898caa0e97975f12172bba41',
+                             fixing_commit='07d2c6720718e498598e64f24a14b992b29bdf61'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='104f7fd66686e41a8cdd1161e975356530fcd58a',
+                             fixing_commit='07d2c6720718e498598e64f24a14b992b29bdf61'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='e5b2e85fb4e9c761cfe0c92b7f09ae95526a0e08',
+                             fixing_commit='07d2c6720718e498598e64f24a14b992b29bdf61'),
+            FailureProneFile(filepath='tasks/task2.yml',
+                             commit='a3d029beb2ce2e4f01dfe49e09f17bae9c92025f',
+                             fixing_commit='07d2c6720718e498598e64f24a14b992b29bdf61'),
+            FailureProneFile(filepath='tasks/task1.yml',
+                             commit='e7df3e45e2e27a0dc16806a834b50d0856d350fe',
+                             fixing_commit='70257245257cd899b6f26870e8db11f5b66a4676'),
+            FailureProneFile(filepath='tasks/task1.yml',
+                             commit='d07ed2f58c7cbabee89dbc60a62036f22c23394a',
+                             fixing_commit='70257245257cd899b6f26870e8db11f5b66a4676'),
+            FailureProneFile(filepath='tasks/task1.yml',
+                             commit='755efda3359954588c8486272b17979b3a6512a2',
+                             fixing_commit='70257245257cd899b6f26870e8db11f5b66a4676'),
+            FailureProneFile(filepath='tasks/task1.yml',
+                             commit='e14240d8ca0ffd3ca8f093f39111d048819ab909',
+                             fixing_commit='70257245257cd899b6f26870e8db11f5b66a4676'),
+            FailureProneFile(filepath='tasks/task1.yml',
+                             commit='9cae22d8c88d04bd19e51623ed41e8805651aaed',
+                             fixing_commit='70257245257cd899b6f26870e8db11f5b66a4676'),
+        ])
 
 
 if __name__ == '__main__':

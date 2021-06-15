@@ -104,7 +104,8 @@ class BaseMiner:
         full_name_match = full_name_pattern.search(url_to_repo.replace('.git', ''))
 
         if not full_name_match:
-            raise ValueError('Insert a valid Git URL. For example: https://github.com/radon-h2020/radon-repository-miner.git')
+            raise ValueError(
+                'Insert a valid Git URL. For example: https://github.com/radon-h2020/radon-repository-miner.git')
 
         if not os.path.isdir(clone_repo_to):
             raise FileNotFoundError(f'{clone_repo_to} does not exist.')
@@ -256,11 +257,11 @@ class BaseMiner:
 
                 # If RENAMED then handle renaming
                 if modified_file.change_type == ModificationType.RENAME:
-
                     # if modified_file.new_path in renamed_files:
                     #     renamed_files[modified_file.old_path] = renamed_files[modified_file.new_path]
                     # else:
-                    renamed_files[modified_file.old_path] = renamed_files.get(modified_file.new_path, modified_file.new_path)
+                    renamed_files[modified_file.old_path] = renamed_files.get(modified_file.new_path,
+                                                                              modified_file.new_path)
                     # elif commit.hash in self.fixing_commits:
                     #     renamed_files[modified_file.old_path] = modified_file.new_path
 
@@ -352,39 +353,27 @@ class BaseMiner:
 
         self.sort_commits(self.fixing_commits)
 
-        for commit in Repository(self.path_to_repo, from_commit=self.fixing_commits[-1], to_commit=self.commit_hashes[0],
+        renamed_files = {}
+
+        for commit in Repository(self.path_to_repo, from_commit=self.fixing_commits[-1],
+                                 to_commit=self.commit_hashes[0],
                                  order='reverse', num_workers=1).traverse_commits():
 
-            for files in labeling.values():
-                for file in files:
+            for file in self.fixed_files:
 
-                    idx_fic = self.commit_hashes.index(file.fic)
-                    idx_bic = self.commit_hashes.index(file.bic)
-                    idx_commit = self.commit_hashes.index(commit.hash)
+                idx_fic = self.commit_hashes.index(file.fic)
+                idx_bic = self.commit_hashes.index(file.bic)
+                idx_commit = self.commit_hashes.index(commit.hash)
 
-                    if idx_fic > idx_commit >= idx_bic:
-                        yield FailureProneFile(filepath=file.filepath,
-                                               commit=commit.hash,
-                                               fixing_commit=file.fic)
-
-                    if idx_commit == idx_bic and file.filepath in labeling:
-                        if file in labeling[file.filepath]:
-                            labeling[file.filepath].remove(file)
+                if idx_fic > idx_commit >= idx_bic:
+                    yield FailureProneFile(filepath=renamed_files.get(file.filepath, file.filepath),
+                                           commit=commit.hash,
+                                           fixing_commit=file.fic)
 
             # Handle file renaming
             for modified_file in commit.modified_files:
-                filepath = modified_file.new_path
-
-                for file in list(labeling.get(filepath, list())):
-                    if self.commit_hashes.index(file.fic) > self.commit_hashes.index(
-                            commit.hash) >= self.commit_hashes.index(file.bic):
-
-                        if modified_file.change_type == ModificationType.ADD:
-                            if filepath in labeling and file in labeling[filepath]:
-                                labeling[filepath].remove(file)
-                        elif modified_file.change_type == ModificationType.RENAME:
-                            file.filepath = modified_file.old_path
-                        break
+                if modified_file.change_type == ModificationType.RENAME:
+                    renamed_files[modified_file.new_path] = modified_file.old_path
 
     def sort_commits(self, commits: List[str]) -> None:
         """
@@ -605,7 +594,8 @@ class FixingCommitClassifier:
         for sentence in self.sentences:
             sentence = ' '.join(sentence)
             sentence_dep = ' '.join(utils.get_head_dependents(sentence))
-            if rules.has_defect_pattern(sentence) and (rules.has_service_pattern(sentence_dep) or self.is_service_changed()):
+            if rules.has_defect_pattern(sentence) and (
+                    rules.has_service_pattern(sentence_dep) or self.is_service_changed()):
                 return True
 
         return False
