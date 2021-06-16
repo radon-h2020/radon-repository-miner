@@ -17,7 +17,7 @@ class AnsibleMetricsExtractor(BaseMetricsExtractor):
         try:
             return metrics_extractor.extract_all(script)
         except (TypeError, ValueError):
-            return dict()
+            return {}
 
     def ignore_file(self, path_to_file: str, content: str = None):
         return not is_ansible_file(path_to_file)

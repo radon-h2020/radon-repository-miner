@@ -167,7 +167,7 @@ class BaseMetricsExtractor:
             A dictionary of <metric, value>.
 
         """
-        return dict()
+        return {}
 
     def get_process_metrics(self, from_commit: str, to_commit: str) -> dict:
         """ Extract process metrics for an evolution period.
