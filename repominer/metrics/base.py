@@ -17,8 +17,6 @@ from repominer.files import FailureProneFile
 
 from typing import Any, Dict, Set, Union
 
-full_name_pattern = re.compile(r'git(hub|lab)\.com/([\w\W]+)$')
-
 
 def get_content(path: str) -> Union[str, None]:
     """ Get the content of a file as plain text.
@@ -67,16 +65,17 @@ class BaseMetricsExtractor:
 
     """
 
-    def __init__(self, path_to_repo: str, clone_repo_to: str, at: str = 'release'):
+    def __init__(self, path_to_repo: str, clone_repo_to: str = None, at: str = 'release'):
         """ The class constructor.
 
         Parameters
         ----------
         path_to_repo : str
-            The path to the repository.
+            The path to a local or remote repository.
 
         clone_repo_to : str
             Path to clone the repository to.
+            If path_to_repo links to a local repository, this parameter is not used. Otherwise it is mandatory.
 
         at : str
             When to extract metrics: at each release or each commit.
@@ -89,7 +88,8 @@ class BaseMetricsExtractor:
         Raises
         ------
         ValueError
-            If `at` is not one of the following: release, commit.
+            If `at` is not release or commit, or if the path to the remote repository does not link to a github or
+            gitlab repository.
         NotImplementedError
             The commit option is not implemented yet.
 
@@ -101,26 +101,29 @@ class BaseMetricsExtractor:
         if at == 'commit':
             raise NotImplementedError('This functionality is not implemented yet! Please, use at=release')
 
-        if os.path.isdir(path_to_repo):
-            self.path_to_repo = path_to_repo
-            repo_miner = Repository(path_to_repo=path_to_repo,
-                                    only_releases=True if at == 'release' else False,
-                                    order='date-order', num_workers=8)
+        self.path_to_repo = path_to_repo
 
-        elif is_remote(path_to_repo):
+        if is_remote(path_to_repo):
+
+            if not clone_repo_to:
+                raise ValueError('clone_repo_to is mandatory when linking to a remote repository.')
+
+            full_name_pattern = re.compile(r'git(hub|lab)\.com/([\w\W]+)$')
             match = full_name_pattern.search(path_to_repo.replace('.git', ''))
+
+            if not match:
+                raise ValueError('The remote repository must be hosted on github or gitlab.')
+
             repo_name = match.groups()[1].split('/')[1]
+            self.path_to_repo = os.path.join(clone_repo_to, repo_name)
 
-            path_to_clone = os.path.join(clone_repo_to, repo_name)
-            self.path_to_repo = path_to_clone
+            if os.path.isdir(self.path_to_repo):
+                clone_repo_to = None
 
-            repo_miner = Repository(path_to_repo=path_to_repo,
-                                    clone_repo_to=clone_repo_to if not os.path.isdir(path_to_clone) else None,
-                                    only_releases=True if at == 'release' else False,
-                                    order='date-order', num_workers=8)
-
-        else:
-            raise ValueError(f'{path_to_repo} does not seem a path or url to a Git repository.')
+        repo_miner = Repository(path_to_repo=path_to_repo,
+                                clone_repo_to=clone_repo_to,
+                                only_releases=True if at == 'release' else False,
+                                order='date-order', num_workers=1)
 
         self.commits_at = [commit.hash for commit in repo_miner.traverse_commits()]
         self.dataset = pd.DataFrame()
@@ -223,6 +226,7 @@ class BaseMetricsExtractor:
             Whether to extract delta metrics between two successive releases or commits.
 
         """
+        self.dataset = pd.DataFrame()
         git_repo = Git(self.path_to_repo)
 
         metrics_previous_release = dict()  # Values for iac metrics in the last release
