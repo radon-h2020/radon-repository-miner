@@ -103,9 +103,10 @@ class BaseMetricsExtractor:
 
         if os.path.isdir(path_to_repo):
             self.path_to_repo = path_to_repo
-            self.repo_miner = Repository(path_to_repo=path_to_repo,
-                                         only_releases=True if at == 'release' else False,
-                                         order='date-order', num_workers=8)
+            repo_miner = Repository(path_to_repo=path_to_repo,
+                                    only_releases=True if at == 'release' else False,
+                                    order='date-order', num_workers=8)
+
         elif is_remote(path_to_repo):
             match = full_name_pattern.search(path_to_repo.replace('.git', ''))
             repo_name = match.groups()[1].split('/')[1]
@@ -113,15 +114,15 @@ class BaseMetricsExtractor:
             path_to_clone = os.path.join(clone_repo_to, repo_name)
             self.path_to_repo = path_to_clone
 
-            self.repo_miner = Repository(path_to_repo=path_to_repo,
-                                         clone_repo_to=clone_repo_to if not os.path.isdir(path_to_clone) else None,
-                                         only_releases=True if at == 'release' else False,
-                                         order='date-order', num_workers=8)
+            repo_miner = Repository(path_to_repo=path_to_repo,
+                                    clone_repo_to=clone_repo_to if not os.path.isdir(path_to_clone) else None,
+                                    only_releases=True if at == 'release' else False,
+                                    order='date-order', num_workers=8)
 
         else:
             raise ValueError(f'{path_to_repo} does not seem a path or url to a Git repository.')
 
-        self.releases = [commit.hash for commit in self.repo_miner.traverse_commits()]
+        self.commits_at = [commit.hash for commit in repo_miner.traverse_commits()]
         self.dataset = pd.DataFrame()
 
     def get_files(self) -> Set[str]:
@@ -219,14 +220,14 @@ class BaseMetricsExtractor:
         process: bool
             Whether to extract process metrics.
         delta: bool
-            Whether to extract delta metrics between two successive releases (or commits).
+            Whether to extract delta metrics between two successive releases or commits.
 
         """
         git_repo = Git(self.path_to_repo)
 
         metrics_previous_release = dict()  # Values for iac metrics in the last release
 
-        for commit in Repository(self.path_to_repo, order='date-order', num_workers=8).traverse_commits():
+        for commit in Repository(self.path_to_repo, order='date-order', num_workers=1).traverse_commits():
 
             # To handle renaming in metrics_previous_release
             for modified_file in commit.modified_files:
@@ -238,7 +239,7 @@ class BaseMetricsExtractor:
                     # Rename key old_path wit new_path
                     metrics_previous_release[new_path] = metrics_previous_release.pop(old_path)
 
-            if commit.hash not in self.releases:
+            if commit.hash not in self.commits_at:
                 continue
 
             # Else
@@ -247,9 +248,9 @@ class BaseMetricsExtractor:
 
             if process:
                 # Extract process metrics
-                i = self.releases.index(commit.hash)
-                from_previous_commit = commit.hash if i == 0 else self.releases[i - 1]
-                to_current_commit = commit.hash  # = self.releases[i]
+                i = self.commits_at.index(commit.hash)
+                from_previous_commit = commit.hash if i == 0 else self.commits_at[i - 1]
+                to_current_commit = commit.hash  # = self.commits_at[i]
                 process_metrics = self.get_process_metrics(from_previous_commit, to_current_commit)
 
             for filepath in self.get_files():
