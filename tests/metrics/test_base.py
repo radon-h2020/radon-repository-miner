@@ -61,11 +61,20 @@ class BaseMetricsExtractorTestSuite(unittest.TestCase):
                                  clone_repo_to=self.path_to_tmp_dir,
                                  at='release')
 
-    def test_init_NotImplementedError(self):
-        with self.assertRaises(NotImplementedError):
-            BaseMetricsExtractor(path_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing',
-                                 clone_repo_to=self.path_to_tmp_dir,
-                                 at='commit')
+    def test_commits_at_commit(self):
+            me = BaseMetricsExtractor(path_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing',
+                                      clone_repo_to=self.path_to_tmp_dir,
+                                      at='commit')
+
+            self.assertEqual(me.commits_at, [
+                '3de3d8c2bbccf62ef5698cf33ad258aae5316432',
+                'fa91aedc17a7dfb08a60f189c86a9d86dac72b41',
+                'ea49aab402a7cb64e9382e764f202d9e6c8f4cbe',
+                'c029d7520456e5468d66b56fe176146680520b20',
+                'd39fdb44e98869835fe59a86d20d05a9e82d5282',
+                '75da5889425815009cc0eb4bdff68f59024d351f',
+                'f494eac8c6e7acad5bdc6acf32c6b40b1a11c926'
+            ])
 
     def test_commits_at_release(self):
             me = BaseMetricsExtractor(path_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing',
@@ -168,6 +177,22 @@ class BaseMetricsExtractorTestSuite(unittest.TestCase):
         self.assertEqual(me.dataset.shape, (9, 4))
         self.assertEqual(me.dataset.failure_prone.to_list().count(0), 8)
         self.assertEqual(me.dataset.failure_prone.to_list().count(1), 1)
+
+    def test_extract_at_commit(self):
+        me = BaseMetricsExtractor(path_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing',
+                                  clone_repo_to=self.path_to_tmp_dir,
+                                  at='commit')
+
+        me.extract([], product=False, process=False, delta=False)
+        self.assertEqual(me.dataset.shape, (18, 4))
+        commits = list(me.dataset.commit.unique())
+        self.assertIn('3de3d8c2bbccf62ef5698cf33ad258aae5316432', commits)
+        self.assertIn('fa91aedc17a7dfb08a60f189c86a9d86dac72b41', commits)
+        self.assertIn('ea49aab402a7cb64e9382e764f202d9e6c8f4cbe', commits)
+        self.assertIn('c029d7520456e5468d66b56fe176146680520b20', commits)
+        self.assertIn('d39fdb44e98869835fe59a86d20d05a9e82d5282', commits)
+        self.assertIn('75da5889425815009cc0eb4bdff68f59024d351f', commits)
+        self.assertIn('f494eac8c6e7acad5bdc6acf32c6b40b1a11c926', commits)
 
 
 if __name__ == '__main__':

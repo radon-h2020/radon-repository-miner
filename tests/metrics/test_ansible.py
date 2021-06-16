@@ -45,6 +45,11 @@ class BaseMetricsExtractorTestSuite(unittest.TestCase):
         self.assertFalse(self.me.ignore_file(path_to_file='tasks/task1.yml'))
         self.assertTrue(self.me.ignore_file(path_to_file='others/useless.py'))
 
+    def test_extract_at_commit(self):
+
+        self.me.extract([], product=False, process=False, delta=False)
+        self.assertEqual(self.me.dataset.shape, (0, 0))
+
 
 if __name__ == '__main__':
     unittest.main()

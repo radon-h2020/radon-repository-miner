@@ -98,9 +98,6 @@ class BaseMetricsExtractor:
         if at not in ('release', 'commit'):
             raise ValueError(f'{at} is not valid! Use \'release\' or \'commit\'.')
 
-        if at == 'commit':
-            raise NotImplementedError('This functionality is not implemented yet! Please, use at=release')
-
         self.path_to_repo = path_to_repo
 
         if is_remote(path_to_repo):
