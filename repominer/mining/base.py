@@ -145,13 +145,18 @@ class BaseMiner:
         """
         pass
 
-    def get_fixing_commits(self) -> Dict[str, List[str]]:
+    def get_fixing_commits(self, num_workers=8) -> Dict[str, List[str]]:
         """
         Return a list of bug-fixing commit hash, categorized as fixing "conditionals", "configuration data",
         "dependencies", "documentation", "idempotency", "security", "service", "syntax".
 
         This method returns the commits whose message indicates defective scripts.
         `Note:` Beside returning the list of bug-fixing commits, it also updates the attribute ``fixing_commits``.
+
+        Parameters
+        ----------
+        num_workers : int
+            Number of threads. Default 8.
 
         Returns
         -------
@@ -163,7 +168,7 @@ class BaseMiner:
         commits_labels = {}
         commits = []
 
-        for commit in Repository(self.path_to_repo, only_in_branch=self.branch, num_workers=8).traverse_commits():
+        for commit in Repository(self.path_to_repo, only_in_branch=self.branch, num_workers=num_workers).traverse_commits():
 
             if commit.hash in self.fixing_commits:
                 continue
