@@ -72,6 +72,10 @@ class RulesTestCase(unittest.TestCase):
     @staticmethod
     def test_has_documentation_pattern_true():
         assert rules.has_documentation_pattern('Updated readme and specifications')
+        assert rules.has_documentation_pattern('Updated documentation')
+        assert rules.has_documentation_pattern('Updated docs')
+        assert rules.has_documentation_pattern('Fixed docs')
+        assert rules.has_documentation_pattern('Fixed doc')
 
     @staticmethod
     def test_has_documentation_pattern_false():

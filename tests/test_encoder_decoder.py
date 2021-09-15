@@ -48,5 +48,6 @@ class TestFailureProneFileEncoderAndDecoder(unittest.TestCase):
         decoded = FailureProneFileDecoder().to_object(lf1)
         assert type(decoded) == FailureProneFile
 
+
 if __name__ == '__main__':
     unittest.main()

@@ -8,11 +8,11 @@ with open("requirements.txt", "r") as reqs_file:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-VERSION = '0.9.6'
+VERSION = '1.0'
 
 setup(name='repository-miner',
       version=VERSION,
-      description='A tool to mine IaC-based repositories.',
+      description='A tool to mine software repositories for defect prediction.',
       long_description=long_description,
       long_description_content_type="text/markdown",
       author='Stefano Dalla Palma',
@@ -20,13 +20,12 @@ setup(name='repository-miner',
       author_email='stefano.dallapalma0@gmail.com',
       url='https://github.com/radon-h2020/radon-repository-miner',
       download_url=f'https://github.com/radon-h2020/radon-repository-miner/archive/{VERSION}.tar.gz',
+      license='Apache License',
+      package_dir={'repominer': 'repominer'},
       packages=find_packages(exclude=('tests',)),
-      entry_points={
-          'console_scripts': ['repo-miner=repominer.cli:main'],
-      },
       python_requires='>=3.6',
       classifiers=[
-          "Development Status :: 4 - Beta",
+          "Development Status :: 5 - Production/Stable",
           "Intended Audience :: Developers",
           "Programming Language :: Python :: 3.6",
           "Programming Language :: Python :: 3.7",
