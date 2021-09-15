@@ -303,7 +303,10 @@ class BaseMiner:
                     # Else it means the current fix is between the existing fix bic and fic.
                     # If the current BIC is older than the existing bic, then update the bic.
                     if self.commit_hashes.index(current_fix.fic) < self.commit_hashes.index(existing_fix.bic):
-                        del renamed_files[modified_file.new_path]
+
+                        if modified_file.new_path in renamed_files:
+                            del renamed_files[modified_file.new_path]
+
                         current_fix.filepath = modified_file.new_path
                         self.fixed_files.append(current_fix)
                     elif self.commit_hashes.index(current_fix.bic) < self.commit_hashes.index(existing_fix.bic):
