@@ -6,7 +6,9 @@
 ![python-version](https://img.shields.io/pypi/pyversions/repository-miner)
 
 # radon-repository-miner
-A Python package for mining Infrastructure-as-Code software repositories.
+
+RepositoryMiner is a Python framework that helps developers and researchers to mining software repositories.
+It currently supports the Infrastructure as Code technology Ansible and Tosca.
 
 # How to install
 
