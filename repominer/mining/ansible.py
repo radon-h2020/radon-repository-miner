@@ -21,38 +21,6 @@ class AnsibleMiner(BaseMiner):
         super(self.__class__, self).__init__(url_to_repo, clone_repo_to, branch)
         self.FixingCommitClassifier = AnsibleFixingCommitClassifier
 
-    def discard_undesired_fixing_commits(self, commits: List[str]):
-        """
-        Given a list of commits, discard commits that do not modify at least one Ansible file.
-
-        Note, the update occurs in-place. That is, the original list is updated.
-
-        Parameters
-        ----------
-        commits : List[str]
-            List of commit hashes
-
-        """
-        self.sort_commits(commits)
-
-        for commit in Repository(self.path_to_repo,
-                                 from_commit=commits[0],  # first commit in commits
-                                 to_commit=commits[-1],  # last commit in commits
-                                 only_in_branch=self.branch).traverse_commits():
-            i = 0
-
-            # if none of the modified files is a Ansible file then discard the commit
-            while i < len(commit.modified_files):
-                if commit.modified_files[i].change_type != ModificationType.MODIFY:
-                    i += 1
-                elif not filters.is_ansible_file(commit.modified_files[i].new_path):
-                    i += 1
-                else:
-                    break
-
-            if i == len(commit.modified_files) and commit.hash in commits:
-                commits.remove(commit.hash)
-
     def ignore_file(self, path_to_file: str, content: str = None):
         """
         Ignore non-Ansible files.

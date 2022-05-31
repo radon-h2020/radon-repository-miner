@@ -64,7 +64,7 @@ class TestBaseMiner(unittest.TestCase):
             ]
         )
 
-    def test_discard_undesired_fixing_commits__abstract(self):
+    def test_discard_undesired_fixing_commits(self):
         miner = BaseMiner(
             url_to_repo='https://github.com/stefanodallapalma/radon-repository-miner-testing.git',
             clone_repo_to=os.path.join(os.getcwd(), 'test_data', 'tmp')

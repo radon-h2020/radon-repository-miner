@@ -143,7 +143,29 @@ class BaseMiner:
             List of commit hash
 
         """
-        pass
+
+        if not commits:
+            return
+
+        self.sort_commits(commits)
+
+        for commit in Repository(self.path_to_repo,
+                                 from_commit=commits[0],  # first commit in commits
+                                 to_commit=commits[-1],  # last commit in commits
+                                 only_in_branch=self.branch).traverse_commits():
+            i = 0
+
+            # if none of the modified files is a Ansible file then discard the commit
+            while i < len(commit.modified_files):
+                if commit.modified_files[i].change_type != ModificationType.MODIFY:
+                    i += 1
+                elif self.ignore_file(commit.modified_files[i].new_path, commit.modified_files[i].source_code):
+                    i += 1
+                else:
+                    break
+
+            if i == len(commit.modified_files) and commit.hash in commits:
+                commits.remove(commit.hash)
 
     def get_fixing_commits(self, num_workers=8) -> Dict[str, List[str]]:
         """
