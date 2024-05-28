@@ -13,11 +13,13 @@ It currently supports the Infrastructure as Code technology Ansible and Tosca.
 
 # How to install
 
-From [PyPI](https://pypi.org/project/repository-miner/):
+First, ensure your `git version` is greater than `2.38.0`.
+
+Then, from [PyPI](https://pypi.org/project/repository-miner/):
 
 ```pip install repository-miner```
 
-From source code:
+Or, from source code:
 
 ```text
 git clone https://github.com/radon-h2020/radon-repository-miner.git
