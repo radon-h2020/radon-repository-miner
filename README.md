@@ -1,7 +1,6 @@
 ![Build](https://github.com/radon-h2020/radon-repository-miner/workflows/Build/badge.svg)
-![Documentation](https://github.com/radon-h2020/radon-repository-miner/workflows/Documentation/badge.svg)
 ![Codecov](https://img.shields.io/codecov/c/github/radon-h2020/radon-repository-miner)
-![lgtm](https://img.shields.io/lgtm/grade/python/github/radon-h2020/radon-repository-miner)
+[![Downloads](https://pepy.tech/badge/repository-miner/month)](https://pepy.tech/project/repository-miner)
 ![pypi-version](https://img.shields.io/pypi/v/repository-miner)
 ![python-version](https://img.shields.io/pypi/pyversions/repository-miner)
 
